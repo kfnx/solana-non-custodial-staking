@@ -10,6 +10,8 @@ pub mod nc_staking {
     use super::*;
 
     pub fn freeze(ctx: Context<Freeze>) -> Result<()> {
+        // assign delegate to PDA
+        // TODO: check that delegate key is equal pda? 
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_accounts = Approve {
             to: ctx.accounts.token_account.to_account_info(),
@@ -18,6 +20,8 @@ pub mod nc_staking {
         };
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         token::approve(cpi_ctx, 1)?;
+
+        // use pda to freeze
 
         Ok(())
     }
