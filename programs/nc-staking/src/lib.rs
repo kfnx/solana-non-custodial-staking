@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self,Approve,Token,TokenAccount};
+use anchor_spl::token::{self, Approve, Mint, Token, TokenAccount};
+
+mod mpl;
 
 declare_id!("stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E");
 
@@ -10,8 +12,14 @@ pub mod nc_staking {
     use super::*;
 
     pub fn freeze(ctx: Context<Freeze>) -> Result<()> {
+        let seeds = [
+            &DELEGATE_PDA_SEED[..],
+            ctx.accounts.token_account.to_account_info().key.as_ref(),
+        ];
+        let (_, bump) = Pubkey::find_program_address(&seeds, &id());
+
         // assign delegate to PDA
-        // TODO: check that delegate key is equal pda? 
+        // TODO: check that delegate key is equal pda?
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_accounts = Approve {
             to: ctx.accounts.token_account.to_account_info(),
@@ -22,7 +30,48 @@ pub mod nc_staking {
         token::approve(cpi_ctx, 1)?;
 
         // use pda to freeze
+        let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
+        let cpi_accounts = mpl::FreezeDelegatedAccount {
+            delegate: ctx.accounts.delegate_auth.clone(),
+            token_account: ctx.accounts.token_account.clone(),
+            edition: ctx.accounts.edition.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        };
+        let auth_seeds = [
+            &DELEGATE_PDA_SEED[..],
+            ctx.accounts.token_account.to_account_info().key.as_ref(),
+            &[bump]
+        ];
+        let signer = &[&auth_seeds[..]];
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+        mpl::freeze_delegated_account(cpi_ctx)?;
+        Ok(())
+    }
+    pub fn thaw(ctx: Context<Freeze>) -> Result<()> {
+        let seeds = [
+            &DELEGATE_PDA_SEED[..],
+            ctx.accounts.token_account.to_account_info().key.as_ref(),
+        ];
+        let (_, bump) = Pubkey::find_program_address(&seeds, &id());
 
+        // use pda to thaw
+        let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
+        let cpi_accounts = mpl::FreezeDelegatedAccount {
+            delegate: ctx.accounts.delegate_auth.clone(),
+            token_account: ctx.accounts.token_account.clone(),
+            edition: ctx.accounts.edition.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        };
+        let auth_seeds = [
+            &DELEGATE_PDA_SEED[..],
+            ctx.accounts.token_account.to_account_info().key.as_ref(),
+            &[bump]
+        ];
+        let signer = &[&auth_seeds[..]];
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+        mpl::thaw_delegated_account(cpi_ctx)?;
         Ok(())
     }
 }
@@ -34,16 +83,21 @@ pub struct Freeze<'info> {
         token::authority = user,
         constraint = user.key == &token_account.owner
     )]
-    pub token_account: Account<'info, TokenAccount>,
+    token_account: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub user: Signer<'info>,
+    user: Signer<'info>,
     #[account(
         seeds=[DELEGATE_PDA_SEED, token_account.key().as_ref()],
         bump
     )]
     /// CHECK: PDA
-    pub delegate_auth: AccountInfo<'info>,
-    pub token_program: Program<'info, Token>, // constraint here to check token program is legit
+    delegate_auth: AccountInfo<'info>,
+    /// CHECK: PDA for metaplex; also freeze auth
+    edition: AccountInfo<'info>,
+    mint: Account<'info, Mint>,           // mint address
+    token_program: Program<'info, Token>, // constraint here to check token program is legit
+    token_metadata_program: Program<'info, mpl::TokenMetadata>, // constraint here to check token metadata program is legit
+    system_program: Program<'info, System>,
 }
 
 // Accounts
