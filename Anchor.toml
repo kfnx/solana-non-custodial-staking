@@ -1,15 +1,13 @@
 [features]
 seeds = false
 
-[programs.localnet]
-nc_staking = "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
-
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/home/benson/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+# test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/basic.ts"

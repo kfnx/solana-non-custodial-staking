@@ -7,3 +7,4 @@ node_modules
 test-ledger
 secrets.sh
 .env
+*.original
