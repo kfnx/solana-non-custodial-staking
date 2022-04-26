@@ -86,12 +86,36 @@ pub mod nc_staking {
         let staking_acc: &mut Account<StakingAccount> = &mut ctx.accounts.account;
         let owner: &Signer = &ctx.accounts.owner;
         let clock: Clock = Clock::get().unwrap();
-
         staking_acc.owner = *owner.key;
         staking_acc.timestamp = clock.unix_timestamp;
         staking_acc.staked_nft = 0;
         staking_acc.json_data = json_data;
         msg!("staking account created");
+        Ok(())
+    }
+
+    pub fn stake(ctx: Context<Stake>) -> Result<()> {
+        let staking_acc: &mut Account<StakingAccount> = &mut ctx.accounts.account;
+        let clock: Clock = Clock::get().unwrap();
+        staking_acc.timestamp = clock.unix_timestamp;
+        staking_acc.staked_nft = staking_acc.staked_nft + 1;
+        msg!("staked 1 nft");
+        Ok(())
+    }
+
+    pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
+        // let authority: Signer = ctx.accounts.authority;
+        let staking_acc: &mut Account<StakingAccount> = &mut ctx.accounts.account;
+        // if staking_acc.owner != authority {
+        //     return Err(error::ErrorCode::InvalidAuthority.into());
+        // }
+        if staking_acc.staked_nft < 1 {
+            return Err(error::ErrorCode::CannotUnstake.into());
+        }
+        let clock: Clock = Clock::get().unwrap();
+        staking_acc.timestamp = clock.unix_timestamp;
+        staking_acc.staked_nft = staking_acc.staked_nft - 1;
+        msg!("unstaked 1 nft");
         Ok(())
     }
 }
@@ -127,6 +151,20 @@ pub struct InitStakingAccount<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Stake<'info> {
+    #[account(mut)]
+    pub account: Account<'info, StakingAccount>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Unstake<'info> {
+    #[account(mut)]
+    pub account: Account<'info, StakingAccount>,
+    pub authority: Signer<'info>,
 }
 
 #[account]
