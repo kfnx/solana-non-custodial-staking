@@ -21,7 +21,7 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 - Run solana local cluster with `solana-test-validator`, this is useful for development with fast network speed with of repetition and less strict environtment
 - Run test in started local cluster with `anchor test --skip-local-validator`, this is useful to test with persistent network
 
-# Deploy or developing program
+# Deploy your own program
 
 To deploy with original program id, you need the original keypair. If you dont have it you can generate new keypair and deploy the program with the new keypair. Follow steps below
 

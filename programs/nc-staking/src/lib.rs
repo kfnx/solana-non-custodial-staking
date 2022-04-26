@@ -84,9 +84,9 @@ pub mod nc_staking {
             return Err(error::ErrorCode::JsonDataInvalid.into());
         }
         let staking_acc: &mut Account<StakingAccount> = &mut ctx.accounts.account;
-        let owner: &Signer = &ctx.accounts.owner;
+        let authority: &Signer = &ctx.accounts.authority;
         let clock: Clock = Clock::get().unwrap();
-        staking_acc.owner = *owner.key;
+        staking_acc.authority = *authority.key;
         staking_acc.timestamp = clock.unix_timestamp;
         staking_acc.staked_nft = 0;
         staking_acc.json_data = json_data;
@@ -146,30 +146,30 @@ pub struct Freeze<'info> {
 
 #[derive(Accounts)]
 pub struct InitStakingAccount<'info> {
-    #[account(init, payer = owner, space = StakingAccount::LEN)]
+    #[account(init, payer = authority, space = StakingAccount::LEN)]
     pub account: Account<'info, StakingAccount>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
-    #[account(mut)]
+    #[account(mut, has_one = authority)]
     pub account: Account<'info, StakingAccount>,
     pub authority: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct Unstake<'info> {
-    #[account(mut)]
+    #[account(mut, has_one = authority)]
     pub account: Account<'info, StakingAccount>,
     pub authority: Signer<'info>,
 }
 
 #[account]
 pub struct StakingAccount {
-    pub owner: Pubkey,
+    pub authority: Pubkey,
     pub timestamp: i64,
     pub staked_nft: i64,
     pub json_data: String,

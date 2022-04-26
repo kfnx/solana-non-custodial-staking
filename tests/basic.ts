@@ -21,7 +21,7 @@ describe("basic test", () => {
     await program.rpc.initStakingAcc(JSON.stringify(jsonData), {
       accounts: {
         account: stakingAccount.publicKey,
-        owner: user.publicKey,
+        authority: user.publicKey,
         systemProgram: SystemProgram.programId,
       },
       signers: [stakingAccount],
@@ -31,7 +31,7 @@ describe("basic test", () => {
       stakingAccount.publicKey
     );
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.authority.equals(user.publicKey));
     assert.ok(account.stakedNft.toNumber() === 0);
   });
 
@@ -47,7 +47,7 @@ describe("basic test", () => {
       stakingAccount.publicKey
     );
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.authority.equals(user.publicKey));
     assert.ok(account.stakedNft.toNumber() === 1);
   });
 
@@ -63,14 +63,13 @@ describe("basic test", () => {
       stakingAccount.publicKey
     );
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.authority.equals(user.publicKey));
     assert.ok(account.stakedNft.toNumber() === 0);
   });
 
-  let _anotherStakingAccount: anchor.web3.Keypair;
   it("Creates staking account from another user", async () => {
     const anotherStakingAccount = anchor.web3.Keypair.generate();
-    console.log("staking account", anotherStakingAccount.publicKey.toBase58());
+    console.log("another staking account", anotherStakingAccount.publicKey.toBase58());
     const anotherUser = anchor.web3.Keypair.generate();
     const airdropSig = await program.provider.connection.requestAirdrop(
       anotherUser.publicKey,
@@ -83,7 +82,7 @@ describe("basic test", () => {
     await program.rpc.initStakingAcc(JSON.stringify(jsonData), {
       accounts: {
         account: anotherStakingAccount.publicKey,
-        owner: anotherUser.publicKey,
+        authority: anotherUser.publicKey,
         systemProgram: SystemProgram.programId,
       },
       signers: [anotherStakingAccount, anotherUser],
@@ -93,32 +92,32 @@ describe("basic test", () => {
       anotherStakingAccount.publicKey
     );
 
-    assert.ok(account.owner.equals(anotherUser.publicKey));
+    assert.ok(account.authority.equals(anotherUser.publicKey));
     assert.ok(account.stakedNft.toNumber() === 0);
-    _anotherStakingAccount = anotherStakingAccount;
   });
 
-  // TODO: add auth security test after program updated
-  // it("User cannot stake other user NFT", async () => {
-  //   try {
-  //     await program.rpc.stake({
-  //       accounts: {
-  //         account: _anotherStakingAccount.publicKey,
-  //         authority: user.publicKey,
-  //       },
-  //     });
-  //     console.log("NO ERROR");
-  //   } catch (error) {
-  //     console.log("error", error);
-  //     assert.equal(error.error.errorCode.code, "CannotUnstake");
-  //     assert.equal(error.error.errorCode.number, 6001);
-  //     return;
-  //   }
-
-  //   assert.fail(
-  //     "The instruction should have failed to modify other user staking account with different authority."
-  //   );
-  // });
+  it("User cannot stake other user NFT", async () => {
+    const newUser = anchor.web3.Keypair.generate();
+    try {
+      await program.rpc.stake({
+        accounts: {
+          account: stakingAccount.publicKey,
+          authority: newUser.publicKey,
+        },
+        signers: [newUser],
+      });
+      assert.fail(
+        "The instruction should have failed (Signature invalid). Cannot modify other user staking account from different user authority."
+      );
+    } catch (error) {
+      // Ensure the tweet account kept the initial data.
+      const stakingAccountState = await program.account.stakingAccount.fetch(
+        stakingAccount.publicKey
+      );
+      // should stay zero
+      assert.equal(stakingAccountState.stakedNft.toNumber(), 0);
+    }
+  });
 
   it("Fetch all staking accounts", async () => {
     const allStakingAccounts = await program.account.stakingAccount.all();
