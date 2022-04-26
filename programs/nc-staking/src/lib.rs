@@ -18,9 +18,8 @@ pub mod nc_staking {
             ctx.accounts.token_account.to_account_info().key.as_ref(),
         ];
         let (_, bump) = Pubkey::find_program_address(&seeds, &id());
-
+        
         // assign delegate to PDA
-        // TODO: check that delegate key is equal pda?
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_accounts = Approve {
             to: ctx.accounts.token_account.to_account_info(),
@@ -124,8 +123,8 @@ pub mod nc_staking {
 pub struct Freeze<'info> {
     #[account(
         mut,
-        token::authority = user,
-        constraint = user.key == &token_account.owner
+        token::authority = user,  // ensure signer is the authority of this token account
+        constraint = user.key == &token_account.owner, // ensure signer is the owner of this token account
     )]
     token_account: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -134,7 +133,7 @@ pub struct Freeze<'info> {
         seeds=[DELEGATE_PDA_SEED, token_account.key().as_ref()],
         bump
     )]
-    /// CHECK: PDA
+    /// CHECK: PDA; seeds constraint ensure that the correct PDA is passed as delegate auth
     delegate_auth: AccountInfo<'info>,
     /// CHECK: PDA for metaplex; also freeze auth
     edition: AccountInfo<'info>,

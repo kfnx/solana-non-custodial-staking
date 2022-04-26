@@ -29,3 +29,5 @@ To deploy with original program id, you need the original keypair. If you dont h
 - Run `yarn programid` to print the new program address after setup.
 - Run `anchor test` to test the built program
 
+# Misc cli commands
+spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs 1 tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr

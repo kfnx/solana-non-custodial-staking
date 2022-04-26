@@ -8,14 +8,13 @@ import { NcStaking } from "../target/types/nc_staking";
  * e.g: from create NFT, send to someone, then freeze it creator freeze it by pda, etc
  */
 
-const localKeypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.SECRET_KEYPAIR))
-);
-console.log(`signer: `, localKeypair.publicKey.toBase58());
 
 describe("nc-staking", async () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env();
+  const localKeypair = provider.wallet;
+  console.log(`signer: `, localKeypair.publicKey.toBase58());
+  anchor.setProvider(provider);
 
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
 
