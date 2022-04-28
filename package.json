@@ -18,18 +18,15 @@
     "homepage": "https://github.com/tatsuworks/nc-staking#readme",
     "scripts": {
         "setup:programid": "./scripts/update_program_id.sh",
-        "programid": "echo 🔑 your program id: `solana address -k target/deploy/nc_staking-keypair.json`",
         "keypair": "echo 📁 your local wallet keypair path: `solana config get | grep \"Keypair Path: \" | sed \"s/Keypair Path: //g\"`",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },
-    "dependencies": {
+    "devDependencies": {
+        "@metaplex/js": "^4.12.0",
         "@project-serum/anchor": "^0.24.2",
         "@solana/spl-token": "^0.2.0",
         "@solana/web3.js": "^1.39.1",
-        "dotenv": "^16.0.0"
-    },
-    "devDependencies": {
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/mocha": "^9.0.0",

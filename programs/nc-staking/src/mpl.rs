@@ -2,8 +2,6 @@ use anchor_lang::prelude::*;
 use solana_program::instruction::Instruction;
 use anchor_spl::token::{TokenAccount};
 
-// const TOKEN_METADATA_ID: Pubkey = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s".parse().unwrap();
-
 pub fn thaw_delegated_account<'a, 'b, 'c, 'info>(
     ctx: CpiContext<'a, 'b, 'c, 'info, FreezeDelegatedAccount<'info>>,
 ) -> Result<()> {
