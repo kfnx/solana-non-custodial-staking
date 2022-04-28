@@ -15,10 +15,10 @@ const keypair2 = Keypair.fromSecretKey(Uint8Array.from([206, 215, 218, 86, 77, 2
 
 const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 const wallet1 = new anchor.Wallet(keypair1);
-const provider1 = new anchor.AnchorProvider(connection, wallet1, {});
+const provider1 = new anchor.AnchorProvider(connection, wallet1, {commitment: "confirmed"});
 const ata1 = new PublicKey("BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs");
-const wallet2 = new anchor.Wallet(keypair1);
-const provider2 = new anchor.AnchorProvider(connection, wallet2, {});
+const wallet2 = new anchor.Wallet(keypair2);
+const provider2 = new anchor.AnchorProvider(connection, wallet2, {commitment: "confirmed"});
 const ata2 = new PublicKey("FdTMiWD7FAXhNmewHUSahAok896mtJfDRuSR4u1LsNsm");
 // changes based on the nft
 const mint = new PublicKey("AiFWNmitWNXQr3EazPDJWcAfEvU8KnPf69WAS6F6iFG7"); // pre-setup
@@ -37,7 +37,6 @@ describe("nc-staking", async () => {
   const [delegateAuth] = await PublicKey.findProgramAddress([Buffer.from('delegate'), tokenAccount.toBuffer()], program.programId);
 
   it("Freeze", async () => {
-    // Add your test here.
     const tx = await program.methods
       .freeze()
       .accounts({
@@ -50,6 +49,7 @@ describe("nc-staking", async () => {
         edition,
       })
       .rpc();
+
     console.log("Freeze transaction signature", tx);
     const ataInfo = await connection.getParsedAccountInfo(tokenAccount);
     const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
@@ -68,7 +68,7 @@ describe("nc-staking", async () => {
         1
       );
     } catch (error) {
-      console.log(error)
+      assert.equal(error.message, 'failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x11'); // frozen
       return;
     }
 
@@ -76,7 +76,6 @@ describe("nc-staking", async () => {
   });
 
   it("Thaw", async () => {
-    // Add your test here.
     const tx = await program.methods
       .thaw()
       .accounts({
@@ -112,7 +111,7 @@ describe("nc-staking", async () => {
   });
 
   
-  it("Freeze empty account", async () => {
+  it("Unable to freeze empty account", async () => {
     try {
     await program.methods
       .freeze()
@@ -128,11 +127,27 @@ describe("nc-staking", async () => {
       .rpc();
     } 
     catch (error) {
-      console.log(error)
+      assert.equal(error.message, 'failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x20'); // cannot freeze `Not enough tokens to mint a limited edition`
       return;
     }
 
-    assert.fail('The instruction should have failed with a frozen account.');
+    assert.fail('The instruction should have failed with an empty account.');
+  });
+
+  
+  // transfer to kp1
+  // Get the token account of the toWallet address, and if it does not exist, create it
+  it("Transfer the token to 1st wallet", async () => {
+    const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, wallet2.payer, mint, wallet1.publicKey);
+
+    await transfer(
+      connection,
+      wallet2.payer,
+      ata2,
+      toTokenAccount.address,
+      wallet2.publicKey,
+      1
+    );
   });
   
 });
