@@ -8,17 +8,16 @@ const { SystemProgram } = anchor.web3;
 
 describe("basic test", () => {
   const provider = anchor.AnchorProvider.env();
-  console.log("rpc endpoint", provider.connection.rpcEndpoint);
   anchor.setProvider(provider);
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const { programId } = program;
-  console.log("program id", programId.toBase58());
   const user = provider.wallet;
-  console.log("user", user.publicKey.toBase58());
+
+  console.log("rpc endpoint", provider.connection.rpcEndpoint);
+  console.log("program id", programId.toBase58());
 
   it("Creates staking account in a single atomic transaction (simplified)", async () => {
     const [vault, _vaultBump] = await findVaultPDA(user, programId);
-    console.log("vault", vault.toBase58());
 
     await program.methods
       .initStakingVault()
@@ -36,7 +35,6 @@ describe("basic test", () => {
 
   it("Cannot create same vault more than once", async () => {
     const [vault, _vaultBump] = await findVaultPDA(user, programId);
-    console.log("vault", vault.toBase58());
 
     try {
       await program.methods
@@ -112,7 +110,6 @@ describe("basic test", () => {
 
   it("User cannot modify other user vault", async () => {
     const userTwo = anchor.web3.Keypair.generate();
-    console.log("userTwo", userTwo.publicKey.toBase58());
     const airdropSig = await program.provider.connection.requestAirdrop(
       userTwo.publicKey,
       1000000000
@@ -122,7 +119,6 @@ describe("basic test", () => {
     try {
       // init his own vault
       const [userTwoVault, _] = await findVaultPDA(userTwo, programId);
-      console.log("userTwoVault", userTwoVault.toBase58());
 
       await program.methods
         .initStakingVault()
@@ -158,8 +154,7 @@ describe("basic test", () => {
   it("Fetch all staking accounts", async () => {
     const allStakingAccounts = await program.account.vault.all();
 
-    // 2 staking account created from overall test
-    // user (env provided keypair) and anotherUser (generated keypair)
+    // 3 staking account created from overall test
     assert.equal(allStakingAccounts.length, 3);
   });
 });

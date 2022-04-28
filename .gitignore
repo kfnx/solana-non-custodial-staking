@@ -8,3 +8,4 @@ test-ledger
 secrets.sh
 .env
 *.original
+keypair/

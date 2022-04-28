@@ -35,23 +35,17 @@ export function createUsers(
 ) {
   let promises = [];
   for (let i = 0; i < numUsers; i++) {
-    promises.push(
-      createUser(provider, (airdropBalance = 1 * LAMPORTS_PER_SOL))
-    );
+    promises.push(createUser(provider, airdropBalance));
   }
 
   return Promise.all(promises);
 }
 
 export function programForUser(
-  mainProgram: { idl: anchor.Idl; programId: anchor.Address },
+  program: { idl: anchor.Idl; programId: anchor.Address },
   user: { provider: anchor.Provider }
 ) {
-  return new anchor.Program(
-    mainProgram.idl,
-    mainProgram.programId,
-    user.provider
-  );
+  return new anchor.Program(program.idl, program.programId, user.provider);
 }
 
 export async function pause(ms: number) {
@@ -61,7 +55,6 @@ export async function pause(ms: number) {
     }, ms)
   );
 }
-
 
 export async function findVaultPDA(
   user: Wallet | anchor.web3.Keypair,
