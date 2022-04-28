@@ -6,8 +6,6 @@ mod mpl;
 
 declare_id!("stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E");
 
-const DELEGATE_PDA_SEED: &[u8] = b"delegate";
-
 #[program]
 pub mod nc_staking {
     use super::*;
@@ -125,7 +123,7 @@ pub struct Freeze<'info> {
     #[account(mut)]
     user: Signer<'info>,
     #[account(
-        seeds=[DELEGATE_PDA_SEED, token_account.key().as_ref()],
+        seeds=[b"delegate", token_account.key().as_ref()],
         bump
     )]
     /// CHECK: PDA
