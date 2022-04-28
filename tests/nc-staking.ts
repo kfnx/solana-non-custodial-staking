@@ -96,7 +96,7 @@ describe("nc-staking", async () => {
     assert.equal(parsed.info.state, 'frozen')
   });
 
-  it("unable to transfer the token to 2nd wallet", async () => {
+  it("Unable to transfer the token to 2nd wallet", async () => {
     const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, wallet1.payer, mint, wallet2.publicKey);
     try {
       await transfer(
