@@ -23,7 +23,7 @@ pub mod nc_staking {
 
     pub fn freeze(ctx: Context<Freeze>) -> Result<()> {
         let seeds = [
-            &DELEGATE_PDA_SEED[..],
+            b"delegate",
             ctx.accounts.token_account.to_account_info().key.as_ref(),
         ];
         let (_, bump) = Pubkey::find_program_address(&seeds, &id());
@@ -47,7 +47,7 @@ pub mod nc_staking {
             token_program: ctx.accounts.token_program.to_account_info(),
         };
         let auth_seeds = [
-            &DELEGATE_PDA_SEED[..],
+            b"delegate",
             ctx.accounts.token_account.to_account_info().key.as_ref(),
             &[bump],
         ];
@@ -60,12 +60,12 @@ pub mod nc_staking {
 
     pub fn thaw(ctx: Context<Freeze>) -> Result<()> {
         let seeds = [
-            &DELEGATE_PDA_SEED[..],
+            b"delegate",
             ctx.accounts.token_account.to_account_info().key.as_ref(),
         ];
         let (_, bump) = Pubkey::find_program_address(&seeds, &id());
 
-        // use pda to freeze
+        // use pda to thaw
         let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
         let cpi_accounts = mpl::FreezeDelegatedAccount {
             delegate: ctx.accounts.delegate_auth.clone(),
@@ -75,13 +75,13 @@ pub mod nc_staking {
             token_program: ctx.accounts.token_program.to_account_info(),
         };
         let auth_seeds = [
-            &DELEGATE_PDA_SEED[..],
+            b"delegate",
             ctx.accounts.token_account.to_account_info().key.as_ref(),
             &[bump],
         ];
         let signer = &[&auth_seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        mpl::freeze_delegated_account(cpi_ctx)?;
+        mpl::thaw_delegated_account(cpi_ctx)?;
         msg!("thaw success");
         Ok(())
     }

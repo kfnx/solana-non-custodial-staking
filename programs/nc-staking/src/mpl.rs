@@ -2,6 +2,31 @@ use anchor_lang::prelude::*;
 use solana_program::instruction::Instruction;
 use anchor_spl::token::{TokenAccount};
 
+pub fn thaw_delegated_account<'a, 'b, 'c, 'info>(
+    ctx: CpiContext<'a, 'b, 'c, 'info, FreezeDelegatedAccount<'info>>,
+) -> Result<()> {
+    let ix = make_instruction(
+        ctx.accounts.delegate.key,
+        &ctx.accounts.token_account.key(),
+        ctx.accounts.edition.key,
+        ctx.accounts.mint.key,
+        ctx.accounts.token_program.key,
+        false,
+    )?;
+    solana_program::program::invoke_signed(
+        &ix,
+        &[
+            ctx.accounts.delegate.clone(),
+            ctx.accounts.token_account.to_account_info(),
+            ctx.accounts.edition.clone(),
+            ctx.accounts.mint.clone(),
+            ctx.accounts.token_program.clone(),
+        ],
+        ctx.signer_seeds,
+    )
+    .map_err(Into::into)
+}
+
 pub fn freeze_delegated_account<'a, 'b, 'c, 'info>(
     ctx: CpiContext<'a, 'b, 'c, 'info, FreezeDelegatedAccount<'info>>,
 ) -> Result<()> {
