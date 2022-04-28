@@ -1,8 +1,8 @@
 import assert from "assert";
 import * as anchor from "@project-serum/anchor";
 import { NcStaking } from "../target/types/nc_staking";
-import { PublicKey } from "@solana/web3.js";
-import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { createUser, findVaultPDA } from "./utils";
 
 const { SystemProgram } = anchor.web3;
 
@@ -11,19 +11,13 @@ describe("basic test", () => {
   console.log("rpc endpoint", provider.connection.rpcEndpoint);
   anchor.setProvider(provider);
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-  console.log("program id", program.programId.toBase58());
+  const { programId } = program;
+  console.log("program id", programId.toBase58());
   const user = provider.wallet;
   console.log("user", user.publicKey.toBase58());
 
-  const findVaultPDA = async (user: Wallet | anchor.web3.Keypair) => {
-    return await PublicKey.findProgramAddress(
-      [Buffer.from("vault"), user.publicKey.toBytes()],
-      program.programId
-    );
-  };
-
   it("Creates staking account in a single atomic transaction (simplified)", async () => {
-    const [vault, _vaultBump] = await findVaultPDA(user);
+    const [vault, _vaultBump] = await findVaultPDA(user, programId);
     console.log("vault", vault.toBase58());
 
     await program.methods
@@ -41,7 +35,7 @@ describe("basic test", () => {
   });
 
   it("Cannot create same vault more than once", async () => {
-    const [vault, _vaultBump] = await findVaultPDA(user);
+    const [vault, _vaultBump] = await findVaultPDA(user, programId);
     console.log("vault", vault.toBase58());
 
     try {
@@ -59,7 +53,7 @@ describe("basic test", () => {
   });
 
   it("Stake recording add 1 NFT", async () => {
-    const [vault, _vaultBump] = await findVaultPDA(user);
+    const [vault, _vaultBump] = await findVaultPDA(user, programId);
     await program.methods
       .stake()
       .accounts({
@@ -75,7 +69,7 @@ describe("basic test", () => {
   });
 
   it("Unstake recording reduce 1 NFT", async () => {
-    const [vault, _vaultBump] = await findVaultPDA(user);
+    const [vault, _vaultBump] = await findVaultPDA(user, programId);
     await program.methods
       .unstake()
       .accounts({
@@ -91,29 +85,28 @@ describe("basic test", () => {
   });
 
   it("Creates vault account from generated user", async () => {
-    const anotherUser = anchor.web3.Keypair.generate();
-    const [anotherUserVault, _bump] = await findVaultPDA(anotherUser);
-    console.log("another user vault", anotherUserVault.toBase58());
-    const airdropSig = await program.provider.connection.requestAirdrop(
-      anotherUser.publicKey,
-      1000000000
+    const { key: userKeypair } = await createUser(
+      provider,
+      1 * LAMPORTS_PER_SOL
     );
-    await program.provider.connection.confirmTransaction(airdropSig);
-    console.log("another user", user.publicKey.toBase58());
+    const [anotherUserVault, _bump] = await findVaultPDA(
+      userKeypair,
+      programId
+    );
 
     await program.methods
       .initStakingVault()
       .accounts({
         vault: anotherUserVault,
-        owner: anotherUser.publicKey,
+        owner: userKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([anotherUser, anotherUser])
+      .signers([userKeypair])
       .rpc();
 
     const account = await program.account.vault.fetch(anotherUserVault);
 
-    assert.ok(account.owner.equals(anotherUser.publicKey));
+    assert.ok(account.owner.equals(userKeypair.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
@@ -128,7 +121,7 @@ describe("basic test", () => {
 
     try {
       // init his own vault
-      const [userTwoVault, _] = await findVaultPDA(userTwo);
+      const [userTwoVault, _] = await findVaultPDA(userTwo, programId);
       console.log("userTwoVault", userTwoVault.toBase58());
 
       await program.methods
@@ -142,7 +135,7 @@ describe("basic test", () => {
         .rpc();
 
       // but modify (stake to) other user vault
-      const [userOneVault, __] = await findVaultPDA(user);
+      const [userOneVault, __] = await findVaultPDA(user, programId);
       await program.methods
         .stake()
         .accounts({
@@ -156,7 +149,7 @@ describe("basic test", () => {
       );
     } catch (error) {
       // targeted vault should stay zero
-      const [vault, _vaultBump] = await findVaultPDA(user);
+      const [vault, _vaultBump] = await findVaultPDA(user, programId);
       const vaultState = await program.account.vault.fetch(vault);
       assert.equal(vaultState.totalStaked.toNumber(), 0);
     }

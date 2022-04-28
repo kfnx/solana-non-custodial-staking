@@ -1,7 +1,6 @@
 import * as anchor from "@project-serum/anchor";
-import { clusterApiUrl, Connection, Keypair, ParsedAccountData, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, Keypair, ParsedAccountData, PublicKey } from "@solana/web3.js";
 import { getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
-import { NcStaking } from "../../target/types/nc_staking";
 import { assert } from "chai";
 import idl from "../../target/idl/nc_staking.json";
 /**

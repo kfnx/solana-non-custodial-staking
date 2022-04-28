@@ -3,9 +3,8 @@ use anchor_spl::token::{self, Approve, Mint, Token, TokenAccount};
 
 mod error;
 mod mpl;
-mod utils;
 
-declare_id!("stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E");
+declare_id!("213MTwSbPbBzi8jH7xJ5aFC56j6DCnsAaBHFz98NNe8s");
 
 const DELEGATE_PDA_SEED: &[u8] = b"delegate";
 
@@ -135,7 +134,7 @@ pub struct Freeze<'info> {
     edition: AccountInfo<'info>,
     mint: Account<'info, Mint>,           // mint address
     token_program: Program<'info, Token>, // constraint here to check token program is legit
-    token_metadata_program: Program<'info, utils::TokenMetadata>, // constraint here to check token metadata program is legit
+    token_metadata_program: Program<'info, mpl::TokenMetadata>, // constraint here to check token metadata program is legit
     system_program: Program<'info, System>,
 }
 
