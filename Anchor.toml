@@ -6,11 +6,10 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "/Users/kafin/.config/solana/id.json"
+wallet = "/Users/benson/.config/solana/id.json"
 
 [scripts]
-# test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/nc-staking.ts"
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/basic.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
