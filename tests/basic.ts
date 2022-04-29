@@ -23,13 +23,13 @@ describe("basic test", () => {
       .initStakingVault()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
@@ -41,7 +41,7 @@ describe("basic test", () => {
         .initStakingVault()
         .accounts({
           vault: vault,
-          owner: user.publicKey,
+          user: user.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
@@ -56,13 +56,13 @@ describe("basic test", () => {
       .stake()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 1);
   });
 
@@ -72,13 +72,13 @@ describe("basic test", () => {
       .unstake()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
@@ -96,7 +96,7 @@ describe("basic test", () => {
       .initStakingVault()
       .accounts({
         vault: anotherUserVault,
-        owner: userKeypair.publicKey,
+        user: userKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .signers([userKeypair])
@@ -104,7 +104,7 @@ describe("basic test", () => {
 
     const account = await program.account.vault.fetch(anotherUserVault);
 
-    assert.ok(account.owner.equals(userKeypair.publicKey));
+    assert.ok(account.user.equals(userKeypair.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
@@ -124,7 +124,7 @@ describe("basic test", () => {
         .initStakingVault()
         .accounts({
           vault: userTwoVault,
-          owner: userTwo.publicKey,
+          user: userTwo.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .signers([userTwo])
@@ -136,7 +136,7 @@ describe("basic test", () => {
         .stake()
         .accounts({
           vault: userOneVault,
-          owner: userTwo.publicKey,
+          user: userTwo.publicKey,
         })
         .rpc();
 
