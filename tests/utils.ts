@@ -2,10 +2,16 @@ import * as anchor from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
+export type User = {
+  keypair: anchor.web3.Keypair;
+  wallet: anchor.Wallet;
+  provider: anchor.AnchorProvider;
+};
+
 export async function createUser(
   provider: anchor.AnchorProvider,
   airdropBalance: number
-) {
+): Promise<User> {
   airdropBalance = airdropBalance ?? 10 * LAMPORTS_PER_SOL;
   let user = anchor.web3.Keypair.generate();
   let sig = await provider.connection.requestAirdrop(
@@ -22,7 +28,7 @@ export async function createUser(
   );
 
   return {
-    key: user,
+    keypair: user,
     wallet,
     provider: userProvider,
   };
