@@ -8,42 +8,40 @@ const { SystemProgram } = anchor.web3;
 
 describe("basic test", () => {
   const provider = anchor.AnchorProvider.env();
-  console.log("rpc endpoint", provider.connection.rpcEndpoint);
   anchor.setProvider(provider);
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const { programId } = program;
-  console.log("program id", programId.toBase58());
   const user = provider.wallet;
-  console.log("user", user.publicKey.toBase58());
+
+  console.log("rpc endpoint", provider.connection.rpcEndpoint);
+  console.log("program id", programId.toBase58());
 
   it("Creates staking account in a single atomic transaction (simplified)", async () => {
     const [vault, _vaultBump] = await findVaultPDA(user, programId);
-    console.log("vault", vault.toBase58());
 
     await program.methods
       .initStakingVault()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
   it("Cannot create same vault more than once", async () => {
     const [vault, _vaultBump] = await findVaultPDA(user, programId);
-    console.log("vault", vault.toBase58());
 
     try {
       await program.methods
         .initStakingVault()
         .accounts({
           vault: vault,
-          owner: user.publicKey,
+          user: user.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
@@ -58,13 +56,13 @@ describe("basic test", () => {
       .stake()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 1);
   });
 
@@ -74,13 +72,13 @@ describe("basic test", () => {
       .unstake()
       .accounts({
         vault: vault,
-        owner: user.publicKey,
+        user: user.publicKey,
       })
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.owner.equals(user.publicKey));
+    assert.ok(account.user.equals(user.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
@@ -98,7 +96,7 @@ describe("basic test", () => {
       .initStakingVault()
       .accounts({
         vault: anotherUserVault,
-        owner: userKeypair.publicKey,
+        user: userKeypair.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .signers([userKeypair])
@@ -106,13 +104,12 @@ describe("basic test", () => {
 
     const account = await program.account.vault.fetch(anotherUserVault);
 
-    assert.ok(account.owner.equals(userKeypair.publicKey));
+    assert.ok(account.user.equals(userKeypair.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
   it("User cannot modify other user vault", async () => {
     const userTwo = anchor.web3.Keypair.generate();
-    console.log("userTwo", userTwo.publicKey.toBase58());
     const airdropSig = await program.provider.connection.requestAirdrop(
       userTwo.publicKey,
       1000000000
@@ -122,13 +119,12 @@ describe("basic test", () => {
     try {
       // init his own vault
       const [userTwoVault, _] = await findVaultPDA(userTwo, programId);
-      console.log("userTwoVault", userTwoVault.toBase58());
 
       await program.methods
         .initStakingVault()
         .accounts({
           vault: userTwoVault,
-          owner: userTwo.publicKey,
+          user: userTwo.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .signers([userTwo])
@@ -140,7 +136,7 @@ describe("basic test", () => {
         .stake()
         .accounts({
           vault: userOneVault,
-          owner: userTwo.publicKey,
+          user: userTwo.publicKey,
         })
         .rpc();
 
@@ -158,8 +154,7 @@ describe("basic test", () => {
   it("Fetch all staking accounts", async () => {
     const allStakingAccounts = await program.account.vault.all();
 
-    // 2 staking account created from overall test
-    // user (env provided keypair) and anotherUser (generated keypair)
+    // 3 staking account created from overall test
     assert.equal(allStakingAccounts.length, 3);
   });
 });
