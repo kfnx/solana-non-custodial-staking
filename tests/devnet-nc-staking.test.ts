@@ -42,7 +42,6 @@ const markersNFT = {
 
 before((done) => {
   console.log("rpc endpoint", provider.connection.rpcEndpoint);
-  console.log("program id", program.programId.toBase58());
 
   // create user: Justin as NFT Owner UETQgtvJWRcMsqEqHtEBGyHHzDtebar3eWE79g4y2H6
   createUser(

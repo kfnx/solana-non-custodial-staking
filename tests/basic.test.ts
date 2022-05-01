@@ -7,27 +7,22 @@ import { findVaultPDA } from "./utils/pda";
 
 const { SystemProgram } = anchor.web3;
 
-const provider = anchor.AnchorProvider.env();
-anchor.setProvider(provider);
-const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-
 let justin: User;
 let markers: User;
 
 before((done) => {
-  console.log("rpc endpoint", provider.connection.rpcEndpoint);
-  console.log("program id", program.programId.toBase58());
-
-  createUser(provider).then((user) => {
+  createUser().then((user) => {
     justin = user;
-    createUser(provider).then((user) => {
+    createUser().then((user) => {
       markers = user;
       done();
     });
   });
 });
 
-describe("Good user Justin exist", () => {
+const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+
+describe("Good user Justin exist", async () => {
   it("User Created", () => {
     console.log("  address", justin.keypair.publicKey.toBase58());
   });

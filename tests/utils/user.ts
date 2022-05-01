@@ -8,12 +8,10 @@ export type User = {
 };
 
 export async function createUser(
-  provider: anchor.AnchorProvider,
-  keypair?: Keypair,
-  airdropBalance?: number
+  provider: anchor.AnchorProvider = anchor.AnchorProvider.env(),
+  keypair: Keypair = anchor.web3.Keypair.generate(),
+  airdropBalance: number = 1 * LAMPORTS_PER_SOL
 ): Promise<User> {
-  airdropBalance = airdropBalance ?? 1 * LAMPORTS_PER_SOL;
-  keypair ?? anchor.web3.Keypair.generate();
   let sig = await provider.connection.requestAirdrop(
     keypair.publicKey,
     airdropBalance
