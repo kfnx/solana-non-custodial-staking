@@ -1,6 +1,0 @@
-json_rpc_url: "https://api.devnet.solana.com"
-websocket_url: ""
-keypair_path: /home/benson/nc-staking/tests/keypairs/tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr.json
-address_labels:
-  "11111111111111111111111111111111": System Program
-commitment: confirmed

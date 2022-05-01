@@ -2,8 +2,8 @@ import { describe, before } from "mocha";
 import { assert } from "chai";
 import * as anchor from "@project-serum/anchor";
 import { NcStaking } from "../target/types/nc_staking";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { createUser, findVaultPDA, User } from "./utils";
+import { createUser, User } from "./utils/user";
+import { findVaultPDA } from "./utils/pda";
 
 const { SystemProgram } = anchor.web3;
 
@@ -11,26 +11,30 @@ const provider = anchor.AnchorProvider.env();
 anchor.setProvider(provider);
 const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
 
-console.log("rpc endpoint", provider.connection.rpcEndpoint);
-console.log("program id", program.programId.toBase58());
-
-let jhon: User;
+let justin: User;
 let markers: User;
 
 before((done) => {
-  createUser(provider, 1 * LAMPORTS_PER_SOL).then((user) => {
-    jhon = user;
-    createUser(provider, 1 * LAMPORTS_PER_SOL).then((user) => {
+  console.log("rpc endpoint", provider.connection.rpcEndpoint);
+  console.log("program id", program.programId.toBase58());
+
+  createUser(provider).then((user) => {
+    justin = user;
+    createUser(provider).then((user) => {
       markers = user;
       done();
     });
   });
 });
 
-describe("Good user Jhon exist", () => {
-  it("Jhon initate a staking vault", async () => {
+describe("Good user Justin exist", () => {
+  it("User Created", () => {
+    console.log("  address", justin.keypair.publicKey.toBase58());
+  });
+
+  it("Justin initate a staking vault", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
-      jhon.wallet,
+      justin.wallet,
       program.programId
     );
 
@@ -38,20 +42,20 @@ describe("Good user Jhon exist", () => {
       .initStakingVault()
       .accounts({
         vault: vault,
-        user: jhon.wallet.publicKey,
+        user: justin.wallet.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([jhon.keypair])
+      .signers([justin.keypair])
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
-    assert.ok(account.user.equals(jhon.wallet.publicKey));
+    assert.ok(account.user.equals(justin.wallet.publicKey));
     assert.ok(account.totalStaked.toNumber() === 0);
   });
 
-  it("Jhon cannot create vault more than once", async () => {
+  it("Justin cannot create vault more than once", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
-      jhon.wallet,
+      justin.wallet,
       program.programId
     );
 
@@ -60,19 +64,19 @@ describe("Good user Jhon exist", () => {
         .initStakingVault()
         .accounts({
           vault: vault,
-          user: jhon.wallet.publicKey,
+          user: justin.wallet.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .signers([jhon.keypair])
+        .signers([justin.keypair])
         .rpc();
 
       assert.fail("Cannot initiate same vault");
     } catch (error) {}
   });
 
-  it("Jhon stake one of his NFT", async () => {
+  it("Justin stake one of his NFT", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
-      jhon.wallet,
+      justin.wallet,
       program.programId
     );
 
@@ -80,20 +84,20 @@ describe("Good user Jhon exist", () => {
       .stake()
       .accounts({
         vault: vault,
-        user: jhon.wallet.publicKey,
+        user: justin.wallet.publicKey,
       })
-      .signers([jhon.keypair])
+      .signers([justin.keypair])
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.user.equals(jhon.wallet.publicKey));
+    assert.ok(account.user.equals(justin.wallet.publicKey));
     assert.ok(account.totalStaked.toNumber() === 1);
   });
 
-  it("Jhon stake another NFT (now 2)", async () => {
+  it("Justin stake another NFT (now 2)", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
-      jhon.wallet,
+      justin.wallet,
       program.programId
     );
 
@@ -101,39 +105,43 @@ describe("Good user Jhon exist", () => {
       .stake()
       .accounts({
         vault: vault,
-        user: jhon.wallet.publicKey,
+        user: justin.wallet.publicKey,
       })
-      .signers([jhon.keypair])
+      .signers([justin.keypair])
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.user.equals(jhon.wallet.publicKey));
+    assert.ok(account.user.equals(justin.wallet.publicKey));
     assert.ok(account.totalStaked.toNumber() === 2);
   });
 
-  it("Jhon unstake one of his NFT", async () => {
+  it("Justin unstake one of his NFT", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
-      jhon.wallet,
+      justin.wallet,
       program.programId
     );
     await program.methods
       .unstake()
       .accounts({
         vault: vault,
-        user: jhon.wallet.publicKey,
+        user: justin.wallet.publicKey,
       })
-      .signers([jhon.keypair])
+      .signers([justin.keypair])
       .rpc();
 
     const account = await program.account.vault.fetch(vault);
 
-    assert.ok(account.user.equals(jhon.wallet.publicKey));
+    assert.ok(account.user.equals(justin.wallet.publicKey));
     assert.ok(account.totalStaked.toNumber() === 1);
   });
 });
 
 describe("Bad user Markers try staking program", () => {
+  it("User Created", () => {
+    console.log("  address", markers.keypair.publicKey.toBase58());
+  });
+
   it("Markers initate a staking vault", async () => {
     const [vault, _vaultBump] = await findVaultPDA(
       markers.wallet,
@@ -174,7 +182,7 @@ describe("Bad user Markers try staking program", () => {
     } catch (error) {}
   });
 
-  it("Markers cannot modify Jhon vault", async () => {
+  it("Markers cannot modify Justin vault", async () => {
     try {
       const [markersVault, _] = await findVaultPDA(
         markers.wallet,
@@ -193,7 +201,7 @@ describe("Bad user Markers try staking program", () => {
 
       // but modify (stake to) other user vault
       const [userOneVault, __] = await findVaultPDA(
-        jhon.wallet,
+        justin.wallet,
         program.programId
       );
       await program.methods
@@ -210,7 +218,7 @@ describe("Bad user Markers try staking program", () => {
       );
     } catch (error) {
       const [jhonVault, _vaultBump] = await findVaultPDA(
-        jhon.wallet,
+        justin.wallet,
         program.programId
       );
       const vaultState = await program.account.vault.fetch(jhonVault);
@@ -220,7 +228,7 @@ describe("Bad user Markers try staking program", () => {
 });
 
 describe("Final program state", () => {
-  it("Fetch all 2 user (Jhon and Markers)", async () => {
+  it("Fetch all 2 user (Justin and Markers)", async () => {
     const allStakingAccounts = await program.account.vault.all();
 
     assert.equal(allStakingAccounts.length, 2);

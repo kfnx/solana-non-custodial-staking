@@ -1,6 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export type User = {
   keypair: anchor.web3.Keypair;
@@ -10,17 +9,18 @@ export type User = {
 
 export async function createUser(
   provider: anchor.AnchorProvider,
-  airdropBalance: number
+  keypair?: Keypair,
+  airdropBalance?: number
 ): Promise<User> {
-  airdropBalance = airdropBalance ?? 10 * LAMPORTS_PER_SOL;
-  let user = anchor.web3.Keypair.generate();
+  airdropBalance = airdropBalance ?? 1 * LAMPORTS_PER_SOL;
+  keypair ?? anchor.web3.Keypair.generate();
   let sig = await provider.connection.requestAirdrop(
-    user.publicKey,
+    keypair.publicKey,
     airdropBalance
   );
   await provider.connection.confirmTransaction(sig);
 
-  let wallet = new anchor.Wallet(user);
+  let wallet = new anchor.Wallet(keypair);
   let userProvider = new anchor.AnchorProvider(
     provider.connection,
     wallet,
@@ -28,7 +28,7 @@ export async function createUser(
   );
 
   return {
-    keypair: user,
+    keypair,
     wallet,
     provider: userProvider,
   };
@@ -41,7 +41,7 @@ export function createUsers(
 ) {
   let promises = [];
   for (let i = 0; i < numUsers; i++) {
-    promises.push(createUser(provider, airdropBalance));
+    promises.push(createUser(provider, undefined, airdropBalance));
   }
 
   return Promise.all(promises);
@@ -52,22 +52,4 @@ export function programForUser(
   user: { provider: anchor.Provider }
 ) {
   return new anchor.Program(program.idl, program.programId, user.provider);
-}
-
-export async function pause(ms: number) {
-  await new Promise((response) =>
-    setTimeout(() => {
-      response(0);
-    }, ms)
-  );
-}
-
-export async function findVaultPDA(
-  user: Wallet | anchor.web3.Keypair,
-  programId: anchor.web3.PublicKey
-) {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from("vault"), user.publicKey.toBytes()],
-    programId
-  );
 }
