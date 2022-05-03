@@ -12,40 +12,16 @@ import {
   transfer,
 } from "@solana/spl-token";
 import { assert } from "chai";
-import { createUser, programForUser, User } from "./utils/user";
-import { METADATA_PROGRAM_ID } from "./utils/program-id";
+import idl from "../target/idl/nc_staking.json";
+import { TOKEN_METADATA_PROGRAM_ID } from "./utils/program-id";
+import { airdropUser, createUser } from "./utils/user";
 import { findDelegateAuthPDA } from "./utils/pda";
 import { NcStaking } from "../target/types/nc_staking";
 
-const connection = new Connection(clusterApiUrl("devnet"));
-const provider = new anchor.AnchorProvider(
-  connection,
-  anchor.AnchorProvider.local().wallet,
-  {
-    commitment: "confirmed",
-  }
-);
-const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-
-let justin: User;
-const justinNFT = {
-  mint: new PublicKey("AiFWNmitWNXQr3EazPDJWcAfEvU8KnPf69WAS6F6iFG7"),
-  tokenAccount: new PublicKey("BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs"),
-  edition: new PublicKey("3Bff77s3HqbDa8WEcneMRF1NeUPhHVBPdFYd5g1upuRo"),
-};
-
-let markers: User;
-// markers dont own NFT at first
-const markersNFT = {
-  tokenAccount: new PublicKey("FdTMiWD7FAXhNmewHUSahAok896mtJfDRuSR4u1LsNsm"),
-};
-
-before((done) => {
-  console.log("rpc endpoint", provider.connection.rpcEndpoint);
-
-  // create user: Justin as NFT Owner UETQgtvJWRcMsqEqHtEBGyHHzDtebar3eWE79g4y2H6
-  createUser(
-    provider,
+describe("Non custodial staking", () => {
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+  const justin = createUser(
+    connection,
     Keypair.fromSecretKey(
       Uint8Array.from([
         244, 32, 132, 254, 83, 48, 171, 241, 44, 221, 83, 7, 75, 133, 215, 247,
@@ -55,55 +31,95 @@ before((done) => {
         224, 25,
       ])
     )
-  ).then((user) => {
-    justin = user;
+  );
+  const markers = createUser(
+    connection,
+    Keypair.fromSecretKey(
+      Uint8Array.from([
+        206, 215, 218, 86, 77, 204, 200, 3, 111, 91, 3, 5, 115, 142, 94, 232,
+        178, 52, 125, 100, 97, 2, 219, 114, 212, 31, 160, 213, 89, 216, 92, 116,
+        13, 45, 103, 206, 98, 224, 169, 15, 32, 116, 107, 194, 63, 241, 33, 247,
+        230, 251, 1, 145, 140, 73, 115, 124, 212, 106, 229, 74, 133, 109, 173,
+        79,
+      ])
+    )
+  );
+  const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+  const justinProgram = new anchor.Program(
+    <anchor.Idl>idl,
+    program.programId,
+    justin.provider
+  );
+  const markersProgram = new anchor.Program(
+    <anchor.Idl>idl,
+    program.programId,
+    markers.provider
+  );
 
-    // create user: Markers as Villain NFT exploiter tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr
-    createUser(
-      provider,
-      Keypair.fromSecretKey(
-        Uint8Array.from([
-          206, 215, 218, 86, 77, 204, 200, 3, 111, 91, 3, 5, 115, 142, 94, 232,
-          178, 52, 125, 100, 97, 2, 219, 114, 212, 31, 160, 213, 89, 216, 92,
-          116, 13, 45, 103, 206, 98, 224, 169, 15, 32, 116, 107, 194, 63, 241,
-          33, 247, 230, 251, 1, 145, 140, 73, 115, 124, 212, 106, 229, 74, 133,
-          109, 173, 79,
-        ])
-      )
-    ).then((user) => {
-      markers = user;
+  let justinNFT = {
+    mint: new PublicKey("AiFWNmitWNXQr3EazPDJWcAfEvU8KnPf69WAS6F6iFG7"),
+    ata: null,
+    edition: new PublicKey("3Bff77s3HqbDa8WEcneMRF1NeUPhHVBPdFYd5g1upuRo"),
+  };
 
-      done();
-    });
-  });
-});
+  it("Set initial state", async () => {
+    await airdropUser(justin.wallet.publicKey);
+    await airdropUser(markers.wallet.publicKey);
 
-describe("Staking Unstaking lifecyle", () => {
-  it("Users", () => {
-    console.log("  Justin", justin.keypair.publicKey.toBase58());
+    const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
+      justin.wallet.publicKey,
+      {
+        mint: justinNFT.mint,
+      }
+    );
+    const tokenAccount = getTokenAccount.value[0].pubkey;
+    justinNFT.ata = tokenAccount;
+
+    const ataInfo = await connection.getParsedAccountInfo(tokenAccount);
+    const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+    if (parsed.info.state === "frozen") {
+      const [delegate] = await findDelegateAuthPDA(
+        justinNFT.ata,
+        program.programId
+      );
+
+      await justinProgram.methods
+        .thaw()
+        .accounts({
+          user: justin.wallet.publicKey,
+          mint: justinNFT.mint,
+          tokenAccount: justinNFT.ata,
+          edition: justinNFT.edition,
+          delegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        })
+        .rpc();
+    }
+
+    console.log("  Justin address", justin.wallet.publicKey.toBase58());
     console.log("  Justin NFT mint", justinNFT.mint.toBase58());
-    console.log("  Justin NFT token acc", justinNFT.tokenAccount.toBase58());
-    console.log("  Markers", markers.keypair.publicKey.toBase58());
+    console.log("  Justin NFT ata", justinNFT.ata.toBase58());
+    console.log("  Justin NFT edition", justinNFT.edition.toBase58());
+    console.log("  Markers address", markers.wallet.publicKey.toBase58());
   });
 
   it("Markers should not be able to stake/freeze Justin NFT", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const markersCall = programForUser(program, markers);
-
     try {
-      await markersCall.methods
+      await markersProgram.methods
         .freeze()
         .accounts({
           user: markers.wallet.publicKey,
-          tokenAccount: justinNFT.tokenAccount,
-          delegateAuth,
-          tokenProgram: TOKEN_PROGRAM_ID,
           mint: justinNFT.mint,
-          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenAccount: justinNFT.ata,
           edition: justinNFT.edition,
+          delegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .rpc();
     } catch (error) {
@@ -116,23 +132,21 @@ describe("Staking Unstaking lifecyle", () => {
   });
 
   it("Markers should not be able to stake/freeze Justin NFT even if he use Justin address", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const markersCall = programForUser(program, markers);
-
     try {
-      await markersCall.methods
+      await markersProgram.methods
         .freeze()
         .accounts({
           user: justin.wallet.publicKey,
-          tokenAccount: justinNFT.tokenAccount,
-          delegateAuth,
-          tokenProgram: TOKEN_PROGRAM_ID,
           mint: justinNFT.mint,
-          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenAccount: justinNFT.ata,
+          delegate,
           edition: justinNFT.edition,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .rpc();
     } catch (error) {
@@ -142,29 +156,25 @@ describe("Staking Unstaking lifecyle", () => {
   });
 
   it("Justin can stake/freeze his own NFT", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const justinCall = programForUser(program, justin);
-
-    const tx = await justinCall.methods
+    const tx = await justinProgram.methods
       .freeze()
       .accounts({
         user: justin.wallet.publicKey,
-        tokenAccount: justinNFT.tokenAccount,
-        delegateAuth,
-        tokenProgram: TOKEN_PROGRAM_ID,
         mint: justinNFT.mint,
-        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        tokenAccount: justinNFT.ata,
         edition: justinNFT.edition,
+        delegate,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
       })
       .rpc();
 
-    console.log("  Freeze transaction signature", tx);
-    const ataInfo = await connection.getParsedAccountInfo(
-      justinNFT.tokenAccount
-    );
+    console.log("Freeze transaction signature", tx);
+    const ataInfo = await connection.getParsedAccountInfo(justinNFT.ata);
     const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
     assert.equal(parsed.info.state, "frozen");
   });
@@ -176,12 +186,11 @@ describe("Staking Unstaking lifecyle", () => {
       justinNFT.mint,
       markers.wallet.publicKey
     );
-
     try {
       await transfer(
         connection,
         justin.wallet.payer,
-        justinNFT.tokenAccount,
+        justinNFT.ata,
         toTokenAccount.address,
         justin.wallet.publicKey,
         1
@@ -190,7 +199,7 @@ describe("Staking Unstaking lifecyle", () => {
       assert.equal(
         error.message,
         "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x11"
-      ); // frozen
+      );
       return;
     }
 
@@ -198,23 +207,21 @@ describe("Staking Unstaking lifecyle", () => {
   });
 
   it("Markers cannot unstake/thaw Justin NFT", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const markersCall = programForUser(program, markers);
-
     try {
-      await markersCall.methods
+      await markersProgram.methods
         .freeze()
         .accounts({
           user: markers.wallet.publicKey,
-          tokenAccount: justinNFT.tokenAccount,
-          delegateAuth,
-          tokenProgram: TOKEN_PROGRAM_ID,
           mint: justinNFT.mint,
-          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenAccount: justinNFT.ata,
           edition: justinNFT.edition,
+          delegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .rpc();
     } catch (error) {
@@ -225,25 +232,22 @@ describe("Staking Unstaking lifecyle", () => {
       return;
     }
   });
-
   it("Markers cannot unstake/thaw Justin NFT even if he use Justin address", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const markersCall = programForUser(program, markers);
-
     try {
-      await markersCall.methods
+      await markersProgram.methods
         .freeze()
         .accounts({
           user: justin.wallet.publicKey,
-          tokenAccount: justinNFT.tokenAccount,
-          delegateAuth,
-          tokenProgram: TOKEN_PROGRAM_ID,
           mint: justinNFT.mint,
-          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenAccount: justinNFT.ata,
           edition: justinNFT.edition,
+          delegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .rpc();
     } catch (error) {
@@ -253,36 +257,32 @@ describe("Staking Unstaking lifecyle", () => {
   });
 
   it("Justin can unstake/thaw his own NFT", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const justinCall = programForUser(program, justin);
-
-    const tx = await justinCall.methods
+    const tx = await justinProgram.methods
       .thaw()
       .accounts({
         user: justin.wallet.publicKey,
-        tokenAccount: justinNFT.tokenAccount,
-        delegateAuth,
-        tokenProgram: TOKEN_PROGRAM_ID,
         mint: justinNFT.mint,
-        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        tokenAccount: justinNFT.ata,
+        delegate,
         edition: justinNFT.edition,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
       })
       .rpc();
-    console.log("  Thaw transaction signature", tx);
+    console.log("Thaw transaction signature", tx);
 
-    const ataInfo = await connection.getParsedAccountInfo(
-      justinNFT.tokenAccount
-    );
+    const ataInfo = await connection.getParsedAccountInfo(justinNFT.ata);
     const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
     assert.notEqual(parsed.info.state, "frozen");
   });
 
   // transfer to kp2
   // Get the token account of the toWallet address, and if it does not exist, create it
-  it("Justin transfered his NFT to Markers while its not staked/frozen", async () => {
+  it("Justin can transfer his NFT to Markers while its not staked/frozen", async () => {
     const toTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection,
       justin.wallet.payer,
@@ -293,7 +293,7 @@ describe("Staking Unstaking lifecyle", () => {
     await transfer(
       connection,
       justin.wallet.payer,
-      justinNFT.tokenAccount,
+      justinNFT.ata,
       toTokenAccount.address,
       justin.wallet.publicKey,
       1
@@ -301,22 +301,20 @@ describe("Staking Unstaking lifecyle", () => {
   });
 
   it("Justin cannot stake his NFT anymore because he transferred it to Markers previously", async () => {
-    const [delegateAuth] = await findDelegateAuthPDA(
-      justinNFT.tokenAccount,
+    const [delegate] = await findDelegateAuthPDA(
+      justinNFT.ata,
       program.programId
     );
-    const justinCall = programForUser(program, justin);
-
     try {
-      await justinCall.methods
+      await justinProgram.methods
         .freeze()
         .accounts({
           user: justin.wallet.publicKey,
-          tokenAccount: justinNFT.tokenAccount,
-          delegateAuth,
+          tokenAccount: justinNFT.ata,
+          delegate,
           tokenProgram: TOKEN_PROGRAM_ID,
           mint: justinNFT.mint,
-          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           edition: justinNFT.edition,
         })
         .rpc();
@@ -324,7 +322,7 @@ describe("Staking Unstaking lifecyle", () => {
       assert.equal(
         error.message,
         "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x20"
-      ); // cannot freeze `Not enough tokens to mint a limited edition`
+      ); // cannot freeze `Not enough tokens to mint a limited edition: justinNFT.edition`
       return;
     }
 
@@ -334,17 +332,23 @@ describe("Staking Unstaking lifecyle", () => {
   // transfer to kp1
   // Get the token account of the toWallet address, and if it does not exist, create it
   it("Testing finished, Markers send the NFT back to Justin", async () => {
+    const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
+      markers.wallet.publicKey,
+      {
+        mint: justinNFT.mint,
+      }
+    );
+    const fromTokenAccount = getTokenAccount.value[0].pubkey;
     const toTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection,
       markers.wallet.payer,
       justinNFT.mint,
       justin.wallet.publicKey
     );
-
     await transfer(
       connection,
       markers.wallet.payer,
-      markersNFT.tokenAccount,
+      fromTokenAccount,
       toTokenAccount.address,
       markers.wallet.publicKey,
       1

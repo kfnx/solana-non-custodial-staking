@@ -17,7 +17,7 @@ pub struct Thaw<'info> {
         bump
     )]
     /// CHECK: PDA
-    delegate_auth: AccountInfo<'info>,
+    delegate: AccountInfo<'info>,
     /// CHECK: PDA for metaplex; also freeze auth
     edition: AccountInfo<'info>,
     mint: Account<'info, Mint>,           // mint address
@@ -42,7 +42,7 @@ pub fn handler(ctx: Context<Thaw>) -> Result<()> {
     // use pda to thaw
     let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_accounts = mpl::FreezeDelegatedAccount {
-        delegate: ctx.accounts.delegate_auth.clone(),
+        delegate: ctx.accounts.delegate.clone(),
         token_account: ctx.accounts.token_account.clone(),
         edition: ctx.accounts.edition.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),

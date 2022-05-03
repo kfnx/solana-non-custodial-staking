@@ -17,7 +17,7 @@ pub struct Freeze<'info> {
         bump
     )]
     /// CHECK: PDA
-    delegate_auth: AccountInfo<'info>,
+    delegate: AccountInfo<'info>,
     /// CHECK: PDA for metaplex; also freeze auth
     edition: AccountInfo<'info>,
     mint: Account<'info, Mint>,           // mint address
@@ -31,16 +31,17 @@ pub fn handler(ctx: Context<Freeze>) -> Result<()> {
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_accounts = Approve {
         to: ctx.accounts.token_account.to_account_info(),
-        delegate: ctx.accounts.delegate_auth.clone(),
+        delegate: ctx.accounts.delegate.clone(),
         authority: ctx.accounts.user.to_account_info(),
     };
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     token::approve(cpi_ctx, 1)?;
+    msg!("Approve token delegate with key {}", ctx.accounts.delegate.key());
 
     // use pda to freeze
     let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_accounts = mpl::FreezeDelegatedAccount {
-        delegate: ctx.accounts.delegate_auth.clone(),
+        delegate: ctx.accounts.delegate.clone(),
         token_account: ctx.accounts.token_account.clone(),
         edition: ctx.accounts.edition.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),

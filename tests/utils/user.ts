@@ -1,45 +1,52 @@
 import * as anchor from "@project-serum/anchor";
-import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-export type User = {
+export interface User {
   keypair: anchor.web3.Keypair;
   wallet: anchor.Wallet;
   provider: anchor.AnchorProvider;
-};
+}
 
-export async function createUser(
-  provider: anchor.AnchorProvider = anchor.AnchorProvider.env(),
+export function createUser(
+  connection: Connection = anchor.AnchorProvider.env().connection,
   keypair: Keypair = anchor.web3.Keypair.generate(),
-  airdropBalance: number = 1 * LAMPORTS_PER_SOL
-): Promise<User> {
-  let sig = await provider.connection.requestAirdrop(
-    keypair.publicKey,
-    airdropBalance
-  );
-  await provider.connection.confirmTransaction(sig);
-
+  providerOpts = anchor.AnchorProvider.defaultOptions()
+): User {
   let wallet = new anchor.Wallet(keypair);
-  let userProvider = new anchor.AnchorProvider(
-    provider.connection,
-    wallet,
-    provider.opts
-  );
+  let provider = new anchor.AnchorProvider(connection, wallet, providerOpts);
 
   return {
     keypair,
     wallet,
-    provider: userProvider,
+    provider,
   };
 }
 
-export function createUsers(
-  provider: anchor.AnchorProvider,
+export async function airdropUser(
+  publicKey: anchor.web3.PublicKey,
+  connection: Connection = anchor.AnchorProvider.env().connection,
+  airdropBalance: number = 1 * LAMPORTS_PER_SOL
+): Promise<void> {
+  let sig = await connection.requestAirdrop(publicKey, airdropBalance);
+  await connection.confirmTransaction(sig);
+}
+
+export function createUsers(connection: Connection, numUsers: number) {
+  for (let i = 0; i < numUsers; i++) {
+    createUser(connection, undefined);
+  }
+}
+
+export function createUsersWithAirdrop(
+  connection: Connection,
   airdropBalance = 1 * LAMPORTS_PER_SOL,
   numUsers: number
 ) {
   let promises = [];
   for (let i = 0; i < numUsers; i++) {
-    promises.push(createUser(provider, undefined, airdropBalance));
+    const user = createUser(connection, null);
+    const tx = airdropUser(user.keypair.publicKey, connection, airdropBalance);
+    promises.push(tx);
   }
 
   return Promise.all(promises);
