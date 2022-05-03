@@ -9,3 +9,5 @@ secrets.sh
 .env
 *.original
 keypair/
+.coderrect
+soteria-linux-develop
