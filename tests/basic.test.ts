@@ -80,8 +80,10 @@ describe("Basic user journey", () => {
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.ok(account.totalStaked.toNumber() === 1);
     });
-
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    
     it("Justin stake another NFT (now 2)", async () => {
+      await delay(1000);
       const [vault, _vaultBump] = await findVaultPDA(
         justin.wallet,
         program.programId
