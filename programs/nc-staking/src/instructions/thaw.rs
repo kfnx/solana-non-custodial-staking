@@ -31,25 +31,23 @@ pub fn handler(ctx: Context<Thaw>) -> Result<()> {
         b"delegate",
         ctx.accounts.token_account.to_account_info().key.as_ref(),
     ];
-    let (_, bump) = Pubkey::find_program_address(&seeds, &ctx.program_id);
+    let (_, bump) = Pubkey::find_program_address(&seeds, ctx.program_id);
 
     let auth_seeds = [
         b"delegate",
         ctx.accounts.token_account.to_account_info().key.as_ref(),
         &[bump],
     ];
-    let signer = &[&auth_seeds[..]];
-    // use pda to thaw
-    let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
-    let cpi_accounts = mpl::FreezeDelegatedAccount {
+    let cpi_accounts = mpl::FreezeOrThawDelegatedAccount {
         delegate: ctx.accounts.delegate.clone(),
         token_account: ctx.accounts.token_account.clone(),
         edition: ctx.accounts.edition.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
+        token_metadata_program: ctx.accounts.token_metadata_program.clone()
     };
-    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-    mpl::thaw_delegated_account(cpi_ctx)?;
-    msg!("instruction handler: Freeze");
+
+    cpi_accounts.freeze_or_thaw(false,&auth_seeds)?;
+    msg!("instruction handler: Thaw");
     Ok(())
 }

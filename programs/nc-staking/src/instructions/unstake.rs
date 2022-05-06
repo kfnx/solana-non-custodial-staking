@@ -18,7 +18,7 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if vault.total_staked < 1 {
         return Err(error::ErrorCode::EmptyVault.into());
     }
-    vault.total_staked = vault.total_staked - 1;
+    vault.total_staked = vault.total_staked.checked_sub(1).unwrap();
     msg!("instruction handler: Unstake");
     Ok(())
 }

@@ -15,7 +15,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     if vault.user != user {
         return Err(error::ErrorCode::InvalidVaultOwner.into());
     }
-    vault.total_staked = vault.total_staked + 1;
+    vault.total_staked = vault.total_staked.checked_add(1).unwrap();
     msg!("instruction handler: Stake");
     Ok(())
 }
