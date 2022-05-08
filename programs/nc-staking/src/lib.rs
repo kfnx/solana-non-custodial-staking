@@ -31,4 +31,12 @@ pub mod nc_staking {
     pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
         instructions::unstake::handler(ctx)
     }
+
+    pub fn claim(ctx: Context<ClaimStakingReward>) -> Result<()> {
+        instructions::claim::handler(ctx)
+    }
+
+    pub fn transfer_wrapper(ctx: Context<TransferWrapper>, amount: u64) -> Result<()> {
+        instructions::transfer_wrapper::handler(ctx, amount)
+    }
 }

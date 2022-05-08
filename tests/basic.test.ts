@@ -1,11 +1,8 @@
-import { describe, before } from "mocha";
 import { assert } from "chai";
 import * as anchor from "@project-serum/anchor";
 import { NcStaking } from "../target/types/nc_staking";
 import { airdropUser, createUser, User } from "./utils/user";
 import { findVaultPDA } from "./utils/pda";
-
-const { SystemProgram } = anchor.web3;
 
 describe("Basic user journey", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
@@ -29,7 +26,6 @@ describe("Basic user journey", () => {
         .accounts({
           vault: vault,
           user: justin.wallet.publicKey,
-          systemProgram: SystemProgram.programId,
         })
         .signers([justin.keypair])
         .rpc();
@@ -51,7 +47,6 @@ describe("Basic user journey", () => {
           .accounts({
             vault: vault,
             user: justin.wallet.publicKey,
-            systemProgram: SystemProgram.programId,
           })
           .signers([justin.keypair])
           .rpc();
@@ -80,8 +75,8 @@ describe("Basic user journey", () => {
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.ok(account.totalStaked.toNumber() === 1);
     });
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     it("Justin stake another NFT (now 2)", async () => {
       await delay(1000);
       const [vault, _vaultBump] = await findVaultPDA(
@@ -142,7 +137,6 @@ describe("Basic user journey", () => {
         .accounts({
           vault: vault,
           user: markers.wallet.publicKey,
-          systemProgram: SystemProgram.programId,
         })
         .signers([markers.keypair])
         .rpc();
@@ -186,7 +180,6 @@ describe("Basic user journey", () => {
           .accounts({
             vault: markersVault,
             user: markers.wallet.publicKey,
-            systemProgram: SystemProgram.programId,
           })
           .signers([markers.keypair])
           .rpc();

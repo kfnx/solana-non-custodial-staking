@@ -7,6 +7,13 @@ export interface User {
   provider: anchor.AnchorProvider;
 }
 
+/**
+ * executing createUser() with empty args will create a new User with keypair, anchor wallet and provider object
+ * @param connection
+ * @param keypair
+ * @param providerOpts
+ * @returns
+ */
 export function createUser(
   connection: Connection = anchor.AnchorProvider.env().connection,
   keypair: Keypair = anchor.web3.Keypair.generate(),
@@ -57,4 +64,43 @@ export function programForUser(
   user: { provider: anchor.Provider }
 ) {
   return new anchor.Program(program.idl, program.programId, user.provider);
+}
+
+export async function userToken(
+  connection: Connection,
+  publicKey: anchor.web3.PublicKey,
+  mint: anchor.web3.PublicKey
+): Promise<[anchor.web3.PublicKey, number]> {
+  try {
+    const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
+      publicKey,
+      {
+        mint,
+      }
+    );
+
+    const account = getTokenAccount.value[0].pubkey;
+    // const info = getTokenAccount.value[0].account.data.parsed.info
+    const balance =
+      getTokenAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+
+    return [account, balance];
+  } catch (error) {
+    console.error(error);
+    return [null, null];
+  }
+}
+
+export async function getTokenBalance(
+  connection: Connection,
+  publicKey: anchor.web3.PublicKey,
+  mint: anchor.web3.PublicKey
+): Promise<number> {
+  const tokenAccount = await connection.getParsedTokenAccountsByOwner(
+    publicKey,
+    {
+      mint,
+    }
+  );
+  return tokenAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount;
 }
