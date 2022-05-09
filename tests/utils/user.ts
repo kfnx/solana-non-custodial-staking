@@ -1,4 +1,10 @@
 import * as anchor from "@project-serum/anchor";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export interface User {
@@ -91,16 +97,22 @@ export async function userToken(
   }
 }
 
-export async function getTokenBalance(
+export async function getTokenBalanceByATA(
   connection: Connection,
-  publicKey: anchor.web3.PublicKey,
-  mint: anchor.web3.PublicKey
+  ata: anchor.web3.PublicKey
 ): Promise<number> {
-  const tokenAccount = await connection.getParsedTokenAccountsByOwner(
-    publicKey,
-    {
-      mint,
-    }
+  return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
+}
+
+export async function findUserATA(
+  user: anchor.web3.PublicKey,
+  mint: anchor.web3.PublicKey
+): Promise<anchor.web3.PublicKey> {
+  return getAssociatedTokenAddress(
+    mint,
+    user,
+    false,
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
   );
-  return tokenAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount;
 }

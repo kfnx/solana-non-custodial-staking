@@ -16,6 +16,10 @@ pub mod nc_staking {
         instructions::init_staking_vault::handler(ctx)
     }
 
+    pub fn init_staking_config(ctx: Context<InitStakingConfig>, bump: u8) -> Result<()> {
+        instructions::init_staking_config::handler(ctx, bump)
+    }
+
     pub fn freeze(ctx: Context<Freeze>) -> Result<()> {
         instructions::freeze::handler(ctx)
     }
@@ -32,7 +36,7 @@ pub mod nc_staking {
         instructions::unstake::handler(ctx)
     }
 
-    pub fn claim(ctx: Context<ClaimStakingReward>) -> Result<()> {
+    pub fn claim(ctx: Context<ClaimStakingReward>, _bump_config_auth: u8, _bump_reward_pot: u8) -> Result<()> {
         instructions::claim::handler(ctx)
     }
 

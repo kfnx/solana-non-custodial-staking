@@ -23,9 +23,9 @@ describe("token-cpi", () => {
   const program = anchor.workspace.NcStaking as Program<NcStaking>;
   //   const provider = anchor.AnchorProvider.env();
 
-  const user = createUser();
-  const provider = user.provider;
-  const userProgram = programForUser(program, user);
+  const admin = createUser();
+  const provider = admin.provider;
+  const userProgram = programForUser(program, admin);
   const tokenAuth = Keypair.generate();
   const mint = Keypair.generate();
   const sender = Keypair.generate();
@@ -51,7 +51,7 @@ describe("token-cpi", () => {
       10 * LAMPORTS_PER_SOL
     );
     await airdropUser(
-      user.wallet.publicKey,
+      admin.wallet.publicKey,
       provider.connection,
       10 * LAMPORTS_PER_SOL
     );
@@ -59,13 +59,13 @@ describe("token-cpi", () => {
 
   it("setup mints and token accounts", async () => {
     const create_mint_tx = new Transaction({
-      feePayer: user.wallet.publicKey,
+      feePayer: admin.wallet.publicKey,
     });
 
     // ! #1
     create_mint_tx.add(
       SystemProgram.createAccount({
-        fromPubkey: sender.publicKey,
+        fromPubkey: admin.wallet.publicKey,
         newAccountPubkey: mint.publicKey,
         space: MintLayout.span,
         lamports: await getMinimumBalanceForRentExemptMint(provider.connection),
@@ -76,17 +76,13 @@ describe("token-cpi", () => {
       createInitializeMintInstruction(
         mint.publicKey, // mint pubkey
         0, // decimals
-        sender.publicKey, // mint authority
-        sender.publicKey, // freeze authority (if you don't need it, you can set `null`)
+        admin.wallet.publicKey, // mint authority
+        null, // freeze authority (if you don't need it, you can set `null`)
         TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
       )
     );
-    // console.log("create_mint_tx", create_mint_tx)
-    // console.log("create_mint_tx.instructions[0]", create_mint_tx.instructions[0]);
-    // provider.wallet.signTransaction()
-
     const create_mint_tx_sig = await provider.sendAndConfirm(create_mint_tx, [
-      sender,
+      admin.keypair,
       mint,
     ]);
     console.log("create_mint_tx_sig", create_mint_tx_sig);
@@ -160,21 +156,16 @@ describe("token-cpi", () => {
       createMintToInstruction(
         mint.publicKey, // mint
         sender_token.publicKey, // receiver (sholud be a token account)
-        sender.publicKey, // mint authority
+        admin.wallet.publicKey, // mint authority
         2e6, // amount. if your decimals is 8, you mint 10^8 for 1 token.
         [], // only multisig account will use. leave it empty now.
         TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
       )
     );
 
-    mint_tokens_to_sender_tx.instructions[0].keys.map(
-      (key) => key.isSigner && console.log(key.pubkey.toBase58())
-    );
-    // console.log("mint_tokens_to_sender_tx", )
-
     const mint_tokens_to_sender_tx_sig = await provider.sendAndConfirm(
       mint_tokens_to_sender_tx,
-      [sender]
+      [admin.keypair]
     );
     console.log("mint_tokens_to_sender_tx_sig", mint_tokens_to_sender_tx_sig);
 
@@ -187,22 +178,6 @@ describe("token-cpi", () => {
 
   it("transfter wrapper", async () => {
     const amount = new anchor.BN(1e6);
-
-    // await program.methods
-    // .claim()
-    // .accounts({
-    //   user: sender.publicKey,
-    //   rewardFromAta: senderTokenAccount,
-    //   rewardToAta: receiverTokenAccount,
-
-    //   // programs
-    //   tokenProgram: TOKEN_PROGRAM_ID,
-    //   associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    //   systemProgram: anchor.web3.SystemProgram.programId,
-    //   rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    // })
-    // .signers([sender])
-    // ();
 
     await program.methods
       .transferWrapper(amount)
@@ -217,11 +192,16 @@ describe("token-cpi", () => {
       .rpc();
     console.log(
       "sender token balance: ",
-      await provider.connection.getTokenAccountBalance(sender_token.publicKey)
+      (await provider.connection.getTokenAccountBalance(sender_token.publicKey))
+        .value
     );
     console.log(
       "receiver token balance: ",
-      await provider.connection.getTokenAccountBalance(receiver_token.publicKey)
+      (
+        await provider.connection.getTokenAccountBalance(
+          receiver_token.publicKey
+        )
+      ).value
     );
   });
 });

@@ -1,4 +1,9 @@
 import * as anchor from "@project-serum/anchor";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 
 export const findVaultPDA = async (
@@ -17,6 +22,24 @@ export const findDelegateAuthPDA = async (
 ) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
+    programId
+  );
+};
+
+export const findConfigAuthorityPDA = async (
+  config: PublicKey,
+  programId: PublicKey
+) => {
+  return PublicKey.findProgramAddress([config.toBytes()], programId);
+};
+
+export const findRewardPotPDA = (
+  config: PublicKey,
+  rewardMint: PublicKey,
+  programId: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
     programId
   );
 };
