@@ -1,5 +1,4 @@
 import * as anchor from "@project-serum/anchor";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
