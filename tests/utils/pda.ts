@@ -1,12 +1,11 @@
-import * as anchor from "@project-serum/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
-export const findVaultPDA = async (
-  user: anchor.Wallet | Keypair,
+export const findUserStatePDA = async (
+  user: PublicKey,
   programId: PublicKey
 ) => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from("vault"), user.publicKey.toBytes()],
+    [Buffer.from("user_state"), user.toBytes()],
     programId
   );
 };
@@ -17,6 +16,27 @@ export const findDelegateAuthPDA = async (
 ) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
+    programId
+  );
+};
+
+export const findConfigAuthorityPDA = async (
+  config: PublicKey,
+  programId: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [Buffer.from("config"), config.toBytes()],
+    programId
+  );
+};
+
+export const findRewardPotPDA = (
+  config: PublicKey,
+  rewardMint: PublicKey,
+  programId: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
     programId
   );
 };

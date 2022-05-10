@@ -1,5 +1,5 @@
-pub mod program_state;
-pub mod vault;
+pub mod staking_config;
+pub mod user;
 
-pub use program_state::*;
-pub use vault::*;
+pub use staking_config::*;
+pub use user::*;
