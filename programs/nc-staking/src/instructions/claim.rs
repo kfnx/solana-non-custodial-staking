@@ -13,7 +13,7 @@ pub struct ClaimStakingReward<'info> {
     #[account(mut, has_one = config_authority)]
     pub config: Account<'info, StakingConfig>,
     /// CHECK:
-    #[account(seeds = [config.key().as_ref()], bump = bump_config_auth)]
+    #[account(seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
     pub config_authority: AccountInfo<'info>,
     #[account(mut)]
     pub user_state: Account<'info, User>,

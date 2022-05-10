@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(bump_auth: u8)]
+#[instruction(bump_config_auth: u8)]
 pub struct InitStakingConfig<'info> {
   #[account(mut)]
   pub admin: Signer<'info>,
@@ -14,7 +14,7 @@ pub struct InitStakingConfig<'info> {
   )]
   pub config: Account<'info, StakingConfig>,
   /// CHECK:
-  #[account(mut, seeds = [config.key().as_ref()], bump = bump_auth)]
+  #[account(mut, seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
   pub config_authority: AccountInfo<'info>,
   #[account(
     init,
@@ -33,15 +33,14 @@ pub struct InitStakingConfig<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<InitStakingConfig>, bump_auth: u8, reward_rate: u64) -> Result<()> {
+pub fn handler(ctx: Context<InitStakingConfig>, bump_config_auth: u8, reward_rate: u64) -> Result<()> {
   let config = &mut ctx.accounts.config;
   config.admin = ctx.accounts.admin.key();
   config.reward_mint = ctx.accounts.reward_mint.key();
   config.reward_pot = ctx.accounts.reward_pot.key();
   config.config_authority = ctx.accounts.config_authority.key();
-  config.config_authority = ctx.accounts.config_authority.key();
   config.config_authority_seed = config.key();
-  config.config_authority_bump_seed = [bump_auth];
+  config.config_authority_bump_seed = [bump_config_auth];
   config.reward_rate = reward_rate;
   config.reward_accrued = 0;
   config.nfts_staked = 0;

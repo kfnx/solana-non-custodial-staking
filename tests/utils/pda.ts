@@ -24,7 +24,10 @@ export const findConfigAuthorityPDA = async (
   config: PublicKey,
   programId: PublicKey
 ) => {
-  return PublicKey.findProgramAddress([config.toBytes()], programId);
+  return PublicKey.findProgramAddress(
+    [Buffer.from("config"), config.toBytes()],
+    programId
+  );
 };
 
 export const findRewardPotPDA = (

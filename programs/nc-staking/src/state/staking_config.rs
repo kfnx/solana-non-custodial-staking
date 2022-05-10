@@ -17,7 +17,7 @@ pub struct StakingConfig {
 }
 
 impl StakingConfig {
-    pub fn seeds(&self) -> [&[u8]; 2] {
-        [self.config_authority_seed.as_ref(), &self.config_authority_bump_seed]
+    pub fn seeds(&self) -> [&[u8]; 3] {
+        [b"config", self.config_authority_seed.as_ref(), &self.config_authority_bump_seed]
     }
 }
