@@ -1,17 +1,11 @@
-import * as anchor from "@project-serum/anchor";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
-export const findVaultPDA = async (
-  user: anchor.Wallet | Keypair,
+export const findUserStatePDA = async (
+  user: PublicKey,
   programId: PublicKey
 ) => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from("vault"), user.publicKey.toBytes()],
+    [Buffer.from("user_state"), user.toBytes()],
     programId
   );
 };

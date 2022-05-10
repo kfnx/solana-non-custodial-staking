@@ -24,8 +24,8 @@ pub struct InitStakingConfig<'info> {
     token::authority = config_authority,
     payer = admin
   )]
-  pub reward_pot: Box<Account<'info, TokenAccount>>,
-  pub reward_mint: Box<Account<'info, Mint>>,
+  pub reward_pot: Account<'info, TokenAccount>,
+  pub reward_mint: Account<'info, Mint>,
 
   // programs
   pub token_program: Program<'info, Token>,
@@ -33,7 +33,7 @@ pub struct InitStakingConfig<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<InitStakingConfig>, bump_auth: u8) -> Result<()> {
+pub fn handler(ctx: Context<InitStakingConfig>, bump_auth: u8, reward_rate: u64) -> Result<()> {
   let config = &mut ctx.accounts.config;
   config.admin = ctx.accounts.admin.key();
   config.reward_mint = ctx.accounts.reward_mint.key();
@@ -42,7 +42,9 @@ pub fn handler(ctx: Context<InitStakingConfig>, bump_auth: u8) -> Result<()> {
   config.config_authority = ctx.accounts.config_authority.key();
   config.config_authority_seed = config.key();
   config.config_authority_bump_seed = [bump_auth];
-  // config.reward_rate = ctx.accounts.reward_mint.key();
+  config.reward_rate = reward_rate;
+  config.reward_accrued = 0;
+  config.nfts_staked = 0;
   // config.reward_rate_denominator = ctx.accounts.reward_pot.key();
   msg!("instruction handler: InitStakingConfig");
   Ok(())

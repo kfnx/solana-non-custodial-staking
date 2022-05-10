@@ -3,22 +3,22 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct Unstake<'info> {
-    #[account(mut, has_one = user)]
-    pub vault: Account<'info, Vault>,
     pub user: Signer<'info>,
+    #[account(mut, has_one = user)]
+    pub user_state: Account<'info, User>,
 }
 
 pub fn handler(ctx: Context<Unstake>) -> Result<()> {
-    let vault = &mut ctx.accounts.vault;
+    let user_state = &mut ctx.accounts.user_state;
     let user = *ctx.accounts.user.to_account_info().key;
 
-    if vault.user != user {
-        return Err(error::ErrorCode::InvalidVaultOwner.into());
+    if user_state.user != user {
+        return Err(error::ErrorCode::InvalidUserState.into());
     }
-    if vault.total_staked < 1 {
+    if user_state.nfts_staked < 1 {
         return Err(error::ErrorCode::EmptyVault.into());
     }
-    vault.total_staked = vault.total_staked - 1;
+    user_state.nfts_staked = user_state.nfts_staked - 1;
     msg!("instruction handler: Unstake");
     Ok(())
 }

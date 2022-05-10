@@ -1,4 +1,4 @@
-use crate::state::*;
+use crate::{error, state::*, utils::now_ts};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -15,6 +15,8 @@ pub struct ClaimStakingReward<'info> {
     /// CHECK:
     #[account(seeds = [config.key().as_ref()], bump = bump_config_auth)]
     pub config_authority: AccountInfo<'info>,
+    #[account(mut)]
+    pub user_state: Account<'info, User>,
 
     #[account(
         mut,
@@ -52,13 +54,30 @@ impl<'info> ClaimStakingReward<'info> {
 }
 
 pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
-    let to_claim_reward_amount: u64 = 1_000_000;
+    let config = &ctx.accounts.config;
+    let user_state = &ctx.accounts.user_state;
+
+    // transfer
+    let time_accrued = {
+        if user_state.time_last_stake == 0 {
+            return Err(error::ErrorCode::UserNeverStake.into());
+        }
+        now_ts()? - user_state.time_last_stake
+    };
+    let reward_amount = config.reward_rate * time_accrued;
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
-            .with_signer(&[&ctx.accounts.config.seeds()]),
-        to_claim_reward_amount,
+            .with_signer(&[&config.seeds()]),
+        reward_amount,
     )?;
+
+    // record changes
+    let config = &mut ctx.accounts.config;
+    config.reward_accrued = config.reward_accrued + reward_amount;
+    let user_state = &mut ctx.accounts.user_state;
+    user_state.reward_accrued = user_state.reward_accrued + reward_amount;
+    user_state.time_last_claim = now_ts()?;
 
     msg!("instruction handler: ClaimStakingReward. user");
     Ok(())

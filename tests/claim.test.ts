@@ -2,16 +2,6 @@ import { assert } from "chai";
 import * as anchor from "@project-serum/anchor";
 import { NcStaking } from "../target/types/nc_staking";
 import {
-  airdropUser,
-  createUser,
-  findUserATA,
-  getTokenBalanceByATA,
-} from "./utils/user";
-import {
-  findConfigAuthorityPDA,
-  findRewardPotPDA,
-} from "./utils/pda";
-import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   MintLayout,
@@ -25,6 +15,17 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
+import { BN } from "bn.js";
+import {
+  delay,
+  airdropUser,
+  createUser,
+  findUserATA,
+  getTokenBalanceByATA,
+  findConfigAuthorityPDA,
+  findRewardPotPDA,
+  findUserStatePDA,
+} from "./utils";
 
 describe("Claiming staking token reward", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
@@ -34,20 +35,20 @@ describe("Claiming staking token reward", () => {
   const user = createUser();
   const programId = program.programId;
 
-  console.log("programId", programId.toBase58());
-  console.log("config", config.publicKey.toBase58());
-  console.log("mint", mint.publicKey.toBase58());
-  console.log("admin", admin.wallet.publicKey.toBase58());
-  console.log("user", user.wallet.publicKey.toBase58());
-
-  describe("claim user journey", () => {
-    it("setup accounts", async () => {
+  describe("Setup accounts", () => {
+    it("accounts", async () => {
+      console.log("programId", programId.toBase58());
+      console.log("config", config.publicKey.toBase58());
+      console.log("mint", mint.publicKey.toBase58());
+      console.log("admin", admin.wallet.publicKey.toBase58());
+      console.log("user", user.wallet.publicKey.toBase58());
       await airdropUser(user.wallet.publicKey);
       await airdropUser(admin.wallet.publicKey);
     });
+  });
 
-    it("admin/dev create mint and init config instruction", async () => {
-      // create token for reward
+  describe("Admin setup config", () => {
+    it("admin create token for reward", async () => {
       const create_mint_tx = new Transaction({
         feePayer: admin.wallet.publicKey,
       });
@@ -77,7 +78,9 @@ describe("Claiming staking token reward", () => {
         [admin.keypair, mint]
       );
       console.log("create mint tx", create_mint_tx_sig);
+    });
 
+    it("admin create staking config", async () => {
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey,
         programId
@@ -92,8 +95,9 @@ describe("Claiming staking token reward", () => {
       console.log("reward pot", rewardPot.toBase58());
 
       // init staking config
-      const init_staking_tx = await program.methods
-        .initStakingConfig(configAuthBump)
+      const rewardRate = new BN(10);
+      const initStakingTx = await program.methods
+        .initStakingConfig(configAuthBump, rewardRate)
         .accounts({
           admin: admin.wallet.publicKey,
           config: config.publicKey,
@@ -107,9 +111,29 @@ describe("Claiming staking token reward", () => {
         })
         .signers([admin.keypair, config])
         .rpc();
-      console.log("init config tx", init_staking_tx);
+      console.log("init config tx", initStakingTx);
 
-      // fund reward pot
+      const allStakingAccounts = await program.account.stakingConfig.all();
+      assert.equal(
+        allStakingAccounts.length,
+        1,
+        "there should be 1 staking config account"
+      );
+
+      const account = await program.account.stakingConfig.fetch(
+        config.publicKey
+      );
+
+      assert.ok(account.admin.equals(admin.wallet.publicKey));
+      assert.ok(account.rewardMint.equals(mint.publicKey));
+      assert.ok(account.rewardRate.toNumber() === rewardRate.toNumber());
+    });
+
+    it("admin fund reward pot so user can claim", async () => {
+      const stakingConfig = await program.account.stakingConfig.fetch(
+        config.publicKey
+      );
+
       const mint_tokens_to_reward_pot_tx = new Transaction({
         feePayer: admin.wallet.publicKey,
       });
@@ -117,7 +141,7 @@ describe("Claiming staking token reward", () => {
       mint_tokens_to_reward_pot_tx.add(
         createMintToInstruction(
           mint.publicKey, // mint
-          rewardPot, // receiver (sholud be a token account)
+          stakingConfig.rewardPot, // receiver (sholud be a token account)
           admin.wallet.publicKey, // mint authority
           mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
           [], // only multisig account will use. leave it empty now.
@@ -136,16 +160,45 @@ describe("Claiming staking token reward", () => {
 
       const rewardPotBalance = await getTokenBalanceByATA(
         admin.provider.connection,
-        rewardPot
+        stakingConfig.rewardPot
       );
       console.log("funded reward pot token balance: ", rewardPotBalance);
 
       assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
+    });
+  });
 
-      const allStakingAccounts = await program.account.stakingConfig.all();
-      // console.log("allStakingAccounts", allStakingAccounts[0]);
+  describe("User claiming reward", () => {
+    it("User initate staking and stake NFT", async () => {
+      const [userState, _vaultBump] = await findUserStatePDA(
+        user.wallet.publicKey,
+        program.programId
+      );
 
-      assert.equal(allStakingAccounts.length, 1, "there should be 1 staking config account");
+      await program.methods
+        .initStaking()
+        .accounts({
+          user: user.wallet.publicKey,
+          userState,
+        })
+        .signers([user.keypair])
+        .rpc();
+
+      const account = await program.account.user.fetch(userState);
+      assert.ok(account.user.equals(user.wallet.publicKey));
+      assert.ok(account.nftsStaked.toNumber() === 0);
+
+      await program.methods
+        .stake()
+        .accounts({
+          userState,
+          user: user.wallet.publicKey,
+        })
+        .signers([user.keypair])
+        .rpc();
+
+      const updatedAccount = await program.account.user.fetch(userState);
+      assert.ok(updatedAccount.nftsStaked.toNumber() === 1);
     });
 
     it("user claim token reward with previously created staking config", async () => {
@@ -171,12 +224,18 @@ describe("Claiming staking token reward", () => {
       );
 
       const userATA = await findUserATA(user.wallet.publicKey, mint.publicKey);
+      const [userState, _bump] = await findUserStatePDA(
+        user.wallet.publicKey,
+        programId
+      );
 
       console.log("userATA", userATA.toBase58());
+      await delay(2000);
       const tx = await program.methods
         .claim(configAuthBump, rewardPotBump)
         .accounts({
           user: user.wallet.publicKey,
+          userState,
           config: config.publicKey,
           configAuthority: configAuth,
           rewardDestination: userATA,
@@ -208,10 +267,13 @@ describe("Claiming staking token reward", () => {
         userATA
       );
       console.log("user token balance (after claim): ", finalUserTokenBalance);
-      const reward = 1_000_000;
 
-      assert.equal(reward, finalUserTokenBalance, "user got the reward");
-      assert.equal(earlyRewardPotBalance - reward, finalRewardPotBalance, "reward pot reduced by reward amount");
+      assert.ok(finalUserTokenBalance > 0, "user got the reward");
+      assert.equal(
+        earlyRewardPotBalance - finalUserTokenBalance,
+        finalRewardPotBalance,
+        "reward pot reduced by reward amount"
+      );
     });
   });
 });

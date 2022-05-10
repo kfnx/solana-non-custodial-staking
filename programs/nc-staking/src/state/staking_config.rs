@@ -8,10 +8,12 @@ pub struct StakingConfig {
     pub config_authority: Pubkey,
     pub config_authority_seed: Pubkey,
     pub config_authority_bump_seed: [u8; 1],
-    // pub reward_accrued: i64,
-    // pub registered_stakers: i64,
-    // pub active_stakers: i64,
-    // pub nft_staked: i64,
+    pub reward_rate: u64,
+    // pub reward_rate_denominator: u64,
+    pub reward_accrued: u64,
+    pub nfts_staked: u64,
+    // pub registered_stakers: u64,
+    // pub active_stakers: u64,
 }
 
 impl StakingConfig {

@@ -1,5 +1,5 @@
 pub mod staking_config;
-pub mod vault;
+pub mod user;
 
 pub use staking_config::*;
-pub use vault::*;
+pub use user::*;
