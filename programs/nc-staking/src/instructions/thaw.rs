@@ -38,7 +38,7 @@ pub fn handler(ctx: Context<Thaw>) -> Result<()> {
         ctx.accounts.token_account.to_account_info().key.as_ref(),
         &[bump],
     ];
-    let cpi_accounts = mpl::FreezeOrThawDelegatedAccount {
+    let mpl_helper = mpl::FreezeOrThawDelegatedAccount {
         delegate: ctx.accounts.delegate.clone(),
         token_account: ctx.accounts.token_account.clone(),
         edition: ctx.accounts.edition.to_account_info(),
@@ -47,7 +47,7 @@ pub fn handler(ctx: Context<Thaw>) -> Result<()> {
         token_metadata_program: ctx.accounts.token_metadata_program.clone()
     };
 
-    cpi_accounts.freeze_or_thaw(false,&auth_seeds)?;
+    mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
     msg!("instruction handler: Thaw");
     Ok(())
 }

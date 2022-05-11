@@ -46,7 +46,7 @@ pub fn handler(ctx: Context<Freeze>) -> Result<()> {
     msg!("Approve token delegate with key {}", ctx.accounts.delegate.key());
 
     // use pda to freeze
-    let cpi_accounts = mpl::FreezeOrThawDelegatedAccount {
+    let mpl_helper = mpl::FreezeOrThawDelegatedAccount {
         delegate: ctx.accounts.delegate.clone(),
         token_account: ctx.accounts.token_account.clone(),
         edition: ctx.accounts.edition.to_account_info(),
@@ -65,7 +65,7 @@ pub fn handler(ctx: Context<Freeze>) -> Result<()> {
         &[bump],
     ];
     
-    cpi_accounts.freeze_or_thaw(true,&auth_seeds)?;
+    mpl_helper.freeze_or_thaw(true,&auth_seeds)?;
     msg!("instruction handler: Freeze");
     Ok(())
 }
