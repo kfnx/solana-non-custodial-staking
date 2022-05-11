@@ -15,7 +15,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     if user_state.user != user {
         return Err(error::ErrorCode::InvalidUserState.into());
     }
-    user_state.nfts_staked = user_state.nfts_staked + 1;
+    user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
     user_state.time_last_stake = now_ts()?;
     msg!("instruction handler: Stake");
     Ok(())
