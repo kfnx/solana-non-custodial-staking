@@ -1,4 +1,9 @@
 import * as anchor from "@project-serum/anchor";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export interface User {
@@ -7,6 +12,13 @@ export interface User {
   provider: anchor.AnchorProvider;
 }
 
+/**
+ * executing createUser() with empty args will create a new User with keypair, anchor wallet and provider object
+ * @param connection
+ * @param keypair
+ * @param providerOpts
+ * @returns
+ */
 export function createUser(
   connection: Connection = anchor.AnchorProvider.env().connection,
   keypair: Keypair = anchor.web3.Keypair.generate(),
@@ -57,4 +69,49 @@ export function programForUser(
   user: { provider: anchor.Provider }
 ) {
   return new anchor.Program(program.idl, program.programId, user.provider);
+}
+
+export async function userToken(
+  connection: Connection,
+  publicKey: anchor.web3.PublicKey,
+  mint: anchor.web3.PublicKey
+): Promise<[anchor.web3.PublicKey, number]> {
+  try {
+    const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
+      publicKey,
+      {
+        mint,
+      }
+    );
+
+    const account = getTokenAccount.value[0].pubkey;
+    // const info = getTokenAccount.value[0].account.data.parsed.info
+    const balance =
+      getTokenAccount.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+
+    return [account, balance];
+  } catch (error) {
+    console.error(error);
+    return [null, null];
+  }
+}
+
+export async function getTokenBalanceByATA(
+  connection: Connection,
+  ata: anchor.web3.PublicKey
+): Promise<number> {
+  return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
+}
+
+export async function findUserATA(
+  user: anchor.web3.PublicKey,
+  mint: anchor.web3.PublicKey
+): Promise<anchor.web3.PublicKey> {
+  return getAssociatedTokenAddress(
+    mint,
+    user,
+    false,
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
 }

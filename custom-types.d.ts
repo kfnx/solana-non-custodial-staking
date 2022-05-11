@@ -5,14 +5,15 @@ import {
   Connection,
   PublicKey,
   Signer,
+  TransactionInstruction,
   TransactionSignature,
 } from "@solana/web3.js";
 
 /**
- * We override getOrCreateAssociatedTokenAccount, transfer, Account type for @solana/spl-token
+ * We override some type for @solana/spl-token
  * because stupid type resolver somehow consume types of @solana/spl-token from @metaplex/js child deps
- * which use @solana/spl-token@0.1.8 that have none of getOrCreateAssociatedTokenAccount, transfer, Account (only after @0.2.0 those are added)
- * will remove this type extension after metaplex update their @solana/spl-token to @0.2.0
+ * which use @solana/spl-token@0.1.8 that have none of getOrCreateAssociatedTokenAccount, transfer, Account, etc (only after v0.2.0 those are added)
+ * will remove this type extension after metaplex update their @solana/spl-token@0.2.0
  */
 declare module "@solana/spl-token" {
   export interface Account {
@@ -97,4 +98,96 @@ declare module "@solana/spl-token" {
     confirmOptions?: ConfirmOptions,
     programId?: PublicKey
   ): Promise<TransactionSignature>;
+
+  /**
+   * Construct an InitializeMint instruction
+   *
+   * @param mint            Token mint account
+   * @param decimals        Number of decimals in token account amounts
+   * @param mintAuthority   Minting authority
+   * @param freezeAuthority Optional authority that can freeze token accounts
+   * @param programId       SPL Token program account
+   *
+   * @return Instruction to add to a transaction
+   */
+  export function createInitializeMintInstruction(
+    mint: PublicKey,
+    decimals: number,
+    mintAuthority: PublicKey,
+    freezeAuthority: PublicKey | null,
+    programId?: PublicKey
+  ): TransactionInstruction;
+
+  /** Get the minimum lamport balance for a mint to be rent exempt
+   *
+   * @param connection Connection to use
+   * @param commitment Desired level of commitment for querying the state
+   *
+   * @return Amount of lamports required
+   */
+  export function getMinimumBalanceForRentExemptMint(
+    connection: Connection,
+    commitment?: Commitment
+  ): Promise<number>;
+
+  /**
+   * Construct a MintTo instruction
+   *
+   * @param mint         Public key of the mint
+   * @param destination  Address of the token account to mint to
+   * @param authority    The mint authority
+   * @param amount       Amount to mint
+   * @param multiSigners Signing accounts if `authority` is a multisig
+   * @param programId    SPL Token program account
+   *
+   * @return Instruction to add to a transaction
+   */
+  export function createMintToInstruction(
+    mint: PublicKey,
+    destination: PublicKey,
+    authority: PublicKey,
+    amount: number | bigint,
+    multiSigners?: Signer[],
+    programId?: PublicKey
+  ): TransactionInstruction;
+
+  /**
+   * Get the address of the associated token account for a given mint and owner
+   *
+   * @param mint                     Token mint account
+   * @param owner                    Owner of the new account
+   * @param allowOwnerOffCurve       Allow the owner account to be a PDA (Program Derived Address)
+   * @param programId                SPL Token program account
+   * @param associatedTokenProgramId SPL Associated Token program account
+   *
+   * @return Address of the associated token account
+   */
+  export function getAssociatedTokenAddress(
+    mint: PublicKey,
+    owner: PublicKey,
+    allowOwnerOffCurve?: boolean,
+    programId?: PublicKey,
+    associatedTokenProgramId?: PublicKey
+  ): Promise<PublicKey>;
+
+  /**
+   * Construct an AssociatedTokenAccount instruction
+   *
+   * @param payer                    Payer of the initialization fees
+   * @param associatedToken          New associated token account
+   * @param owner                    Owner of the new account
+   * @param mint                     Token mint account
+   * @param programId                SPL Token program account
+   * @param associatedTokenProgramId SPL Associated Token program account
+   *
+   * @return Instruction to add to a transaction
+   */
+  export function createAssociatedTokenAccountInstruction(
+    payer: PublicKey,
+    associatedToken: PublicKey,
+    owner: PublicKey,
+    mint: PublicKey,
+    programId?: PublicKey,
+    associatedTokenProgramId?: PublicKey
+  ): TransactionInstruction;
 }

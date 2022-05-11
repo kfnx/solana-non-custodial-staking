@@ -13,9 +13,13 @@ import {
 } from "@solana/spl-token";
 import { assert } from "chai";
 import idl from "../target/idl/nc_staking.json";
-import { TOKEN_METADATA_PROGRAM_ID } from "./utils/program-id";
-import { airdropUser, createUser } from "./utils/user";
-import { findDelegateAuthPDA } from "./utils/pda";
+import {
+  TOKEN_METADATA_PROGRAM_ID,
+  airdropUser,
+  createUser,
+  findUserATA,
+  findDelegateAuthPDA,
+} from "./utils";
 import { NcStaking } from "../target/types/nc_staking";
 
 describe("Non custodial staking", () => {
@@ -180,18 +184,17 @@ describe("Non custodial staking", () => {
   });
 
   it("Justin cannot transfer his NFT if its staked (freze)", async () => {
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      justin.wallet.payer,
-      justinNFT.mint,
-      markers.wallet.publicKey
+    const markersNFTata = await findUserATA(
+      markers.wallet.publicKey,
+      justinNFT.mint
     );
+
     try {
       await transfer(
         connection,
         justin.wallet.payer,
         justinNFT.ata,
-        toTokenAccount.address,
+        markersNFTata,
         justin.wallet.publicKey,
         1
       );
@@ -283,18 +286,16 @@ describe("Non custodial staking", () => {
   // transfer to kp2
   // Get the token account of the toWallet address, and if it does not exist, create it
   it("Justin can transfer his NFT to Markers while its not staked/frozen", async () => {
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      justin.wallet.payer,
-      justinNFT.mint,
-      markers.wallet.publicKey
+    const markersNFTata = await findUserATA(
+      markers.wallet.publicKey,
+      justinNFT.mint
     );
 
     await transfer(
       connection,
       justin.wallet.payer,
       justinNFT.ata,
-      toTokenAccount.address,
+      markersNFTata,
       justin.wallet.publicKey,
       1
     );
@@ -332,24 +333,20 @@ describe("Non custodial staking", () => {
   // transfer to kp1
   // Get the token account of the toWallet address, and if it does not exist, create it
   it("Testing finished, Markers send the NFT back to Justin", async () => {
-    const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
+    const justinNFTata = await findUserATA(
+      justin.wallet.publicKey,
+      justinNFT.mint
+    );
+    const markersNFTata = await findUserATA(
       markers.wallet.publicKey,
-      {
-        mint: justinNFT.mint,
-      }
+      justinNFT.mint
     );
-    const fromTokenAccount = getTokenAccount.value[0].pubkey;
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      markers.wallet.payer,
-      justinNFT.mint,
-      justin.wallet.publicKey
-    );
+
     await transfer(
       connection,
       markers.wallet.payer,
-      fromTokenAccount,
-      toTokenAccount.address,
+      markersNFTata,
+      justinNFTata,
       markers.wallet.publicKey,
       1
     );
