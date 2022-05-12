@@ -4,10 +4,15 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
 
 export interface User {
-  keypair: anchor.web3.Keypair;
+  keypair: Keypair;
   wallet: anchor.Wallet;
   provider: anchor.AnchorProvider;
 }
@@ -21,7 +26,7 @@ export interface User {
  */
 export function createUser(
   connection: Connection = anchor.AnchorProvider.env().connection,
-  keypair: Keypair = anchor.web3.Keypair.generate(),
+  keypair: Keypair = Keypair.generate(),
   providerOpts = anchor.AnchorProvider.defaultOptions()
 ): User {
   let wallet = new anchor.Wallet(keypair);
@@ -35,7 +40,7 @@ export function createUser(
 }
 
 export async function airdropUser(
-  publicKey: anchor.web3.PublicKey,
+  publicKey: PublicKey,
   connection: Connection = anchor.AnchorProvider.env().connection,
   airdropBalance: number = 1 * LAMPORTS_PER_SOL
 ): Promise<void> {
@@ -73,9 +78,9 @@ export function programForUser(
 
 export async function userToken(
   connection: Connection,
-  publicKey: anchor.web3.PublicKey,
-  mint: anchor.web3.PublicKey
-): Promise<[anchor.web3.PublicKey, number]> {
+  publicKey: PublicKey,
+  mint: PublicKey
+): Promise<[PublicKey, number]> {
   try {
     const getTokenAccount = await connection.getParsedTokenAccountsByOwner(
       publicKey,
@@ -98,15 +103,15 @@ export async function userToken(
 
 export async function getTokenBalanceByATA(
   connection: Connection,
-  ata: anchor.web3.PublicKey
+  ata: PublicKey
 ): Promise<number> {
   return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
 }
 
 export async function findUserATA(
-  user: anchor.web3.PublicKey,
-  mint: anchor.web3.PublicKey
-): Promise<anchor.web3.PublicKey> {
+  user: PublicKey,
+  mint: PublicKey
+): Promise<PublicKey> {
   return getAssociatedTokenAddress(
     mint,
     user,

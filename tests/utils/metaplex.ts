@@ -20,7 +20,7 @@ export async function createMetadata(
   skipEntirely: boolean = false
 ) {
   const metadataData = parseMetadata(
-    readJSON("./tests/artifacts/testMetadata.json")
+    readJSON("./tests/artifacts/metadata.json")
   );
 
   //we insert as many creators as we'd like for testing, including our target creator
@@ -53,8 +53,6 @@ export async function createMetadata(
     connection,
     metadata
   );
-
-  console.log(`metadata at ${metadata.toBase58()} ok`);
 
   return metadata;
 }

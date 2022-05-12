@@ -3,6 +3,7 @@ import {
   clusterApiUrl,
   Connection,
   Keypair,
+  ParsedAccountData,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -31,19 +32,12 @@ import { createMetadata } from "./utils";
 import { createMintToInstruction } from "@solana/spl-token";
 
 describe("Non custodial staking", () => {
-  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const admin = createUser();
   const user = createUser();
   const adminProgram = programForUser(program, admin);
   const userProgram = programForUser(program, user);
   const mint = Keypair.generate();
-
-  let justinNFT = {
-    mint: new PublicKey("AiFWNmitWNXQr3EazPDJWcAfEvU8KnPf69WAS6F6iFG7"),
-    ata: null,
-    edition: new PublicKey("3Bff77s3HqbDa8WEcneMRF1NeUPhHVBPdFYd5g1upuRo"),
-  };
 
   describe("Setup", () => {
     it("accounts", async () => {
@@ -90,14 +84,14 @@ describe("Non custodial staking", () => {
     });
 
     it("mint one", async () => {
-      const assTokenAccount = await getOrCreateAssociatedTokenAccount(
+      const adminATA = await getOrCreateAssociatedTokenAccount(
         admin.provider.connection,
         admin.wallet.payer,
         mint.publicKey,
         admin.wallet.publicKey
       );
 
-      console.log("create and init ATA", assTokenAccount.address.toBase58());
+      console.log("create and init ATA", adminATA.address.toBase58());
 
       const mint_token_tx = new Transaction({
         feePayer: admin.wallet.publicKey,
@@ -106,7 +100,7 @@ describe("Non custodial staking", () => {
       mint_token_tx.add(
         createMintToInstruction(
           mint.publicKey, // mint
-          assTokenAccount.address, // receiver (sholud be a token account)
+          adminATA.address, // receiver (should be a token account)
           admin.wallet.publicKey, // mint authority
           1, // amount. if your decimals is 8, you mint 10^8 for 1 token.
           [], // only multisig account will use. leave it empty now.
@@ -122,34 +116,133 @@ describe("Non custodial staking", () => {
 
       const ataBalance = await getTokenBalanceByATA(
         admin.provider.connection,
-        assTokenAccount.address
+        adminATA.address
       );
-      console.log("token balance: ", ataBalance);
+      console.log(
+        "mint",
+        mint.publicKey.toBase58(),
+        "ATA",
+        adminATA.address.toBase58(),
+        "balance",
+        ataBalance
+      );
     });
 
     it("admin create metadata", async () => {
-      console.log(`before hang`);
-      const gemMetadata = await createMetadata(
+      const metadata = await createMetadata(
         admin.provider.connection,
         admin.wallet,
         mint.publicKey
       );
 
-      console.log("gemMetadata", gemMetadata.toBase58());
-      const account = await admin.provider.connection.getAccountInfo(
-        gemMetadata
+      console.log("metadata", metadata.toBase58());
+      console.log(
+        "NFT",
+        `https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
       );
-      const accountP = await admin.provider.connection.getParsedAccountInfo(
-        gemMetadata
+    });
+
+    it("admin send NFT to user", async () => {
+      const adminATA = await getOrCreateAssociatedTokenAccount(
+        admin.provider.connection,
+        admin.wallet.payer,
+        mint.publicKey,
+        admin.wallet.publicKey
       );
-      console.log("account", account.data);
-      console.log("account parsed", accountP.value);
+
+      console.log(1, "adminATA.address", adminATA.address.toBase58());
+
+      const userATA = await getOrCreateAssociatedTokenAccount(
+        admin.provider.connection,
+        admin.wallet.payer,
+        mint.publicKey,
+        user.wallet.publicKey
+      );
+      console.log(2, "userATA.address", userATA.address.toBase58());
+
+      const transfer_token_tx = await transfer(
+        admin.provider.connection,
+        admin.wallet.payer,
+        adminATA.address,
+        userATA.address,
+        admin.wallet.publicKey,
+        1
+        // [admin.wallet.payer, toWallet]
+      );
+      console.log(3, "transfer NFT to user tx", transfer_token_tx);
+
+      const userAtaBalance = await getTokenBalanceByATA(
+        user.provider.connection,
+        userATA.address
+      );
+      console.log("user NFT: ", userAtaBalance);
+      assert.equal(1, userAtaBalance, "user NFT 1, got it from admin");
+
+      const adminAtaBalance = await getTokenBalanceByATA(
+        admin.provider.connection,
+        adminATA.address
+      );
+      console.log("admin NFT: ", adminAtaBalance);
+      assert.equal(0, adminAtaBalance, "admin NFT 0, transferred to user");
     });
   });
 
   describe("User", () => {
-    it("user staking freeze thaw peepoo", async () => {
-      console.log("end");
+    it("User can stake/freeze his own NFT", async () => {
+      console.log(0);
+      const userATA = await findUserATA(user.wallet.publicKey, mint.publicKey);
+
+      console.log(1, "user ATA", userATA.toBase58());
+      const [delegate] = await findDelegateAuthPDA(userATA, program.programId);
+      console.log(2, "user delegate", delegate.toBase58());
+
+      // const tx = await userProgram.methods
+      //   .freeze()
+      //   .accounts({
+      //     user: user.wallet.publicKey,
+      //     mint: mint.publicKey,
+      //     tokenAccount: userATA,
+      //     edition: mint.publicKey,
+      //     delegate,
+      //     tokenProgram: TOKEN_PROGRAM_ID,
+      //     tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      //   })
+      //   .signers([user.wallet.payer])
+      //   .rpc();
+
+      // console.log(3, "Freeze transaction signature", tx);
+      // const ataInfo = await user.provider.connection.getParsedAccountInfo(
+      //   userATA
+      // );
+      // const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+      // console.log("parsed", parsed);
+      // assert.equal(parsed.info.state, "frozen");
     });
+
+    // it("Justin cannot transfer his NFT if its staked (freze)", async () => {
+    //   const markersNFTata = await findUserATA(
+    //     markers.wallet.publicKey,
+    //     justinNFT.mint
+    //   );
+
+    //   try {
+    //     await transfer(
+    //       connection,
+    //       justin.wallet.payer,
+    //       justinNFT.ata,
+    //       markersNFTata,
+    //       justin.wallet.publicKey,
+    //       1
+    //     );
+    //   } catch (error) {
+    //     assert.equal(
+    //       error.message,
+    //       "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x11"
+    //     );
+    //     return;
+    //   }
+
+    //   assert.fail("The instruction should have failed with a frozen account.");
+    // });
   });
 });
