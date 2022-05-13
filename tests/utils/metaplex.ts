@@ -43,7 +43,17 @@ export async function createMetadata(
     editionMint,
     metadataData,
   });
+  console.log("after createMetadata")
+  //necessary for metadata to propagate, even on localnet
+  await delay(2000);
 
+  await actions.createMasterEdition({
+    connection,
+    wallet,
+    editionMint,
+  });
+
+  console.log("after createMasterEdition")
   //necessary for metadata to propagate, even on localnet
   await delay(2000);
 
