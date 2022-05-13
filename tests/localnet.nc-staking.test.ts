@@ -30,6 +30,7 @@ import { NcStaking } from "../target/types/nc_staking";
 import idl from "../target/idl/nc_staking.json";
 import { createMetadata } from "./utils";
 import { createMintToInstruction } from "@solana/spl-token";
+import { actions } from "@metaplex/js";
 
 describe("Non custodial staking", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
@@ -195,22 +196,28 @@ describe("Non custodial staking", () => {
       console.log(1, "user ATA", userATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(userATA, program.programId);
       console.log(2, "user delegate", delegate.toBase58());
-
-      // const tx = await userProgram.methods
-      //   .freeze()
-      //   .accounts({
-      //     user: user.wallet.publicKey,
-      //     mint: mint.publicKey,
-      //     tokenAccount: userATA,
-      //     edition: mint.publicKey,
-      //     delegate,
-      //     tokenProgram: TOKEN_PROGRAM_ID,
-      //     tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-      //   })
-      //   .signers([user.wallet.payer])
-      //   .rpc();
-
-      // console.log(3, "Freeze transaction signature", tx);
+      // const [edition] = await PublicKey.findProgramAddress(
+      //   [Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBytes(), mint.publicKey.toBytes(), Buffer.from("edition")],
+      //   TOKEN_METADATA_PROGRAM_ID
+      // );
+      // console.log(3, "edition", edition.toBase58());
+      // try {
+      //   const tx = await userProgram.methods
+      //     .freeze()
+      //     .accounts({
+      //       user: user.wallet.publicKey,
+      //       mint: mint.publicKey,
+      //       tokenAccount: userATA,
+      //       delegate,
+      //       edition,
+      //       tokenProgram: TOKEN_PROGRAM_ID,
+      //       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      //     })
+      //     .rpc();
+      //     console.log(3, "Freeze transaction signature", tx);
+      // } catch (error) {
+      //   console.error(error)
+      // }
       // const ataInfo = await user.provider.connection.getParsedAccountInfo(
       //   userATA
       // );
