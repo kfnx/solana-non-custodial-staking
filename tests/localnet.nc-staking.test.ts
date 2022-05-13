@@ -196,34 +196,39 @@ describe("Non custodial staking", () => {
       console.log(1, "user ATA", userATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(userATA, program.programId);
       console.log(2, "user delegate", delegate.toBase58());
-      // const [edition] = await PublicKey.findProgramAddress(
-      //   [Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBytes(), mint.publicKey.toBytes(), Buffer.from("edition")],
-      //   TOKEN_METADATA_PROGRAM_ID
-      // );
-      // console.log(3, "edition", edition.toBase58());
-      // try {
-      //   const tx = await userProgram.methods
-      //     .freeze()
-      //     .accounts({
-      //       user: user.wallet.publicKey,
-      //       mint: mint.publicKey,
-      //       tokenAccount: userATA,
-      //       delegate,
-      //       edition,
-      //       tokenProgram: TOKEN_PROGRAM_ID,
-      //       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-      //     })
-      //     .rpc();
-      //     console.log(3, "Freeze transaction signature", tx);
-      // } catch (error) {
-      //   console.error(error)
-      // }
-      // const ataInfo = await user.provider.connection.getParsedAccountInfo(
-      //   userATA
-      // );
-      // const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
-      // console.log("parsed", parsed);
-      // assert.equal(parsed.info.state, "frozen");
+      const [edition] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from("metadata"),
+          TOKEN_METADATA_PROGRAM_ID.toBytes(),
+          mint.publicKey.toBytes(),
+          Buffer.from("edition"),
+        ],
+        TOKEN_METADATA_PROGRAM_ID
+      );
+      console.log(3, "edition", edition.toBase58());
+      try {
+        const tx = await userProgram.methods
+          .freeze()
+          .accounts({
+            user: user.wallet.publicKey,
+            mint: mint.publicKey,
+            tokenAccount: userATA,
+            delegate,
+            edition,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          })
+          .rpc();
+        console.log(3, "Freeze transaction signature", tx);
+      } catch (error) {
+        console.error(error);
+      }
+      const ataInfo = await user.provider.connection.getParsedAccountInfo(
+        userATA
+      );
+      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+      console.log("parsed", parsed);
+      assert.equal(parsed.info.state, "frozen");
     });
 
     // it("Justin cannot transfer his NFT if its staked (freze)", async () => {
