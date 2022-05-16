@@ -68,7 +68,7 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
-            .with_signer(&[&config.seeds()]),
+            .with_signer(&[&config.auth_seeds()]),
         reward_amount,
     )?;
 

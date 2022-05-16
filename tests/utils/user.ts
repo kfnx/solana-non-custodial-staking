@@ -15,10 +15,11 @@ export interface User {
   keypair: Keypair;
   wallet: anchor.Wallet;
   provider: anchor.AnchorProvider;
+  state: any;
 }
 
 /**
- * executing createUser() with empty args will create a new User with keypair, anchor wallet and provider object
+ * Give user anchor compatible wallet, keypair and provider
  * @param connection
  * @param keypair
  * @param providerOpts
@@ -36,6 +37,7 @@ export function createUser(
     keypair,
     wallet,
     provider,
+    state: {},
   };
 }
 
@@ -69,6 +71,12 @@ export function createUsersWithAirdrop(
   return Promise.all(promises);
 }
 
+/**
+ * Give program with signers built in
+ * @param program 
+ * @param user 
+ * @returns 
+ */
 export function programForUser(
   program: { idl: anchor.Idl; programId: anchor.Address },
   user: { provider: anchor.Provider }
