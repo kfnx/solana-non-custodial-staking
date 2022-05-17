@@ -5,6 +5,7 @@ pub struct StakingConfig {
     pub admin: Pubkey,
     pub reward_pot: Pubkey,
     pub reward_mint: Pubkey,
+    // we use config_authority to guard claim and stake instruction
     pub config_authority: Pubkey,
     pub config_authority_seed: Pubkey,
     pub config_authority_bump_seed: [u8; 1],
@@ -14,10 +15,17 @@ pub struct StakingConfig {
     pub nfts_staked: u64,
     // pub registered_stakers: u64,
     // pub active_stakers: u64,
+
+    // list of whitelisted creator address
+    pub whitelisted_creator: bool,
 }
 
 impl StakingConfig {
     pub fn auth_seeds(&self) -> [&[u8]; 3] {
-        [b"config", self.config_authority_seed.as_ref(), &self.config_authority_bump_seed]
+        [
+            b"config",
+            self.config_authority_seed.as_ref(),
+            &self.config_authority_bump_seed,
+        ]
     }
 }

@@ -44,3 +44,17 @@ export const findEditionPDA = (mint: PublicKey) => {
     TOKEN_METADATA_PROGRAM_ID
   );
 };
+
+export const findWhitelistPDA = async (
+  config: PublicKey,
+  creatorAddress: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [
+      Buffer.from("whitelist"),
+      config.toBytes(),
+      creatorAddress.toBytes(),
+    ],
+    programId
+  );
+};

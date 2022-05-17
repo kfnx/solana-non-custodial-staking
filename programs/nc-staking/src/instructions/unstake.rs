@@ -1,4 +1,4 @@
-use crate::{error, mpl, state::*};
+use crate::{errors::ErrorCode, mpl, state::*};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -55,10 +55,10 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     let user = *ctx.accounts.user.to_account_info().key;
 
     if user_state.user != user {
-        return Err(error::ErrorCode::InvalidUserState.into());
+        return Err(error!(ErrorCode::InvalidUserState));
     }
     if user_state.nfts_staked < 1 {
-        return Err(error::ErrorCode::EmptyVault.into());
+        return Err(error!(ErrorCode::EmptyVault));
     }
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
     msg!("instruction handler: Unstake");
