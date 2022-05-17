@@ -24,16 +24,6 @@ pub mod nc_staking {
         instructions::init_staking::handler(ctx)
     }
 
-    // to be removed once merged with stake
-    pub fn freeze(ctx: Context<Freeze>) -> Result<()> {
-        instructions::freeze::handler(ctx)
-    }
-    
-    // to be removed once merged with unstake
-    pub fn thaw(ctx: Context<Thaw>) -> Result<()> {
-        instructions::thaw::handler(ctx)
-    }
-
     pub fn stake(ctx: Context<Stake>) -> Result<()> {
         instructions::stake::handler(ctx)
     }

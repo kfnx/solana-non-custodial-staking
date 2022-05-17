@@ -43,8 +43,8 @@ export async function createMetadata(
     editionMint,
     metadataData,
   });
-  console.log("after createMetadata")
-  //necessary for metadata to propagate, even on localnet
+
+  // necessary for metadata to propagate, even on localnet
   await delay(2000);
 
   await actions.createMasterEdition({
@@ -53,16 +53,15 @@ export async function createMetadata(
     editionMint,
   });
 
-  console.log("after createMasterEdition")
-  //necessary for metadata to propagate, even on localnet
+  // necessary for metadata to propagate, even on localnet
   await delay(2000);
 
-  //verify metadata propagated successfully and is available
+  // verify metadata propagated successfully and is available
   const metadata = await programs.metadata.Metadata.getPDA(editionMint);
-  const metadataAcc = await programs.metadata.Metadata.load(
-    connection,
-    metadata
-  );
+  // const metadataAcc = await programs.metadata.Metadata.load(
+  //   connection,
+  //   metadata
+  // );
 
   return metadata;
 }
