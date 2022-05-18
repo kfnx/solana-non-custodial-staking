@@ -10,7 +10,7 @@ pub struct Stake<'info> {
     #[account(mut, has_one = user)]
     pub user_state: Account<'info, User>,
     #[account(mut)]
-    pub config: Box<Account<'info, StakingConfig>>,
+    pub config: Account<'info, StakingConfig>,
     #[account(
         mut,
         token::authority = user,
@@ -25,7 +25,7 @@ pub struct Stake<'info> {
     delegate: AccountInfo<'info>,
     /// CHECK: only used for CPI, PDA for metaplex; also freeze auth
     edition: AccountInfo<'info>,
-    mint: Box<Account<'info, Mint>>,
+    mint: Account<'info, Mint>,
     token_program: Program<'info, Token>, // constraint here to check token program is legit
     token_metadata_program: Program<'info, mpl::TokenMetadata>, // constraint here to check token metadata program is legit
     system_program: Program<'info, System>, // probably unneeded here; no init in freeze
@@ -93,21 +93,16 @@ fn assert_valid_whitelist_proof<'info>(
 }
 
 fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
-    let config = &*ctx.accounts.config;
-    let mint = &*ctx.accounts.mint;
+    let config = &ctx.accounts.config;
+    let mint = &ctx.accounts.mint;
     let remaining_accs = &mut ctx.remaining_accounts.iter();
-    msg!("0 {:?} ", remaining_accs);
-    msg!("0.1");
+
     // 2 accounts are sequentially expected - metadata and creator whitelist proof
     let metadata_info = next_account_info(remaining_accs)?;
-    msg!("0.2");
     let creator_whitelist_proof_info = next_account_info(remaining_accs)?;
 
-    msg!("1");
     // verify metadata is legit
     let metadata = assert_valid_metadata(metadata_info, &mint.key())?;
-
-    msg!("2");
     // metaplex constraints this to max 5, so won't go crazy on compute
     // (empirical testing showed there's practically 0 diff between stopping at 0th and 5th creator)
     for creator in &metadata.data.creators.unwrap() {
@@ -115,7 +110,6 @@ fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
         if !creator.verified {
             continue;
         }
-        msg!("3");
 
         // check if creator is whitelisted, returns an error if not
         let attempted_proof = assert_valid_whitelist_proof(
@@ -132,24 +126,17 @@ fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
             Err(_e) => continue,
         }
     }
-    msg!("4");
 
-    // if conditions above failed, no return Ok(()), then verification failed
+    // if conditions above failed, it means nothing is Ok(()), then verification failed
     Err(error!(ErrorCode::NotWhitelisted))
 }
 
 pub fn handler(ctx: Context<Stake>) -> Result<()> {
-    msg!("Start stake");
     // verify whitelist
-    let config = &*ctx.accounts.config;
+    let config = &ctx.accounts.config;
     if config.whitelisted_creator == true {
-        msg!("checking whitelisted");
         assert_whitelisted(&ctx)?;
-        msg!("checking whitelisted TRUE");
-    } else {
-        msg!("checking whitelisted FALSE");
     }
-    msg!("finish whitelist check");
 
     // assign delegate to PDA
     let cpi_ctx = ctx.accounts.approve_delegate_ctx();
