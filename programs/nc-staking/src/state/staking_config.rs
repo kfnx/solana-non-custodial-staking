@@ -1,5 +1,10 @@
 use anchor_lang::prelude::*;
 
+// #[derive(Debug, Copy, Clone, AnchorSerialize, AnchorDeserialize)]
+// pub struct Config {
+//     pub min_staking_period_sec: u64,
+// }
+
 #[account]
 pub struct StakingConfig {
     pub admin: Pubkey,
@@ -15,7 +20,7 @@ pub struct StakingConfig {
     pub nfts_staked: u64,
     pub initiated_users: u64,
     pub active_stakers: u64,
-
+    pub min_staking_period_sec: u64,
     // list of whitelisted creator address
     pub whitelisted_creator: bool,
 }

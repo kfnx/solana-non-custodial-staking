@@ -27,7 +27,7 @@ pub fn handler(ctx: Context<InitStaking>) -> Result<()> {
   user.user = ctx.accounts.user.key();
   user.config = ctx.accounts.config.key();
   user.reward_accrued = 0;
-  user.time_last_stake = 0;
+  user.last_stake_time = 0;
   user.time_last_claim = 0;
   user.nfts_staked = 0;
 

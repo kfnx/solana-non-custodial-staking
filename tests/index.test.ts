@@ -35,6 +35,7 @@ import {
   delay,
   findWhitelistPDA,
   getMetadataPDA,
+  findStakeInfoPDA,
 } from "./utils";
 
 chai.use(chaiAsPromised);
@@ -49,6 +50,10 @@ describe("User journey", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const dev = createUser();
   const config = Keypair.generate();
+  const stakingConfig = {
+    rewardRate: new BN(10),
+    minStakingPeriodInSeconds: new BN(5),
+  };
   const rewardMint = Keypair.generate();
   const justin = createUser();
   const markers = createUser();
@@ -108,9 +113,12 @@ describe("User journey", () => {
       console.log("reward pot", rewardPot.toBase58());
 
       // init staking config
-      const rewardRate = new BN(10);
       const initStakingTx = await program.methods
-        .initStakingConfig(configAuthBump, rewardRate)
+        .initStakingConfig(
+          configAuthBump,
+          stakingConfig.rewardRate,
+          stakingConfig.minStakingPeriodInSeconds
+        )
         .accounts({
           admin: dev.wallet.publicKey,
           config: config.publicKey,
@@ -139,7 +147,9 @@ describe("User journey", () => {
 
       assert.ok(account.admin.equals(dev.wallet.publicKey));
       assert.ok(account.rewardMint.equals(rewardMint.publicKey));
-      assert.ok(account.rewardRate.toNumber() === rewardRate.toNumber());
+      assert.ok(
+        account.rewardRate.toNumber() === stakingConfig.rewardRate.toNumber()
+      );
     });
 
     it("Dev fund reward pot so user can claim reward tokens", async () => {
@@ -414,6 +424,11 @@ describe("User journey", () => {
         config.publicKey
       );
       console.log("justin state", justinState.toBase58());
+      const [stakeInfo] = await findStakeInfoPDA(
+        NFTmint.publicKey,
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -424,6 +439,7 @@ describe("User journey", () => {
         .stake()
         .accounts({
           user: justin.wallet.publicKey,
+          stakeInfo,
           config: config.publicKey,
           mint: NFTmint.publicKey,
           tokenAccount: justinATA,
@@ -475,6 +491,11 @@ describe("User journey", () => {
         config.publicKey
       );
       console.log("justin state", justinState.toBase58());
+      const [stakeInfo] = await findStakeInfoPDA(
+        NFTmint.publicKey,
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -486,6 +507,7 @@ describe("User journey", () => {
           .stake()
           .accounts({
             user: justin.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
@@ -652,7 +674,7 @@ describe("User journey", () => {
       }
     });
 
-    it("Justin can unstake/thaw his own NFT", async () => {
+    it("Justin can unstake/thaw his own NFT after lock period finish", async () => {
       const justinATA = await findUserATA(
         justin.wallet.publicKey,
         NFTmint.publicKey
@@ -667,11 +689,19 @@ describe("User journey", () => {
         config.publicKey
       );
       console.log("justin state", justinState.toBase58());
-      try {
-        const tx = await program.methods
+      const [stakeInfo] = await findStakeInfoPDA(
+        NFTmint.publicKey,
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+
+      // first unstake attemp, cannot unstake because haven't reach minimum staking period
+      await expect(
+        program.methods
           .unstake()
           .accounts({
             user: justin.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
@@ -682,11 +712,33 @@ describe("User journey", () => {
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           })
           .signers([justin.keypair])
-          .rpc();
-        console.log("Thaw transaction signature", tx);
-      } catch (error) {
-        console.error(error);
-      }
+          .rpc()
+      ).to.be.rejectedWith("CannotUnstakeYet");
+
+      const earlyAtaInfo =
+        await justin.provider.connection.getParsedAccountInfo(justinATA);
+      const parsedAcc = (<ParsedAccountData>earlyAtaInfo.value.data).parsed;
+      assert.equal(parsedAcc.info.state, "frozen");
+
+      // second attenp, after reach minimum staking period
+      await delay(stakingConfig.minStakingPeriodInSeconds.toNumber() * 1000);
+      await program.methods
+        .unstake()
+        .accounts({
+          user: justin.wallet.publicKey,
+          stakeInfo,
+          config: config.publicKey,
+          mint: NFTmint.publicKey,
+          tokenAccount: justinATA,
+          userState: justinState,
+          delegate,
+          edition,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        })
+        .signers([justin.keypair])
+        .rpc();
+
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
       );
@@ -713,11 +765,18 @@ describe("User journey", () => {
         config.publicKey
       );
       console.log("justin state", justinState.toBase58());
+      const [stakeInfo] = await findStakeInfoPDA(
+        NFTmint.publicKey,
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+
       try {
         const tx = await program.methods
           .unstake()
           .accounts({
             user: justin.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
@@ -729,7 +788,7 @@ describe("User journey", () => {
           })
           .signers([justin.keypair])
           .rpc();
-        console.log("Thaw transaction signature", tx);
+        console.log("Unstake tx", tx);
       } catch (error) {
         console.error(error);
         assert.equal(
@@ -812,6 +871,11 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
+      const [stakeInfo] = await findStakeInfoPDA(
+        justinNFTmint,
+        markers.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -823,6 +887,7 @@ describe("User journey", () => {
           .stake()
           .accounts({
             user: markers.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             userState: markersState,
             mint: justinNFTmint,
@@ -861,6 +926,11 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
+      const [stakeInfo] = await findStakeInfoPDA(
+        justinNFTmint,
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -872,6 +942,7 @@ describe("User journey", () => {
           .stake()
           .accounts({
             user: justin.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             userState: markersState,
             mint: justinNFTmint,
@@ -1041,6 +1112,11 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
+      const [stakeInfo] = await findStakeInfoPDA(
+        markersNFTmint,
+        markers.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -1051,6 +1127,7 @@ describe("User journey", () => {
           .stake()
           .accounts({
             user: markers.wallet.publicKey,
+            stakeInfo,
             config: config.publicKey,
             userState: markersState,
             mint: markersNFTmint,

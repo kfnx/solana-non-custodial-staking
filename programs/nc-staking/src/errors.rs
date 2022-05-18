@@ -19,4 +19,11 @@ pub enum ErrorCode {
 
     #[msg("NFT creator address is not present in any of the whitelists")]
     NotWhitelisted,
+
+    #[msg("NFT is not present in any stake proof")]
+    NotStaked,
+
+    #[msg("NFT is in lock period, cannot unstake yet until it reach minimum staking period")]
+    CannotUnstakeYet,
+    
 }
