@@ -7,6 +7,8 @@ pub struct Unstake<'info> {
     pub user: Signer<'info>,
     #[account(mut, has_one = user)]
     pub user_state: Account<'info, User>,
+    #[account(mut)]
+    pub config: Account<'info, StakingConfig>,
     #[account(
         mut,
         token::authority = user,
@@ -61,6 +63,14 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
         return Err(error!(ErrorCode::EmptyVault));
     }
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
+
+    let config = &mut ctx.accounts.config;
+    config.nfts_staked = config.nfts_staked.checked_sub(1).unwrap();
+    // subtract active stakers when the user staked NFT reach 0
+    if user_state.nfts_staked == 0 {
+        config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
+    }
+
     msg!("instruction handler: Unstake");
     Ok(())
 }

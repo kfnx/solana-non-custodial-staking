@@ -44,6 +44,8 @@ pub fn handler(ctx: Context<InitStakingConfig>, bump_config_auth: u8, reward_rat
   config.reward_rate = reward_rate;
   config.reward_accrued = 0;
   config.nfts_staked = 0;
+  config.initiated_users = 0;
+  config.active_stakers = 0;
   // config.reward_rate_denominator = ctx.accounts.reward_pot.key();
   msg!("instruction handler: InitStakingConfig");
   Ok(())

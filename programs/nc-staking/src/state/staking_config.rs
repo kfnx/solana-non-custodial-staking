@@ -13,8 +13,8 @@ pub struct StakingConfig {
     // pub reward_rate_denominator: u64,
     pub reward_accrued: u64,
     pub nfts_staked: u64,
-    // pub registered_stakers: u64,
-    // pub active_stakers: u64,
+    pub initiated_users: u64,
+    pub active_stakers: u64,
 
     // list of whitelisted creator address
     pub whitelisted_creator: bool,

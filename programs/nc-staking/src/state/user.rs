@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 pub struct User {
     pub user: Pubkey,
+    pub config: Pubkey,
     // pub user_authority: Pubkey,
     // pub user_authority_bump_seed: [u8; 1],
     pub reward_accrued: u64,

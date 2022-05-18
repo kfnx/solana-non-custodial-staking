@@ -177,6 +177,14 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     }
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
     user_state.time_last_stake = now_ts()?;
+
+    let config = &mut ctx.accounts.config;
+    config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
+    // add active stakers when a user initially stake their first NFT
+    if user_state.nfts_staked == 1 {
+        config.active_stakers = config.active_stakers.checked_add(1).unwrap();
+    }
+
     msg!("instruction handler: Stake");
     Ok(())
 }

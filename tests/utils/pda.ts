@@ -6,9 +6,9 @@ import { programs } from "@metaplex/js";
 
 const { programId } = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
 
-export const findUserStatePDA = async (user: PublicKey) => {
+export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from("user_state"), user.toBytes()],
+    [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
     programId
   );
 };

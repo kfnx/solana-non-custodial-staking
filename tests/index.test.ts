@@ -53,6 +53,8 @@ describe("User journey", () => {
   const justin = createUser();
   const markers = createUser();
   const NFTmint = Keypair.generate();
+  // TODO: create a bunch of NFT for more sophisticated test
+  // const NftCollectionMints = [Keypair.generate(), Keypair.generate(), Keypair.generate()];
 
   describe("Dev create NFT and setup staking config", () => {
     it("User Dev created", async () => {
@@ -356,14 +358,16 @@ describe("User journey", () => {
     });
 
     it("Justin initate staking", async () => {
-      const [userState, _vaultBump] = await findUserStatePDA(
-        justin.wallet.publicKey
+      const [userState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
       );
 
       await program.methods
         .initStaking()
         .accounts({
           userState,
+          config: config.publicKey,
           user: justin.wallet.publicKey,
         })
         .signers([justin.keypair])
@@ -375,23 +379,24 @@ describe("User journey", () => {
     });
 
     it("Justin cannot init staking twice", async () => {
-      const [userState] = await findUserStatePDA(justin.wallet.publicKey);
+      const [userState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
 
-      try {
-        await program.methods
+      await expect(
+        program.methods
           .initStaking()
           .accounts({
             userState,
+            config: config.publicKey,
             user: justin.wallet.publicKey,
           })
           .signers([justin.keypair])
-          .rpc();
-      } catch (error) {
-        assert.equal(
-          error.message,
-          "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x0"
-        );
-      }
+          .rpc()
+      ).to.be.rejectedWith(
+        "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x0"
+      );
     });
 
     it("Justin stake one NFT", async () => {
@@ -404,7 +409,10 @@ describe("User journey", () => {
       console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
       console.log("edition", edition.toBase58());
-      const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       console.log("justin state", justinState.toBase58());
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
@@ -462,7 +470,10 @@ describe("User journey", () => {
       console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
       console.log("edition", edition.toBase58());
-      const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       console.log("justin state", justinState.toBase58());
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
@@ -534,8 +545,9 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         rewardMint.publicKey
       );
-      const [userState, _bump] = await findUserStatePDA(
-        justin.wallet.publicKey
+      const [userState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
       );
 
       console.log("userATA", userATA.toBase58());
@@ -650,13 +662,17 @@ describe("User journey", () => {
       console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
       console.log("edition", edition.toBase58());
-      const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       console.log("justin state", justinState.toBase58());
       try {
         const tx = await program.methods
           .unstake()
           .accounts({
             user: justin.wallet.publicKey,
+            config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
             userState: justinState,
@@ -692,13 +708,17 @@ describe("User journey", () => {
       console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
       console.log("edition", edition.toBase58());
-      const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
       console.log("justin state", justinState.toBase58());
       try {
         const tx = await program.methods
           .unstake()
           .accounts({
             user: justin.wallet.publicKey,
+            config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
             userState: justinState,
@@ -761,13 +781,15 @@ describe("User journey", () => {
 
     it("Markers initate staking", async () => {
       const [userState, _vaultBump] = await findUserStatePDA(
-        markers.wallet.publicKey
+        markers.wallet.publicKey,
+        config.publicKey
       );
 
       await program.methods
         .initStaking()
         .accounts({
           userState,
+          config: config.publicKey,
           user: markers.wallet.publicKey,
         })
         .signers([markers.keypair])
@@ -786,7 +808,10 @@ describe("User journey", () => {
       );
       const [delegate] = await findDelegateAuthPDA(justinNFTata);
       const [edition] = await findEditionPDA(justinNFTmint);
-      const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [markersState] = await findUserStatePDA(
+        markers.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -832,7 +857,10 @@ describe("User journey", () => {
       );
       const [delegate] = await findDelegateAuthPDA(justinNFTata);
       const [edition] = await findEditionPDA(justinNFTmint);
-      const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [markersState] = await findUserStatePDA(
+        markers.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -1009,7 +1037,10 @@ describe("User journey", () => {
       );
       const [delegate] = await findDelegateAuthPDA(markersNFTata);
       const [edition] = await findEditionPDA(markersNFTmint);
-      const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [markersState] = await findUserStatePDA(
+        markers.wallet.publicKey,
+        config.publicKey
+      );
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -1055,9 +1086,44 @@ describe("User journey", () => {
   });
 
   describe("Final program state", () => {
-    it("Fetch all 2 staking user (Justin and Markers)", async () => {
+    it("Check program accounts", async () => {
       const allStakingAccounts = await program.account.user.all();
       assert.equal(allStakingAccounts.length, 2);
+
+      const allStakingConfig = await program.account.stakingConfig.all();
+      assert.equal(allStakingConfig.length, 1);
+    });
+
+    it("Check overall state", async () => {
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+      const justinStateAcc = await program.account.user.fetch(justinState);
+      assert.equal(
+        justinStateAcc.config.toBase58(),
+        config.publicKey.toBase58()
+      );
+      // console.log("justinStateAcc", justinStateAcc);
+
+      const [markersState] = await findUserStatePDA(
+        markers.wallet.publicKey,
+        config.publicKey
+      );
+      const markersStateAcc = await program.account.user.fetch(markersState);
+      assert.equal(
+        markersStateAcc.config.toBase58(),
+        config.publicKey.toBase58()
+      );
+      // console.log("markersStateAcc", markersStateAcc);
+
+      const stakingConfig = await program.account.stakingConfig.fetch(
+        config.publicKey
+      );
+      assert.equal(stakingConfig.initiatedUsers.toNumber(), 2); // justin + markers
+      assert.equal(stakingConfig.whitelistedCreator, true);
+
+      console.log("config", stakingConfig);
     });
   });
 });
