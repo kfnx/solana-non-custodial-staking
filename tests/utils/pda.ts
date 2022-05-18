@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 import { NcStaking } from "../../target/types/nc_staking";
+import { programs } from "@metaplex/js";
 
 const { programId } = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
 
@@ -43,4 +44,18 @@ export const findEditionPDA = (mint: PublicKey) => {
     ],
     TOKEN_METADATA_PROGRAM_ID
   );
+};
+
+export const findWhitelistPDA = async (
+  config: PublicKey,
+  creator: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [Buffer.from("whitelist"), config.toBytes(), creator.toBytes()],
+    programId
+  );
+};
+
+export const getMetadataPDA = async (mint: PublicKey) => {
+  return await programs.metadata.Metadata.getPDA(mint);
 };

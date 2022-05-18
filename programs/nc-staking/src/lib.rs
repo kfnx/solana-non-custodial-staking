@@ -1,7 +1,7 @@
 use crate::instructions::*;
 use anchor_lang::prelude::*;
 
-pub mod error;
+pub mod errors;
 pub mod instructions;
 pub mod mpl;
 pub mod state;
@@ -15,10 +15,10 @@ pub mod nc_staking {
 
     pub fn init_staking_config(
         ctx: Context<InitStakingConfig>,
-        bump: u8,
+        bump_config_auth: u8,
         reward_rate: u64,
     ) -> Result<()> {
-        instructions::init_staking_config::handler(ctx, bump, reward_rate)
+        instructions::init_staking_config::handler(ctx, bump_config_auth, reward_rate)
     }
     pub fn init_staking(ctx: Context<InitStaking>) -> Result<()> {
         instructions::init_staking::handler(ctx)
@@ -38,5 +38,9 @@ pub mod nc_staking {
         _bump_reward_pot: u8,
     ) -> Result<()> {
         instructions::claim::handler(ctx)
+    }
+
+    pub fn add_whitelist(ctx: Context<AddWhitelist>) -> Result<()> {
+        instructions::add_whitelist::handler(ctx)
     }
 }

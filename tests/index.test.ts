@@ -33,13 +33,15 @@ import {
   findConfigAuthorityPDA,
   findRewardPotPDA,
   delay,
+  findWhitelistPDA,
+  getMetadataPDA,
 } from "./utils";
 
 chai.use(chaiAsPromised);
 
 /**
- * This test journey covered by 3 type of user:
- * Dev where all the setup happen, e.g: create NFT
+ * This test journey covers 3 type of user:
+ * Dev where all the setup happen, e.g: create NFT, create reward token, setup staking config and whitelist.
  * Justin as normal and kind user of the NFT project and staking program
  * Markers as bad user that try to exploit the program
  */
@@ -91,6 +93,7 @@ describe("User journey", () => {
     });
 
     it("Dev create staking config", async () => {
+      console.log("config", config.publicKey.toBase58());
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey
       );
@@ -266,6 +269,43 @@ describe("User journey", () => {
       );
     });
 
+    it("Dev whitelist NFT creator address", async () => {
+      // const [configAuthority, bumpConfigAuthority] =
+      //   await findConfigAuthorityPDA(config.publicKey);
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+      console.log("whitelist proof PDA", whitelist.toBase58());
+
+      await program.methods
+        .addWhitelist()
+        .accounts({
+          admin: dev.wallet.publicKey,
+          config: config.publicKey,
+          whitelist,
+          creatorAddressToWhitelist: dev.wallet.publicKey,
+        })
+        .signers([dev.keypair])
+        .rpc();
+
+      const whitelistAcc = await program.account.whitelist.fetch(whitelist);
+      assert.equal(
+        whitelistAcc.creator.toBase58(),
+        dev.wallet.publicKey.toBase58(),
+        "creator addres stored on whitelist is the same creator address"
+      );
+
+      const configAcc = await program.account.stakingConfig.fetch(
+        config.publicKey
+      );
+      assert.equal(
+        configAcc.whitelistedCreator,
+        true,
+        "config whitelist is true"
+      );
+    });
+
     it("Dev send NFT to Justin", async () => {
       const devATA = await getOrCreateAssociatedTokenAccount(
         dev.provider.connection,
@@ -368,25 +408,40 @@ describe("User journey", () => {
       console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
       console.log("justin state", justinState.toBase58());
-      try {
-        const tx = await program.methods
-          .stake()
-          .accounts({
-            user: justin.wallet.publicKey,
-            mint: NFTmint.publicKey,
-            tokenAccount: justinATA,
-            userState: justinState,
-            delegate,
-            edition,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          })
-          .signers([justin.keypair])
-          .rpc();
-        console.log("Freeze transaction signature", tx);
-      } catch (error) {
-        console.error(error);
-      }
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+      const metadata = await getMetadataPDA(NFTmint.publicKey);
+
+      const tx = await program.methods
+        .stake()
+        .accounts({
+          user: justin.wallet.publicKey,
+          config: config.publicKey,
+          mint: NFTmint.publicKey,
+          tokenAccount: justinATA,
+          userState: justinState,
+          delegate,
+          edition,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        })
+        .remainingAccounts([
+          {
+            pubkey: metadata,
+            isWritable: false,
+            isSigner: false,
+          },
+          {
+            pubkey: whitelist,
+            isWritable: false,
+            isSigner: false,
+          },
+        ])
+        .signers([justin.keypair])
+        .rpc();
+      console.log("stake NFT tx", tx);
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
       );
@@ -411,11 +466,18 @@ describe("User journey", () => {
       console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(justin.wallet.publicKey);
       console.log("justin state", justinState.toBase58());
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+      const metadata = await getMetadataPDA(NFTmint.publicKey);
+
       try {
         const tx = await program.methods
           .stake()
           .accounts({
             user: justin.wallet.publicKey,
+            config: config.publicKey,
             mint: NFTmint.publicKey,
             tokenAccount: justinATA,
             userState: justinState,
@@ -424,9 +486,21 @@ describe("User journey", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           })
+          .remainingAccounts([
+            {
+              pubkey: metadata,
+              isWritable: false,
+              isSigner: false,
+            },
+            {
+              pubkey: whitelist,
+              isWritable: false,
+              isSigner: false,
+            },
+          ])
           .signers([justin.keypair])
           .rpc();
-        console.log("Freeze transaction signature", tx);
+        console.log("Stake NFT tx", tx);
       } catch (error) {
         assert.equal(
           error.message,
@@ -706,7 +780,7 @@ describe("User journey", () => {
       assert.ok(account.nftsStaked.toNumber() === 0);
     });
 
-    it("Markers cannot stake Justin NFT", async () => {
+    it("Markers cannot stake other user NFT (owned by Justin)", async () => {
       const justinNFTmint = NFTmint.publicKey;
       const justinNFTata = await findUserATA(
         justin.wallet.publicKey,
@@ -715,12 +789,18 @@ describe("User journey", () => {
       const [delegate] = await findDelegateAuthPDA(justinNFTata);
       const [edition] = await findEditionPDA(justinNFTmint);
       const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+      const metadata = await getMetadataPDA(justinNFTmint);
 
       await expect(
         program.methods
           .stake()
           .accounts({
             user: markers.wallet.publicKey,
+            config: config.publicKey,
             userState: markersState,
             mint: justinNFTmint,
             tokenAccount: justinNFTata,
@@ -729,6 +809,18 @@ describe("User journey", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           })
+          .remainingAccounts([
+            {
+              pubkey: metadata,
+              isWritable: false,
+              isSigner: false,
+            },
+            {
+              pubkey: whitelist,
+              isWritable: false,
+              isSigner: false,
+            },
+          ])
           .signers([markers.keypair])
           .rpc()
       ).to.be.rejectedWith("ConstraintRaw");
@@ -743,12 +835,18 @@ describe("User journey", () => {
       const [delegate] = await findDelegateAuthPDA(justinNFTata);
       const [edition] = await findEditionPDA(justinNFTmint);
       const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+      const metadata = await getMetadataPDA(justinNFTmint);
 
       await expect(
         program.methods
           .stake()
           .accounts({
             user: justin.wallet.publicKey,
+            config: config.publicKey,
             userState: markersState,
             mint: justinNFTmint,
             tokenAccount: justinNFTata,
@@ -757,9 +855,163 @@ describe("User journey", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           })
+          .remainingAccounts([
+            {
+              pubkey: metadata,
+              isWritable: false,
+              isSigner: false,
+            },
+            {
+              pubkey: whitelist,
+              isWritable: false,
+              isSigner: false,
+            },
+          ])
           .signers([markers.keypair])
           .rpc()
       ).to.be.rejectedWith("unknown signer");
+    });
+
+    it("Markers cannot stake unofficial NFT not whitelisted NFT", async () => {
+      // setup unofficial NFT
+      const mint = Keypair.generate();
+      const create_mint_tx = new Transaction({
+        feePayer: markers.wallet.publicKey,
+      });
+
+      create_mint_tx.add(
+        SystemProgram.createAccount({
+          fromPubkey: markers.wallet.publicKey,
+          newAccountPubkey: mint.publicKey,
+          space: MintLayout.span,
+          lamports: await getMinimumBalanceForRentExemptMint(
+            markers.provider.connection
+          ),
+          programId: TOKEN_PROGRAM_ID,
+        })
+      );
+      create_mint_tx.add(
+        createInitializeMintInstruction(
+          mint.publicKey, // mint pubkey
+          0, // decimals
+          markers.wallet.publicKey, // mint authority
+          markers.wallet.publicKey, // freeze authority (if you don't need it, you can set `null`)
+          TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
+        )
+      );
+      const create_mint_tx_sig = await markers.provider.sendAndConfirm(
+        create_mint_tx,
+        [markers.keypair, mint]
+      );
+      console.log("create mint tx", create_mint_tx_sig);
+
+      // Mint Fake NFT
+      const markersATA = await getOrCreateAssociatedTokenAccount(
+        markers.provider.connection,
+        markers.wallet.payer,
+        mint.publicKey,
+        markers.wallet.publicKey
+      );
+
+      console.log("create and init ATA", markersATA.address.toBase58());
+
+      const mint_token_tx = new Transaction({
+        feePayer: markers.wallet.publicKey,
+      });
+
+      mint_token_tx.add(
+        createMintToInstruction(
+          mint.publicKey, // mint
+          markersATA.address, // receiver (should be a token account)
+          markers.wallet.publicKey, // mint authority
+          1, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+          [], // only multisig account will use. leave it empty now.
+          TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
+        )
+      );
+
+      const mint_token_tx_sig = await markers.provider.sendAndConfirm(
+        mint_token_tx,
+        [markers.keypair]
+      );
+      console.log("mint token tx", mint_token_tx_sig);
+
+      const ataBalance = await getTokenBalanceByATA(
+        markers.provider.connection,
+        markersATA.address
+      );
+      console.log(
+        "mint",
+        mint.publicKey.toBase58(),
+        "ATA",
+        markersATA.address.toBase58(),
+        "balance",
+        ataBalance
+      );
+
+      // Fake Dev create NFT metadata
+      const metadata = await createMetadata(
+        markers.provider.connection,
+        markers.wallet,
+        mint.publicKey
+      );
+
+      console.log("metadata", metadata.toBase58());
+      console.log(
+        "Fake/unofficial NFT",
+        `https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
+      );
+
+      // end fake nft
+      const markersNFTmint = mint.publicKey;
+      const markersNFTata = await findUserATA(
+        markers.wallet.publicKey,
+        markersNFTmint
+      );
+      const [delegate] = await findDelegateAuthPDA(markersNFTata);
+      const [edition] = await findEditionPDA(markersNFTmint);
+      const [markersState] = await findUserStatePDA(markers.wallet.publicKey);
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+
+      await expect(
+        program.methods
+          .stake()
+          .accounts({
+            user: markers.wallet.publicKey,
+            config: config.publicKey,
+            userState: markersState,
+            mint: markersNFTmint,
+            tokenAccount: markersNFTata,
+            edition,
+            delegate,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          })
+          .remainingAccounts([
+            {
+              pubkey: metadata,
+              isWritable: false,
+              isSigner: false,
+            },
+            {
+              pubkey: whitelist,
+              isWritable: false,
+              isSigner: false,
+            },
+          ])
+          .signers([markers.keypair])
+          .rpc()
+      ).to.be.rejectedWith("NotWhitelisted");
+
+      const ataInfo = await justin.provider.connection.getParsedAccountInfo(
+        markersNFTata
+      );
+      // state doesnt change to freeze
+      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+      assert.equal(parsed.info.state, "initialized");
     });
   });
 

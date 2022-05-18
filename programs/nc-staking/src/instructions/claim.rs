@@ -1,4 +1,4 @@
-use crate::{error, state::*, utils::now_ts};
+use crate::{errors, state::*, utils::now_ts};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -18,11 +18,7 @@ pub struct ClaimStakingReward<'info> {
     #[account(mut)]
     pub user_state: Account<'info, User>,
 
-    #[account(
-        mut,
-        seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()],
-        bump = bump_reward_pot
-    )]
+    #[account(mut, seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()], bump = bump_reward_pot)]
     pub reward_pot: Account<'info, TokenAccount>,
     pub reward_mint: Account<'info, Mint>,
     #[account(
@@ -60,7 +56,7 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     // transfer
     let time_accrued = {
         if user_state.time_last_stake == 0 {
-            return Err(error::ErrorCode::UserNeverStake.into());
+            return Err(error!(errors::ErrorCode::UserNeverStake));
         }
         now_ts()? - user_state.time_last_stake
     };

@@ -13,7 +13,7 @@ pub struct InitStakingConfig<'info> {
     space = 8 + std::mem::size_of::<StakingConfig>()
   )]
   pub config: Account<'info, StakingConfig>,
-  /// CHECK:
+  /// CHECK: used to transfer reward token to user from reward pot which the auth is config_authority
   #[account(mut, seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
   pub config_authority: AccountInfo<'info>,
   #[account(
