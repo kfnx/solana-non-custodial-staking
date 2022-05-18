@@ -270,8 +270,6 @@ describe("User journey", () => {
     });
 
     it("Dev whitelist NFT creator address", async () => {
-      // const [configAuthority, bumpConfigAuthority] =
-      //   await findConfigAuthorityPDA(config.publicKey);
       const [whitelist] = await findWhitelistPDA(
         config.publicKey,
         dev.wallet.publicKey
@@ -755,7 +753,7 @@ describe("User journey", () => {
     });
   });
 
-  describe("Exploiter Markers try to exploit Justin NFT and staking program", () => {
+  describe("Markers should not be able to exploit staking program", () => {
     it("User Markers Created", async () => {
       console.log("Markers address", markers.keypair.publicKey.toBase58());
       await airdropUser(markers.wallet.publicKey);
@@ -870,6 +868,47 @@ describe("User journey", () => {
           .signers([markers.keypair])
           .rpc()
       ).to.be.rejectedWith("unknown signer");
+    });
+
+    it("Markers cannot add whitelist", async () => {
+      // assume markers somehow know dev pubkey
+      const [whitelist] = await findWhitelistPDA(
+        config.publicKey,
+        dev.wallet.publicKey
+      );
+
+      await expect(
+        program.methods
+          .addWhitelist()
+          .accounts({
+            admin: dev.wallet.publicKey,
+            config: config.publicKey,
+            whitelist,
+            creatorAddressToWhitelist: markers.wallet.publicKey,
+          })
+          .signers([markers.keypair])
+          .rpc()
+      ).to.be.rejectedWith("unknown signer");
+
+      // try again with markers as admin
+      const [markersWhitelist] = await findWhitelistPDA(
+        config.publicKey,
+        markers.wallet.publicKey
+      );
+      console.log("markers whitelist proof PDA", whitelist.toBase58());
+
+      await expect(
+        program.methods
+          .addWhitelist()
+          .accounts({
+            admin: markers.wallet.publicKey,
+            config: config.publicKey,
+            whitelist: markersWhitelist,
+            creatorAddressToWhitelist: markers.wallet.publicKey,
+          })
+          .signers([markers.keypair])
+          .rpc()
+      ).to.be.rejectedWith("ConstraintHasOne");
     });
 
     it("Markers cannot stake unofficial NFT not whitelisted NFT", async () => {
