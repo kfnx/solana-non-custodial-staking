@@ -7,7 +7,7 @@ pub struct User {
     // pub user_authority: Pubkey,
     // pub user_authority_bump_seed: [u8; 1],
     pub reward_accrued: u64,
-    pub time_last_stake: u64,
+    pub last_stake_time: u64,
     pub time_last_claim: u64,
     pub nfts_staked: u64,
 }

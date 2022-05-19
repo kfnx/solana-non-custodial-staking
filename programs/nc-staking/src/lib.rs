@@ -17,8 +17,14 @@ pub mod nc_staking {
         ctx: Context<InitStakingConfig>,
         bump_config_auth: u8,
         reward_rate: u64,
+        min_staking_period_sec: u64,
     ) -> Result<()> {
-        instructions::init_staking_config::handler(ctx, bump_config_auth, reward_rate)
+        instructions::init_staking_config::handler(
+            ctx,
+            bump_config_auth,
+            reward_rate,
+            min_staking_period_sec,
+        )
     }
     pub fn init_staking(ctx: Context<InitStaking>) -> Result<()> {
         instructions::init_staking::handler(ctx)

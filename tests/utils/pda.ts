@@ -59,3 +59,19 @@ export const findWhitelistPDA = async (
 export const getMetadataPDA = async (mint: PublicKey) => {
   return await programs.metadata.Metadata.getPDA(mint);
 };
+
+export const findStakeInfoPDA = async (
+  mint: PublicKey,
+  user: PublicKey,
+  config: PublicKey
+) => {
+  return PublicKey.findProgramAddress(
+    [
+      Buffer.from("stake_info"),
+      mint.toBytes(),
+      user.toBytes(),
+      config.toBytes(),
+    ],
+    programId
+  );
+};

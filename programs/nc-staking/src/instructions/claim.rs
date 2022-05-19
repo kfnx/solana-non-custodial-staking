@@ -55,10 +55,10 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
 
     // transfer
     let time_accrued = {
-        if user_state.time_last_stake == 0 {
+        if user_state.last_stake_time == 0 {
             return Err(error!(errors::ErrorCode::UserNeverStake));
         }
-        now_ts()? - user_state.time_last_stake
+        now_ts()? - user_state.last_stake_time
     };
     let reward_amount = config.reward_rate * time_accrued;
     token::transfer(

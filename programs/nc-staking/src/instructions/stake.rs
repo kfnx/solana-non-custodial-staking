@@ -6,11 +6,20 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
+    #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut, has_one = user)]
     pub user_state: Account<'info, User>,
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
+    #[account(
+        init_if_needed,
+        seeds = [b"stake_info".as_ref(), mint.key().as_ref(), user.key().as_ref(), config.key().as_ref()],
+        bump,
+        payer = user,
+        space = 8 + std::mem::size_of::<StakeInfo>()
+    )]
+    pub stake_info: Account<'info, StakeInfo>,
     #[account(
         mut,
         token::authority = user,
@@ -69,14 +78,14 @@ fn assert_valid_metadata(
 fn assert_valid_whitelist_proof<'info>(
     whitelist_proof: &AccountInfo<'info>,
     config: &Pubkey,
-    address_to_whitelist: &Pubkey,
+    creator_address_to_whitelist: &Pubkey,
     program_id: &Pubkey,
 ) -> Result<()> {
     // 1 verify the PDA seeds match
     let seed = &[
         b"whitelist".as_ref(),
         config.as_ref(),
-        address_to_whitelist.as_ref(),
+        creator_address_to_whitelist.as_ref(),
     ];
     let (whitelist_addr, _bump) = Pubkey::find_program_address(seed, program_id);
 
@@ -176,7 +185,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         return Err(error!(ErrorCode::InvalidUserState));
     }
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
-    user_state.time_last_stake = now_ts()?;
+    user_state.last_stake_time = now_ts()?;
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
@@ -186,5 +195,10 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     }
 
     msg!("instruction handler: Stake");
+
+    let stake_info = &mut *ctx.accounts.stake_info;
+    stake_info.start_time = now_ts()?;
+
+    msg!("stake begin at: {}", stake_info.start_time);
     Ok(())
 }

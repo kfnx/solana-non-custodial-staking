@@ -33,7 +33,12 @@ pub struct InitStakingConfig<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<InitStakingConfig>, bump_config_auth: u8, reward_rate: u64) -> Result<()> {
+pub fn handler(
+  ctx: Context<InitStakingConfig>,
+  bump_config_auth: u8,
+  reward_rate: u64,
+  min_staking_period_sec: u64,
+) -> Result<()> {
   let config = &mut ctx.accounts.config;
   config.admin = ctx.accounts.admin.key();
   config.reward_mint = ctx.accounts.reward_mint.key();
@@ -42,11 +47,13 @@ pub fn handler(ctx: Context<InitStakingConfig>, bump_config_auth: u8, reward_rat
   config.config_authority_seed = config.key();
   config.config_authority_bump_seed = [bump_config_auth];
   config.reward_rate = reward_rate;
+  // config.reward_rate_denominator = reward_rate_denominator;
   config.reward_accrued = 0;
   config.nfts_staked = 0;
   config.initiated_users = 0;
   config.active_stakers = 0;
-  // config.reward_rate_denominator = ctx.accounts.reward_pot.key();
+  config.min_staking_period_sec = min_staking_period_sec;
   msg!("instruction handler: InitStakingConfig");
+  msg!("min_staking_period_sec: {}", min_staking_period_sec);
   Ok(())
 }
