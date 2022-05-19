@@ -45,6 +45,7 @@ chai.use(chaiAsPromised);
  * Dev where all the setup happen, e.g: create NFT, create reward token, setup staking config and whitelist.
  * Justin as normal and kind user of the NFT project and staking program
  * Markers as bad user that try to exploit the program
+ * uncomment the logs for debugging
  */
 describe("User journey", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
@@ -63,7 +64,7 @@ describe("User journey", () => {
 
   describe("Dev create NFT and setup staking config", () => {
     it("User Dev created", async () => {
-      console.log("Dev address", dev.keypair.publicKey.toBase58());
+      // console.log("Dev address", dev.keypair.publicKey.toBase58());
       await airdropUser(dev.wallet.publicKey);
     });
 
@@ -96,21 +97,21 @@ describe("User journey", () => {
         create_mint_tx,
         [dev.keypair, rewardMint]
       );
-      console.log("create rewardMint tx", create_mint_tx_sig);
+      // console.log("create rewardMint tx", create_mint_tx_sig);
     });
 
     it("Dev create staking config", async () => {
-      console.log("config", config.publicKey.toBase58());
+      // console.log("config", config.publicKey.toBase58());
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey
       );
-      console.log("configAuth", configAuth.toBase58());
+      // console.log("configAuth", configAuth.toBase58());
 
       const [rewardPot] = await findRewardPotPDA(
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log("reward pot", rewardPot.toBase58());
+      // console.log("reward pot", rewardPot.toBase58());
 
       // init staking config
       const initStakingTx = await program.methods
@@ -132,7 +133,7 @@ describe("User journey", () => {
         })
         .signers([dev.keypair, config])
         .rpc();
-      console.log("init config tx", initStakingTx);
+      // console.log("init config tx", initStakingTx);
 
       const allStakingAccounts = await program.account.stakingConfig.all();
       assert.equal(
@@ -172,20 +173,17 @@ describe("User journey", () => {
         )
       );
 
-      const mint_tokens_to_reward_pot_tx_sig =
-        await dev.provider.sendAndConfirm(mint_tokens_to_reward_pot_tx, [
-          dev.keypair,
-        ]);
-      console.log(
-        "mint some tokens to reward pot tx",
-        mint_tokens_to_reward_pot_tx_sig
+      const tx = await dev.provider.sendAndConfirm(
+        mint_tokens_to_reward_pot_tx,
+        [dev.keypair]
       );
+      // console.log("mint tokens to reward pot tx", tx);
 
       const rewardPotBalance = await getTokenBalanceByATA(
         dev.provider.connection,
         stakingConfig.rewardPot
       );
-      console.log("funded reward pot token balance: ", rewardPotBalance);
+      // console.log("funded reward pot token balance: ", rewardPotBalance);
 
       assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
     });
@@ -219,7 +217,7 @@ describe("User journey", () => {
         create_mint_tx,
         [dev.keypair, NFTmint]
       );
-      console.log("create NFTmint tx", create_mint_tx_sig);
+      // console.log("create NFTmint tx", create_mint_tx_sig);
     });
 
     it("Mint NFT", async () => {
@@ -230,7 +228,7 @@ describe("User journey", () => {
         dev.wallet.publicKey
       );
 
-      console.log("create and init ATA", devATA.address.toBase58());
+      // console.log("create and init ATA", devATA.address.toBase58());
 
       const mint_token_tx = new Transaction({
         feePayer: dev.wallet.publicKey,
@@ -251,20 +249,15 @@ describe("User journey", () => {
         mint_token_tx,
         [dev.keypair]
       );
-      console.log("mint some tokens to reward pot tx", mint_token_tx_sig);
+      // console.log("mint some tokens to reward pot tx", mint_token_tx_sig);
 
       const ataBalance = await getTokenBalanceByATA(
         dev.provider.connection,
         devATA.address
       );
-      console.log(
-        "mint",
-        NFTmint.publicKey.toBase58(),
-        "ATA",
-        devATA.address.toBase58(),
-        "balance",
-        ataBalance
-      );
+      // console.log("mint", NFTmint.publicKey.toBase58());
+      // console.log("ATA", devATA.address.toBase58());
+      // console.log("balance", ataBalance);
     });
 
     it("Dev create NFT metadata", async () => {
@@ -274,11 +267,11 @@ describe("User journey", () => {
         NFTmint.publicKey
       );
 
-      console.log("metadata", metadata.toBase58());
-      console.log(
-        "NFT",
-        `https://explorer.solana.com/address/${NFTmint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
-      );
+      // console.log("metadata", metadata.toBase58());
+      // console.log(
+      //   "NFT",
+      //   `https://explorer.solana.com/address/${NFTmint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
+      // );
     });
 
     it("Dev whitelist NFT creator address", async () => {
@@ -286,7 +279,7 @@ describe("User journey", () => {
         config.publicKey,
         dev.wallet.publicKey
       );
-      console.log("whitelist proof PDA", whitelist.toBase58());
+      // console.log("whitelist proof PDA", whitelist.toBase58());
 
       await program.methods
         .addWhitelist()
@@ -324,7 +317,7 @@ describe("User journey", () => {
         dev.wallet.publicKey
       );
 
-      console.log("devATA.address", devATA.address.toBase58());
+      // console.log("devATA.address", devATA.address.toBase58());
 
       const justinATA = await getOrCreateAssociatedTokenAccount(
         dev.provider.connection,
@@ -332,7 +325,7 @@ describe("User journey", () => {
         NFTmint.publicKey,
         justin.wallet.publicKey
       );
-      console.log("justinATA.address", justinATA.address.toBase58());
+      // console.log("justinATA.address", justinATA.address.toBase58());
 
       const transfer_token_tx = await transfer(
         dev.provider.connection,
@@ -343,27 +336,27 @@ describe("User journey", () => {
         1
         // [dev.wallet.payer, toWallet]
       );
-      console.log("transfer NFT to justin tx", transfer_token_tx);
+      // console.log("transfer NFT to justin tx", transfer_token_tx);
 
       const justinAtaBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         justinATA.address
       );
-      console.log("justin NFT: ", justinAtaBalance);
+      // console.log("justin NFT: ", justinAtaBalance);
       assert.equal(1, justinAtaBalance, "justin NFT 1, got it from dev");
 
       const devAtaBalance = await getTokenBalanceByATA(
         dev.provider.connection,
         devATA.address
       );
-      console.log("Dev NFT: ", devAtaBalance);
+      // console.log("Dev NFT: ", devAtaBalance);
       assert.equal(0, devAtaBalance, "Dev NFT 0, transferred to justin");
     });
   });
 
   describe("NFT owner Justin exist", () => {
     it("User Justin created", async () => {
-      console.log("Justin address", justin.keypair.publicKey.toBase58());
+      // console.log("Justin address", justin.keypair.publicKey.toBase58());
       await airdropUser(justin.wallet.publicKey);
     });
 
@@ -414,16 +407,16 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         NFTmint.publicKey
       );
-      console.log("justin ATA", justinATA.toBase58());
+      // console.log("justin ATA", justinATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(justinATA);
-      console.log("justin delegate", delegate.toBase58());
+      // console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
-      console.log("edition", edition.toBase58());
+      // console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
       );
-      console.log("justin state", justinState.toBase58());
+      // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
         NFTmint.publicKey,
         justin.wallet.publicKey,
@@ -463,7 +456,7 @@ describe("User journey", () => {
         ])
         .signers([justin.keypair])
         .rpc();
-      console.log("stake NFT tx", tx);
+      // console.log("stake NFT tx", tx);
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
       );
@@ -481,16 +474,16 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         NFTmint.publicKey
       );
-      console.log("justin ATA", justinATA.toBase58());
+      // console.log("justin ATA", justinATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(justinATA);
-      console.log("justin delegate", delegate.toBase58());
+      // console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
-      console.log("edition", edition.toBase58());
+      // console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
       );
-      console.log("justin state", justinState.toBase58());
+      // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
         NFTmint.publicKey,
         justin.wallet.publicKey,
@@ -531,7 +524,7 @@ describe("User journey", () => {
           ])
           .signers([justin.keypair])
           .rpc();
-        console.log("Stake NFT tx", tx);
+        // console.log("Stake NFT tx", tx);
       } catch (error) {
         assert.equal(
           error.message,
@@ -547,21 +540,21 @@ describe("User journey", () => {
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey
       );
-      console.log("configAuth", configAuth.toBase58());
+      // console.log("configAuth", configAuth.toBase58());
 
       const [rewardPot, rewardPotBump] = await findRewardPotPDA(
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log("reward pot", rewardPot.toBase58());
+      // console.log("reward pot", rewardPot.toBase58());
       const earlyRewardPotBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         rewardPot
       );
-      console.log(
-        "reward pot token balance (before claim): ",
-        earlyRewardPotBalance
-      );
+      // console.log(
+      //   "reward pot token balance (before claim): ",
+      //   earlyRewardPotBalance
+      // );
 
       const userATA = await findUserATA(
         justin.wallet.publicKey,
@@ -572,7 +565,7 @@ describe("User journey", () => {
         config.publicKey
       );
 
-      console.log("userATA", userATA.toBase58());
+      // console.log("userATA", userATA.toBase58());
       await delay(2000);
       const claimTx = await program.methods
         .claim(configAuthBump, rewardPotBump)
@@ -594,25 +587,25 @@ describe("User journey", () => {
         .signers([justin.keypair])
         .rpc();
 
-      console.log("claim tx", claimTx);
+      // console.log("claim tx", claimTx);
 
       const finalRewardPotBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         rewardPot
       );
-      console.log(
-        "reward pot token balance (after claim): ",
-        finalRewardPotBalance
-      );
+      // console.log(
+      //   "reward pot token balance (after claim): ",
+      //   finalRewardPotBalance
+      // );
 
       const finalUserTokenBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         userATA
       );
-      console.log(
-        "justin token balance (after claim): ",
-        finalUserTokenBalance
-      );
+      // console.log(
+      //   "justin token balance (after claim): ",
+      //   finalUserTokenBalance
+      // );
 
       assert.ok(finalUserTokenBalance > 0, "justin got the reward");
       assert.equal(
@@ -679,16 +672,16 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         NFTmint.publicKey
       );
-      console.log("justin ATA", justinATA.toBase58());
+      // console.log("justin ATA", justinATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(justinATA);
-      console.log("justin delegate", delegate.toBase58());
+      // console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
-      console.log("edition", edition.toBase58());
+      // console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
       );
-      console.log("justin state", justinState.toBase58());
+      // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
         NFTmint.publicKey,
         justin.wallet.publicKey,
@@ -755,16 +748,16 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         NFTmint.publicKey
       );
-      console.log("justin ATA", justinATA.toBase58());
+      // console.log("justin ATA", justinATA.toBase58());
       const [delegate] = await findDelegateAuthPDA(justinATA);
-      console.log("justin delegate", delegate.toBase58());
+      // console.log("justin delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(NFTmint.publicKey);
-      console.log("edition", edition.toBase58());
+      // console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
       );
-      console.log("justin state", justinState.toBase58());
+      // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
         NFTmint.publicKey,
         justin.wallet.publicKey,
@@ -788,7 +781,7 @@ describe("User journey", () => {
           })
           .signers([justin.keypair])
           .rpc();
-        console.log("Unstake tx", tx);
+        // console.log("Unstake tx", tx);
       } catch (error) {
         console.error(error);
         assert.equal(
@@ -817,7 +810,7 @@ describe("User journey", () => {
         1
       );
 
-      console.log("NFT transfer tx", tfx);
+      // console.log("NFT transfer tx", tfx);
 
       const justinAtaBalance = await getTokenBalanceByATA(
         justin.provider.connection,
@@ -834,7 +827,7 @@ describe("User journey", () => {
 
   describe("Markers should not be able to exploit staking program", () => {
     it("User Markers Created", async () => {
-      console.log("Markers address", markers.keypair.publicKey.toBase58());
+      // console.log("Markers address", markers.keypair.publicKey.toBase58());
       await airdropUser(markers.wallet.publicKey);
     });
 
@@ -994,7 +987,7 @@ describe("User journey", () => {
         config.publicKey,
         markers.wallet.publicKey
       );
-      console.log("markers whitelist proof PDA", whitelist.toBase58());
+      // console.log("markers whitelist proof PDA", whitelist.toBase58());
 
       await expect(
         program.methods
@@ -1041,7 +1034,7 @@ describe("User journey", () => {
         create_mint_tx,
         [markers.keypair, mint]
       );
-      console.log("create mint tx", create_mint_tx_sig);
+      // console.log("create mint tx", create_mint_tx_sig);
 
       // Mint Fake NFT
       const markersATA = await getOrCreateAssociatedTokenAccount(
@@ -1051,7 +1044,7 @@ describe("User journey", () => {
         markers.wallet.publicKey
       );
 
-      console.log("create and init ATA", markersATA.address.toBase58());
+      // console.log("create and init ATA", markersATA.address.toBase58());
 
       const mint_token_tx = new Transaction({
         feePayer: markers.wallet.publicKey,
@@ -1072,20 +1065,15 @@ describe("User journey", () => {
         mint_token_tx,
         [markers.keypair]
       );
-      console.log("mint token tx", mint_token_tx_sig);
+      // console.log("mint token tx", mint_token_tx_sig);
 
       const ataBalance = await getTokenBalanceByATA(
         markers.provider.connection,
         markersATA.address
       );
-      console.log(
-        "mint",
-        mint.publicKey.toBase58(),
-        "ATA",
-        markersATA.address.toBase58(),
-        "balance",
-        ataBalance
-      );
+      // console.log("mint", mint.publicKey.toBase58());
+      // console.log("ATA", markersATA.address.toBase58());
+      // console.log("balance", ataBalance);
 
       // Fake Dev create NFT metadata
       const metadata = await createMetadata(
@@ -1094,11 +1082,11 @@ describe("User journey", () => {
         mint.publicKey
       );
 
-      console.log("metadata", metadata.toBase58());
-      console.log(
-        "Fake/unofficial NFT",
-        `https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
-      );
+      // console.log("metadata", metadata.toBase58());
+      // console.log(
+      //   "Fake/unofficial NFT",
+      //   `https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
+      // );
 
       // end fake nft
       const markersNFTmint = mint.publicKey;
@@ -1200,7 +1188,7 @@ describe("User journey", () => {
       assert.equal(stakingConfig.initiatedUsers.toNumber(), 2); // justin + markers
       assert.equal(stakingConfig.whitelistedCreator, true);
 
-      console.log("config", stakingConfig);
+      // console.log("config", stakingConfig);
     });
   });
 });
