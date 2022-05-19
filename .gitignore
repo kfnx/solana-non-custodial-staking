@@ -12,4 +12,4 @@ keypair/
 .coderrect
 soteria-linux-develop
 
-app
+.crates/

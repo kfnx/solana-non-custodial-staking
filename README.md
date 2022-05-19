@@ -6,7 +6,7 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 
 - Install all the toolchain, for quick guide check out [anchor istallation](https://project-serum.github.io/anchor/getting-started/installation.html#install-rust)
   - Rust 1.60.x
-  - Anchor 0.24.x
+  - Anchor 0.24.2
   - NodeJS 16.x
   - Yarn 1.22.x
 - Recomended if you use vscode: [Rust official vscode extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust)
@@ -28,6 +28,12 @@ To deploy with original program id, you need the original keypair. If you dont h
 - Run `yarn setup:programid`. it will build the program with new keypair.
 - Run `yarn programid` to print the new program address after setup.
 - Run `anchor test` to test the built program
+
+# Typescript SDK
+
+We use [solita](https://github.com/metaplex-foundation/solita) to generate ts SDK to be consumed by frontend web client
+- Run `yarn solita` to and sdk folder will be generated at `app/admin/sdk/` to be used by admin web app.
+- modify `.solitarc` sdk output dir and re-run yarn solita to change generated sdk output for another use case.
 
 # Misc cli commands
 spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs 1 tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr
