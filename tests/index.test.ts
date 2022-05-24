@@ -34,7 +34,7 @@ import {
   findRewardPotPDA,
   delay,
   findWhitelistPDA,
-  getMetadataPDA,
+  findMetadataPDA,
   findStakeInfoPDA,
 } from "./utils";
 
@@ -100,7 +100,7 @@ describe("User journey", () => {
       // console.log("create rewardMint tx", create_mint_tx_sig);
     });
 
-    it("Dev create staking config", async () => {
+    it("Dev create staking config #1", async () => {
       // console.log("config", config.publicKey.toBase58());
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey
@@ -188,7 +188,7 @@ describe("User journey", () => {
       assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
     });
 
-    it("Create NFT", async () => {
+    it("Create, mint and give metadata to NFT #1", async () => {
       const create_mint_tx = new Transaction({
         feePayer: dev.wallet.publicKey,
       });
@@ -213,14 +213,13 @@ describe("User journey", () => {
           TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
         )
       );
+
       const create_mint_tx_sig = await dev.provider.sendAndConfirm(
         create_mint_tx,
         [dev.keypair, NFTmint]
       );
       // console.log("create NFTmint tx", create_mint_tx_sig);
-    });
 
-    it("Mint NFT", async () => {
       const devATA = await getOrCreateAssociatedTokenAccount(
         dev.provider.connection,
         dev.wallet.payer,
@@ -258,9 +257,7 @@ describe("User journey", () => {
       // console.log("mint", NFTmint.publicKey.toBase58());
       // console.log("ATA", devATA.address.toBase58());
       // console.log("balance", ataBalance);
-    });
 
-    it("Dev create NFT metadata", async () => {
       const metadata = await createMetadata(
         dev.provider.connection,
         dev.wallet,
@@ -426,7 +423,7 @@ describe("User journey", () => {
         config.publicKey,
         dev.wallet.publicKey
       );
-      const metadata = await getMetadataPDA(NFTmint.publicKey);
+      const metadata = await findMetadataPDA(NFTmint.publicKey);
 
       const tx = await program.methods
         .stake()
@@ -493,7 +490,7 @@ describe("User journey", () => {
         config.publicKey,
         dev.wallet.publicKey
       );
-      const metadata = await getMetadataPDA(NFTmint.publicKey);
+      const metadata = await findMetadataPDA(NFTmint.publicKey);
 
       try {
         const tx = await program.methods
@@ -873,7 +870,7 @@ describe("User journey", () => {
         config.publicKey,
         dev.wallet.publicKey
       );
-      const metadata = await getMetadataPDA(justinNFTmint);
+      const metadata = await findMetadataPDA(justinNFTmint);
 
       await expect(
         program.methods
@@ -928,7 +925,7 @@ describe("User journey", () => {
         config.publicKey,
         dev.wallet.publicKey
       );
-      const metadata = await getMetadataPDA(justinNFTmint);
+      const metadata = await findMetadataPDA(justinNFTmint);
 
       await expect(
         program.methods

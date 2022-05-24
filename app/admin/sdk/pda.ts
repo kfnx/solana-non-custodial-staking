@@ -1,36 +1,32 @@
-import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
-import { NcStaking } from "../../target/types/nc_staking";
+import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./programId";
 import { programs } from "@metaplex/js";
-
-const { programId } = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
 
 export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findDelegateAuthPDA = async (tokenAccount: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findConfigAuthorityPDA = async (config: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("config"), config.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findRewardPotPDA = (config: PublicKey, rewardMint: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
@@ -52,7 +48,7 @@ export const findWhitelistPDA = async (
 ) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("whitelist"), config.toBytes(), creator.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
@@ -72,6 +68,6 @@ export const findStakeInfoPDA = async (
       user.toBytes(),
       config.toBytes(),
     ],
-    programId
+    PROGRAM_ID
   );
 };
