@@ -8,17 +8,9 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-const Stats = () => (
-  <div>
-    <h2>stats here</h2>
-    <p>bla bla</p>
-  </div>
-);
-
 const categories = {
   "as Admin": <Admin />,
   "as User": <User />,
-  Stats: <Stats />,
 };
 
 export default function Tabs() {

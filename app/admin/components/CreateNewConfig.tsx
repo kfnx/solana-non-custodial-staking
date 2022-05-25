@@ -13,6 +13,8 @@ import {
   SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import { Dispatch, Fragment, SetStateAction, useState } from "react";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
 import {
   findConfigAuthorityPDA,
@@ -21,8 +23,6 @@ import {
   NcStaking,
   PROGRAM_ID,
 } from "../sdk";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import toast from "react-hot-toast";
 
 interface Args {
   rewardMint: PublicKey;
@@ -37,54 +37,53 @@ const createNewConfig = async (
   wallet: AnchorWallet,
   args: Args
 ) => {
-  try {
-    const {
-      rewardRate,
-      rewardRateDenominator,
-      minStakingPeriodSec,
-      rewardMint,
-      whitelistedCreator,
-    } = args;
+  const {
+    rewardRate,
+    rewardRateDenominator,
+    minStakingPeriodSec,
+    rewardMint,
+    whitelistedCreator,
+  } = args;
 
-    const provider = new anchor.AnchorProvider(
-      connection,
-      wallet,
-      anchor.AnchorProvider.defaultOptions()
-    );
-    // anchor.setProvider(provider);
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    anchor.AnchorProvider.defaultOptions()
+  );
+  // anchor.setProvider(provider);
+  const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
-    const config = Keypair.generate();
-    console.log("config", config.publicKey.toBase58());
-    const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
-      config.publicKey
-    );
-    console.log("configAuth", configAuth.toBase58());
+  const config = Keypair.generate();
+  console.log("config", config.publicKey.toBase58());
+  const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
+    config.publicKey
+  );
+  console.log("configAuth", configAuth.toBase58());
 
-    const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
-    console.log("reward pot", rewardPot.toBase58());
+  const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
+  console.log("reward pot", rewardPot.toBase58());
 
-    // init staking config
-    const initStakingTx = await program.methods
-      .initStakingConfig(configAuthBump, rewardRate, minStakingPeriodSec)
-      .accounts({
-        admin: wallet.publicKey,
-        config: config.publicKey,
-        configAuthority: configAuth,
-        rewardMint: rewardMint,
-        rewardPot: rewardPot,
-        // programs
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .signers([config])
-      .rpc();
-    console.log("init config tx", initStakingTx);
-  } catch (error) {
-    console.log("error", error);
-    toast.error("Transaction Error");
-  }
+  // init staking config
+  const initStakingTx = await program.methods
+    .initStakingConfig(configAuthBump, rewardRate, minStakingPeriodSec)
+    .accounts({
+      admin: wallet.publicKey,
+      config: config.publicKey,
+      configAuthority: configAuth,
+      rewardMint: rewardMint,
+      rewardPot: rewardPot,
+      // programs
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([config])
+    .rpc();
+  console.log("init config tx", initStakingTx);
+
+  // console.log("error", error);
+  // toast.error("Transaction Error");
+  // return new Error("Transaction Error")
 };
 
 const CreateNewConfigModal: React.FC<{
@@ -276,20 +275,39 @@ const CreateNewConfigModal: React.FC<{
                         return toast.error("Invalid whitelistedCreator");
                       }
 
-                      // toast.promise()
-                      setLoading(true);
-                      await createNewConfig(connection, wallet!, {
-                        rewardMint: new PublicKey(rewardMint!),
-                        rewardRate: new anchor.BN(rewardRate!),
-                        rewardRateDenominator: new anchor.BN(
-                          rewardRateDenominator!
-                        ),
-                        minStakingPeriodSec: new anchor.BN(
-                          minStakingPeriodSec!
-                        ),
-                        whitelistedCreator: new PublicKey(whitelistedCreator!),
+                      const createNewConfigTx = new Promise(
+                        async (resolve, reject) => {
+                          setLoading(true);
+                          try {
+                            await createNewConfig(connection, wallet!, {
+                              rewardMint: new PublicKey(rewardMint!),
+                              rewardRate: new anchor.BN(rewardRate!),
+                              rewardRateDenominator: new anchor.BN(
+                                rewardRateDenominator!
+                              ),
+                              minStakingPeriodSec: new anchor.BN(
+                                minStakingPeriodSec!
+                              ),
+                              whitelistedCreator: new PublicKey(
+                                whitelistedCreator!
+                              ),
+                            });
+                            closeModal();
+                            resolve(1);
+                          } catch (error) {
+                            console.error(error);
+                            reject();
+                          } finally {
+                            setLoading(false);
+                          }
+                        }
+                      );
+
+                      toast.promise(createNewConfigTx, {
+                        loading: "Processing transaction...",
+                        success: <b>Config created!</b>,
+                        error: <b>Transaction error</b>,
                       });
-                      setLoading(false);
                     }}
                     disabled={loading}
                   >

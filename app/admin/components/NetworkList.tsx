@@ -4,17 +4,17 @@ import { CheckIcon, SelectorIcon, GlobeAltIcon } from "@heroicons/react/solid";
 
 const networks = [
   { name: "Localhost" },
-  { name: "Testnet" },
-  { name: "Devnet" },
-  { name: "Mainnet-beta" },
-  { name: "Mainnet-beta (private node)" },
+  // { name: "Testnet" },
+  // { name: "Devnet" },
+  // { name: "Mainnet-beta" },
+  // { name: "Mainnet-beta (private node)" },
 ];
 
 export default function NetworkList() {
   const [selected, setSelected] = useState(networks[0]);
 
   return (
-    <Listbox value={selected} onChange={setSelected} disabled>
+    <Listbox value={selected} onChange={setSelected}>
       <div className="relative">
         <Listbox.Button className="relative w-44 h-12 cursor-default rounded bg-indigo-700  py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">

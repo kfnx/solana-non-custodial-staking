@@ -7,18 +7,24 @@ import {
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { CogIcon, RefreshIcon } from "@heroicons/react/solid";
-import { IDL, NcStaking, PROGRAM_ID, StakingConfig } from "../sdk";
+import { IDL, NcStaking, PROGRAM_ID } from "../sdk";
 import CreateNewConfigModal from "./CreateNewConfig";
 import toast from "react-hot-toast";
 
 const getAllConfigs = async (connection: Connection, wallet: AnchorWallet) => {
-  const provider = new anchor.AnchorProvider(
-    connection,
-    wallet,
-    anchor.AnchorProvider.defaultOptions()
-  );
-  const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-  return await program.account.stakingConfig.all();
+  try {
+    const provider = new anchor.AnchorProvider(
+      connection,
+      wallet,
+      anchor.AnchorProvider.defaultOptions()
+    );
+    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    return await program.account.stakingConfig.all();
+  } catch (error) {
+    console.error(error);
+    toast.error("Fetching Config failed");
+    return [];
+  }
 };
 
 export default function Admin() {
@@ -47,17 +53,23 @@ export default function Admin() {
       </button>
 
       {data.length === 0 ? (
-        "No config founds"
+        <div className="my-4">No config found</div>
       ) : (
         <div>
           <h2 className="mt-8 my-4">
-            Available configs:{" "}
+            Available configs ({data.length}):
             <button
-              className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1"
+              className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
               onClick={async () => {
-                const configs = await getAllConfigs(connection, wallet!);
-                setData(configs);
-                toast("fetching configs..");
+                const configs = toast.promise(
+                  getAllConfigs(connection, wallet!),
+                  {
+                    loading: "Refetching..",
+                    success: "Refetch success",
+                    error: "Refetch error",
+                  }
+                );
+                setData(await configs);
               }}
             >
               <RefreshIcon height={16} />
@@ -65,11 +77,11 @@ export default function Admin() {
           </h2>
 
           {data.map((config: any) => (
-            <div key={config.publicKey} className="text-xs my-2">
+            <div key={config.publicKey} className="text-xs mt-4">
               <b>{config.publicKey.toString()}</b>
               <div className="flex flex-column flex-wrap mt-2">
                 {Object.keys(config.account).map((v, id) => (
-                  <div key={id} className="flex w-full justify-between my-1">
+                  <div key={id} className="flex w-full justify-between my-0.5">
                     <span>{v}</span>
                     <br />
                     <span>{config.account[v].toString()}</span>
