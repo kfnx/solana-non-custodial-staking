@@ -29,7 +29,7 @@ interface Args {
   rewardRate: anchor.BN;
   rewardRateDenominator: anchor.BN;
   minStakingPeriodSec: anchor.BN;
-  whitelistedCreator: PublicKey;
+  whitelistCreator: PublicKey;
 }
 
 const createNewConfig = async (
@@ -42,7 +42,7 @@ const createNewConfig = async (
     rewardRateDenominator,
     minStakingPeriodSec,
     rewardMint,
-    whitelistedCreator,
+    whitelistCreator,
   } = args;
 
   const provider = new anchor.AnchorProvider(
@@ -72,6 +72,7 @@ const createNewConfig = async (
       configAuthority: configAuth,
       rewardMint: rewardMint,
       rewardPot: rewardPot,
+      creatorAddressToWhitelist: whitelistCreator,
       // programs
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -91,11 +92,11 @@ const CreateNewConfigModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const [rewardMint, setRewardMint] = useState<string>();
-  const [rewardRate, setRewardRate] = useState<number>();
+  const [rewardMint, setRewardMint] = useState<string>("");
+  const [rewardRate, setRewardRate] = useState<number>(1);
   const [rewardRateDenominator, setRewardRateDenominator] = useState<number>(1);
-  const [minStakingPeriodSec, setMinStakingPeriodSec] = useState<number>();
-  const [whitelistedCreator, setWhitelistedCreator] = useState<string>();
+  const [minStakingPeriodSec, setMinStakingPeriodSec] = useState<number>(0);
+  const [whitelistCreator, setWhitelistCreator] = useState<string>("");
 
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
@@ -137,7 +138,7 @@ const CreateNewConfigModal: React.FC<{
 
                 <div className="my-2">
                   <p className="block mb-2 text-sm text-gray-500">Admin:</p>
-                  <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
+                  <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                     {wallet?.publicKey.toBase58()}
                   </div>
                 </div>
@@ -175,7 +176,9 @@ const CreateNewConfigModal: React.FC<{
                     required
                     value={rewardRate}
                     onChange={(event) =>
-                      setRewardRate(parseInt(event.target.value, 10))
+                      event.target.value
+                        ? setRewardRate(parseInt(event.target.value, 10))
+                        : 0
                     }
                   />
                 </div>
@@ -195,7 +198,11 @@ const CreateNewConfigModal: React.FC<{
                     required
                     value={rewardRateDenominator}
                     onChange={(event) =>
-                      setRewardRateDenominator(parseInt(event.target.value, 10))
+                      event.target.value
+                        ? setRewardRateDenominator(
+                            parseInt(event.target.value, 10)
+                          )
+                        : 0
                     }
                   />
                 </div>
@@ -215,7 +222,11 @@ const CreateNewConfigModal: React.FC<{
                     required
                     value={minStakingPeriodSec}
                     onChange={(event) =>
-                      setMinStakingPeriodSec(parseInt(event.target.value, 10))
+                      event.target.value
+                        ? setMinStakingPeriodSec(
+                            parseInt(event.target.value, 10)
+                          )
+                        : 0
                     }
                   />
                 </div>
@@ -233,9 +244,9 @@ const CreateNewConfigModal: React.FC<{
                     className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                     placeholder="BWWE1mrYNCZ2rapGiWhrURgqq9P2RHVCHnAeVHRoFsZv"
                     required
-                    value={whitelistedCreator}
+                    value={whitelistCreator}
                     onChange={(event) =>
-                      setWhitelistedCreator(event.target.value)
+                      setWhitelistCreator(event.target.value)
                     }
                   />
                 </div>
@@ -250,29 +261,30 @@ const CreateNewConfigModal: React.FC<{
                       }
                       if (!rewardMint) {
                         return toast.error("Invalid rewardMint");
+                      } else {
+                        try {
+                          new PublicKey(rewardMint!);
+                        } catch (error) {
+                          return toast.error("Invalid rewardMint");
+                        }
                       }
-                      try {
-                        new PublicKey(rewardMint!);
-                      } catch (error) {
-                        return toast.error("Invalid rewardMint");
-                      }
-
-                      if (!rewardRate) {
+                      if (rewardRate < 1) {
                         return toast.error("Invalid rewardRate");
                       }
-                      if (!rewardRateDenominator) {
+                      if (rewardRateDenominator < 0) {
                         return toast.error("Invalid rewardRateDenominator");
                       }
-                      if (!minStakingPeriodSec) {
+                      if (minStakingPeriodSec < 0) {
                         return toast.error("Invalid minStakingPeriodSec");
                       }
-                      if (!whitelistedCreator) {
-                        return toast.error("Invalid whitelistedCreator");
-                      }
-                      try {
-                        new PublicKey(whitelistedCreator!);
-                      } catch (error) {
-                        return toast.error("Invalid whitelistedCreator");
+                      if (!whitelistCreator) {
+                        return toast.error("Invalid whitelistCreator");
+                      } else {
+                        try {
+                          new PublicKey(whitelistCreator!);
+                        } catch (error) {
+                          return toast.error("Invalid whitelistCreator");
+                        }
                       }
 
                       const createNewConfigTx = new Promise(
@@ -288,8 +300,8 @@ const CreateNewConfigModal: React.FC<{
                               minStakingPeriodSec: new anchor.BN(
                                 minStakingPeriodSec!
                               ),
-                              whitelistedCreator: new PublicKey(
-                                whitelistedCreator!
+                              whitelistCreator: new PublicKey(
+                                whitelistCreator!
                               ),
                             });
                             closeModal();

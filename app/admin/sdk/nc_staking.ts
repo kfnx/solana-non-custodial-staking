@@ -16,6 +16,11 @@ export type NcStaking = {
           "isSigner": true
         },
         {
+          "name": "creatorAddressToWhitelist",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "configAuthority",
           "isMut": true,
           "isSigner": false
@@ -280,7 +285,7 @@ export type NcStaking = {
       ]
     },
     {
-      "name": "addWhitelist",
+      "name": "modifyWhitelist",
       "accounts": [
         {
           "name": "admin",
@@ -295,11 +300,6 @@ export type NcStaking = {
         {
           "name": "creatorAddressToWhitelist",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -383,8 +383,8 @@ export type NcStaking = {
             "type": "u64"
           },
           {
-            "name": "whitelistedCreator",
-            "type": "bool"
+            "name": "creatorWhitelist",
+            "type": "publicKey"
           }
         ]
       }
@@ -417,22 +417,6 @@ export type NcStaking = {
           {
             "name": "nftsStaked",
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "whitelist",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "config",
-            "type": "publicKey"
-          },
-          {
-            "name": "creator",
-            "type": "publicKey"
           }
         ]
       }
@@ -500,6 +484,11 @@ export const IDL: NcStaking = {
           "isSigner": true
         },
         {
+          "name": "creatorAddressToWhitelist",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "configAuthority",
           "isMut": true,
           "isSigner": false
@@ -764,7 +753,7 @@ export const IDL: NcStaking = {
       ]
     },
     {
-      "name": "addWhitelist",
+      "name": "modifyWhitelist",
       "accounts": [
         {
           "name": "admin",
@@ -779,11 +768,6 @@ export const IDL: NcStaking = {
         {
           "name": "creatorAddressToWhitelist",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -867,8 +851,8 @@ export const IDL: NcStaking = {
             "type": "u64"
           },
           {
-            "name": "whitelistedCreator",
-            "type": "bool"
+            "name": "creatorWhitelist",
+            "type": "publicKey"
           }
         ]
       }
@@ -901,22 +885,6 @@ export const IDL: NcStaking = {
           {
             "name": "nftsStaked",
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "whitelist",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "config",
-            "type": "publicKey"
-          },
-          {
-            "name": "creator",
-            "type": "publicKey"
           }
         ]
       }

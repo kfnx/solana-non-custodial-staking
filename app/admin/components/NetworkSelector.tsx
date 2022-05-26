@@ -1,20 +1,22 @@
 import { Fragment, useState } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, SelectorIcon, GlobeAltIcon } from "@heroicons/react/solid";
+import useGlobalState from "../hooks/useGlobalState";
 
 const networks = [
-  { name: "Localhost" },
-  // { name: "Testnet" },
-  // { name: "Devnet" },
-  // { name: "Mainnet-beta" },
-  // { name: "Mainnet-beta (private node)" },
+  { name: "Localhost", endpoint: "http://localhost:8899" },
+  { name: "Testnet", endpoint: "http://localhost:8899" },
+  { name: "Devnet", endpoint: "http://localhost:8899" },
+  { name: "Mainnet-beta", endpoint: "http://localhost:8899" },
+  { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
-export default function NetworkList() {
-  const [selected, setSelected] = useState(networks[0]);
+export default function NetworkSelector() {
+  const setNetwork = useGlobalState((state) => state.setNetwork);
+  const network = useGlobalState((state) => state.network);
 
   return (
-    <Listbox value={selected} onChange={setSelected}>
+    <Listbox value={network} onChange={setNetwork}>
       <div className="relative">
         <Listbox.Button className="relative w-44 h-12 cursor-default rounded bg-indigo-700  py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
@@ -23,7 +25,9 @@ export default function NetworkList() {
               aria-hidden="true"
             />
           </span>
-          <span className="block truncate text-white ml-7">{selected.name}</span>
+          <span className="block truncate text-white ml-7">
+            {network.name}
+          </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <SelectorIcon
               className="h-5 w-5 text-violet-300"

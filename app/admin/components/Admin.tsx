@@ -1,46 +1,17 @@
-import * as anchor from "@project-serum/anchor";
-import {
-  AnchorWallet,
-  useAnchorWallet,
-  useConnection,
-} from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { CogIcon, RefreshIcon } from "@heroicons/react/solid";
-import { IDL, NcStaking, PROGRAM_ID } from "../sdk";
 import CreateNewConfigModal from "./CreateNewConfig";
-import toast from "react-hot-toast";
-
-const getAllConfigs = async (connection: Connection, wallet: AnchorWallet) => {
-  try {
-    const provider = new anchor.AnchorProvider(
-      connection,
-      wallet,
-      anchor.AnchorProvider.defaultOptions()
-    );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    return await program.account.stakingConfig.all();
-  } catch (error) {
-    console.error(error);
-    toast.error("Fetching Config failed");
-    return [];
-  }
-};
+import useGlobalState from "../hooks/useGlobalState";
 
 export default function Admin() {
-  const [data, setData] = useState<any>([]);
   const [isOpenNewConfig, setIsOpenNewConfig] = useState(false);
-  const wallet = useAnchorWallet();
-  const { connection } = useConnection();
+  const configs = useGlobalState((state) => state.configs);
+  const isFetchingConfigs = useGlobalState((state) => state.isFetchingConfigs);
+  const fetchConfigs = useGlobalState((state) => state.fetchConfigs);
 
   useEffect(() => {
-    (async () => {
-      if (wallet) {
-        const configs = await getAllConfigs(connection, wallet);
-        setData(configs);
-      }
-    })();
-  }, [connection, wallet]);
+    fetchConfigs();
+  }, [fetchConfigs]);
 
   return (
     <div>
@@ -52,31 +23,24 @@ export default function Admin() {
         New Config <CogIcon height={24} className="ml-2" />
       </button>
 
-      {data.length === 0 ? (
+      {configs.length === 0 ? (
         <div className="my-4">No config found</div>
       ) : (
         <div>
           <h2 className="mt-8 my-4">
-            Available configs ({data.length}):
+            Available configs ({configs.length}):
             <button
               className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
-              onClick={async () => {
-                const configs = toast.promise(
-                  getAllConfigs(connection, wallet!),
-                  {
-                    loading: "Refetching..",
-                    success: "Refetch success",
-                    error: "Refetch error",
-                  }
-                );
-                setData(await configs);
-              }}
+              onClick={fetchConfigs}
             >
-              <RefreshIcon height={16} />
+              <RefreshIcon
+                height={16}
+                className={isFetchingConfigs ? "animate-spin" : ""}
+              />
             </button>
           </h2>
 
-          {data.map((config: any) => (
+          {configs.map((config: any) => (
             <div key={config.publicKey} className="text-xs mt-4">
               <b>{config.publicKey.toString()}</b>
               <div className="flex flex-column flex-wrap mt-2">
