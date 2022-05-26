@@ -13,6 +13,8 @@ pub struct InitStakingConfig<'info> {
     space = 8 + std::mem::size_of::<StakingConfig>()
   )]
   pub config: Account<'info, StakingConfig>,
+  /// CHECK: not read or written
+  pub creator_address_to_whitelist: AccountInfo<'info>,
   /// CHECK: used to transfer reward token to user from reward pot which the auth is config_authority
   #[account(mut, seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
   pub config_authority: AccountInfo<'info>,
@@ -53,6 +55,7 @@ pub fn handler(
   config.initiated_users = 0;
   config.active_stakers = 0;
   config.min_staking_period_sec = min_staking_period_sec;
+  config.creator_whitelist = ctx.accounts.creator_address_to_whitelist.key();
   msg!("instruction handler: InitStakingConfig");
   msg!("min_staking_period_sec: {}", min_staking_period_sec);
   Ok(())

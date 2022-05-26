@@ -21,8 +21,7 @@ pub struct StakingConfig {
     pub initiated_users: u64,
     pub active_stakers: u64,
     pub min_staking_period_sec: u64,
-    // list of whitelisted creator address
-    pub whitelisted_creator: bool,
+    pub creator_whitelist: Pubkey,
 }
 
 impl StakingConfig {

@@ -75,40 +75,11 @@ fn assert_valid_metadata(
     Metadata::from_account_info(metadata)
 }
 
-fn assert_valid_whitelist_proof<'info>(
-    whitelist_proof: &AccountInfo<'info>,
-    config: &Pubkey,
-    creator_address_to_whitelist: &Pubkey,
-    program_id: &Pubkey,
-) -> Result<()> {
-    // 1 verify the PDA seeds match
-    let seed = &[
-        b"whitelist".as_ref(),
-        config.as_ref(),
-        creator_address_to_whitelist.as_ref(),
-    ];
-    let (whitelist_addr, _bump) = Pubkey::find_program_address(seed, program_id);
-
-    // we can't use an assert_eq statement, we want to catch this error and continue along to creator testing
-    if whitelist_addr != whitelist_proof.key() {
-        return Err(error!(ErrorCode::NotWhitelisted));
-    }
-
-    // 2 no need to verify ownership, deserialization does that for us
-    // https://github.com/project-serum/anchor/blob/fcb07eb8c3c9355f3cabc00afa4faa6247ccc960/lang/src/account.rs#L36
-    Account::<'info, Whitelist>::try_from(whitelist_proof)?;
-
-    Ok(())
-}
-
-fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
+fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
     let config = &ctx.accounts.config;
     let mint = &ctx.accounts.mint;
     let remaining_accs = &mut ctx.remaining_accounts.iter();
-
-    // 2 accounts are sequentially expected - metadata and creator whitelist proof
     let metadata_info = next_account_info(remaining_accs)?;
-    let creator_whitelist_proof_info = next_account_info(remaining_accs)?;
 
     // verify metadata is legit
     let metadata = assert_valid_metadata(metadata_info, &mint.key())?;
@@ -121,18 +92,12 @@ fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
         }
 
         // check if creator is whitelisted, returns an error if not
-        let attempted_proof = assert_valid_whitelist_proof(
-            creator_whitelist_proof_info,
-            &config.key(),
-            &creator.address,
-            ctx.program_id,
-        );
+        let attempted_proof = &config.creator_whitelist.key() == &creator.address;
 
-        match attempted_proof {
-            // proof succeeded, return out of the function, no need to continue looping
-            Ok(()) => return Ok(()),
-            // proof failed, continue to check next creator
-            Err(_e) => continue,
+        if attempted_proof {
+            return Ok(());
+        } else {
+            continue;
         }
     }
 
@@ -141,11 +106,7 @@ fn assert_whitelisted(ctx: &Context<Stake>) -> Result<()> {
 }
 
 pub fn handler(ctx: Context<Stake>) -> Result<()> {
-    // verify whitelist
-    let config = &ctx.accounts.config;
-    if config.whitelisted_creator == true {
-        assert_whitelisted(&ctx)?;
-    }
+    assert_whitelist(&ctx)?;
 
     // assign delegate to PDA
     let cpi_ctx = ctx.accounts.approve_delegate_ctx();

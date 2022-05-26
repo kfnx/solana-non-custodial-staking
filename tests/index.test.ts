@@ -126,6 +126,7 @@ describe("User journey", () => {
           configAuthority: configAuth,
           rewardMint: rewardMint.publicKey,
           rewardPot: rewardPot,
+          creatorAddressToWhitelist: dev.wallet.publicKey,
           // programs
           systemProgram: SystemProgram.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -150,6 +151,11 @@ describe("User journey", () => {
       assert.ok(account.rewardMint.equals(rewardMint.publicKey));
       assert.ok(
         account.rewardRate.toNumber() === stakingConfig.rewardRate.toNumber()
+      );
+      assert.equal(
+        account.creatorWhitelist.toBase58(),
+        dev.wallet.publicKey.toBase58(),
+        "config whitelist is the dev address as creator address"
       );
     });
 
@@ -269,41 +275,6 @@ describe("User journey", () => {
       //   "NFT",
       //   `https://explorer.solana.com/address/${NFTmint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
       // );
-    });
-
-    it("Dev whitelist NFT creator address", async () => {
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
-      // console.log("whitelist proof PDA", whitelist.toBase58());
-
-      await program.methods
-        .addWhitelist()
-        .accounts({
-          admin: dev.wallet.publicKey,
-          config: config.publicKey,
-          whitelist,
-          creatorAddressToWhitelist: dev.wallet.publicKey,
-        })
-        .signers([dev.keypair])
-        .rpc();
-
-      const whitelistAcc = await program.account.whitelist.fetch(whitelist);
-      assert.equal(
-        whitelistAcc.creator.toBase58(),
-        dev.wallet.publicKey.toBase58(),
-        "creator addres stored on whitelist is the same creator address"
-      );
-
-      const configAcc = await program.account.stakingConfig.fetch(
-        config.publicKey
-      );
-      assert.equal(
-        configAcc.whitelistedCreator,
-        true,
-        "config whitelist is true"
-      );
     });
 
     it("Dev send NFT to Justin", async () => {
@@ -959,20 +930,13 @@ describe("User journey", () => {
       ).to.be.rejectedWith("unknown signer");
     });
 
-    it("Markers cannot add whitelist", async () => {
-      // assume markers somehow know dev pubkey
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
-
+    it("Markers cannot modify whitelist", async () => {
       await expect(
         program.methods
-          .addWhitelist()
+          .modifyWhitelist()
           .accounts({
             admin: dev.wallet.publicKey,
             config: config.publicKey,
-            whitelist,
             creatorAddressToWhitelist: markers.wallet.publicKey,
           })
           .signers([markers.keypair])
@@ -980,19 +944,12 @@ describe("User journey", () => {
       ).to.be.rejectedWith("unknown signer");
 
       // try again with markers as admin
-      const [markersWhitelist] = await findWhitelistPDA(
-        config.publicKey,
-        markers.wallet.publicKey
-      );
-      // console.log("markers whitelist proof PDA", whitelist.toBase58());
-
       await expect(
         program.methods
-          .addWhitelist()
+          .modifyWhitelist()
           .accounts({
             admin: markers.wallet.publicKey,
             config: config.publicKey,
-            whitelist: markersWhitelist,
             creatorAddressToWhitelist: markers.wallet.publicKey,
           })
           .signers([markers.keypair])
@@ -1000,7 +957,7 @@ describe("User journey", () => {
       ).to.be.rejectedWith("ConstraintHasOne");
     });
 
-    it("Markers cannot stake unofficial NFT not whitelisted NFT", async () => {
+    it("Markers cannot stake other collection NFT (not whitelisted)", async () => {
       // setup unofficial NFT
       const mint = Keypair.generate();
       const create_mint_tx = new Transaction({
@@ -1183,7 +1140,6 @@ describe("User journey", () => {
         config.publicKey
       );
       assert.equal(stakingConfig.initiatedUsers.toNumber(), 2); // justin + markers
-      assert.equal(stakingConfig.whitelistedCreator, true);
 
       // console.log("config", stakingConfig);
     });

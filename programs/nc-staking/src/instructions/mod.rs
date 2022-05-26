@@ -1,4 +1,4 @@
-pub mod add_whitelist;
+pub mod modify_whitelist;
 pub mod claim;
 pub mod init_staking;
 pub mod init_staking_config;
@@ -6,7 +6,7 @@ pub mod init_staking_config;
 pub mod stake;
 pub mod unstake;
 
-pub use add_whitelist::*;
+pub use modify_whitelist::*;
 pub use claim::*;
 pub use init_staking::*;
 pub use init_staking_config::*;

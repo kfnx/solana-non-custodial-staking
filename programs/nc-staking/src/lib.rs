@@ -46,7 +46,7 @@ pub mod nc_staking {
         instructions::claim::handler(ctx)
     }
 
-    pub fn add_whitelist(ctx: Context<AddWhitelist>) -> Result<()> {
-        instructions::add_whitelist::handler(ctx)
+    pub fn modify_whitelist(ctx: Context<ModifyWhitelist>) -> Result<()> {
+        instructions::modify_whitelist::handler(ctx)
     }
 }
