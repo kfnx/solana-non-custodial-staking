@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { CogIcon, RefreshIcon } from "@heroicons/react/solid";
-import CreateNewConfigModal from "./CreateNewConfig";
+import CreateNewConfigModal from "./CreateNewConfigModal";
 import useGlobalState from "../hooks/useGlobalState";
 
 export default function Admin() {
-  const [isOpenNewConfig, setIsOpenNewConfig] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const configs = useGlobalState((state) => state.configs);
   const isFetchingConfigs = useGlobalState((state) => state.isFetchingConfigs);
   const fetchConfigs = useGlobalState((state) => state.fetchConfigs);
@@ -18,7 +18,7 @@ export default function Admin() {
       <h2 className="mt-2 mb-4">Staking Config</h2>
       <button
         className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90 text-sm w-full"
-        onClick={() => setIsOpenNewConfig(true)}
+        onClick={() => setIsModalOpen(true)}
       >
         New Config <CogIcon height={24} className="ml-2" />
       </button>
@@ -57,8 +57,8 @@ export default function Admin() {
         </div>
       )}
       <CreateNewConfigModal
-        isOpen={isOpenNewConfig}
-        setIsOpen={setIsOpenNewConfig}
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
       />
     </div>
   );
