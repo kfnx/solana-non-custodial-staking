@@ -19,7 +19,11 @@ async function getTokensByOwner(owner: PublicKey, conn: Connection) {
       return amount.decimals === 0 && amount.uiAmount === 1;
     })
     .map((t) => {
-      return { pubkey: t.pubkey, mint: t.account.data.parsed.info.mint };
+      return {
+        pubkey: t.pubkey,
+        mint: t.account.data.parsed.info.mint,
+        state: t.account.data.parsed.info.state,
+      };
     });
 }
 
@@ -31,14 +35,13 @@ interface MetadataCreators {
 
 // const WHITELISTED_CREATOR_ADDRESS = CANDY_MACHINE_ID.toString();
 
-async function getNFTMetadata(
-  mint: string,
+async function getNFT(
   conn: Connection,
-  pubkey?: string,
+  t?: any,
   filterByCreatorAddress?: string
 ): Promise<INFT | undefined> {
   try {
-    const metadataPDA = await Metadata.getPDA(mint);
+    const metadataPDA = await Metadata.getPDA(t.mint);
     const onchainMetadata = (await Metadata.load(conn, metadataPDA)).data;
     const creators = onchainMetadata.data.creators || [];
 
@@ -48,22 +51,24 @@ async function getNFTMetadata(
     ) {
       const externalMetadata = (await axios.get(onchainMetadata.data.uri)).data;
       return {
-        pubkey: pubkey ? new PublicKey(pubkey) : undefined,
-        mint: new PublicKey(mint),
+        pubkey: t.pubkey ? new PublicKey(t.pubkey) : undefined,
+        mint: new PublicKey(t.mint),
+        state: t.state,
         onchainMetadata,
         externalMetadata,
       };
     } else {
       const externalMetadata = (await axios.get(onchainMetadata.data.uri)).data;
       return {
-        pubkey: pubkey ? new PublicKey(pubkey) : undefined,
-        mint: new PublicKey(mint),
+        pubkey: t.pubkey ? new PublicKey(t.pubkey) : undefined,
+        mint: new PublicKey(t.mint),
+        state: t.state,
         onchainMetadata,
         externalMetadata,
       };
     }
   } catch (e) {
-    console.warn(`failed to pull metadata for token ${mint}`);
+    console.warn(`failed to pull metadata for token ${t.mint}`);
   }
 }
 
@@ -72,7 +77,7 @@ export async function getNFTMetadataForMany(
   conn: Connection
 ): Promise<INFT[]> {
   const promises: Promise<INFT | undefined>[] = [];
-  tokens.forEach((t) => promises.push(getNFTMetadata(t.mint, conn, t.pubkey)));
+  tokens.forEach((t) => promises.push(getNFT(conn, t)));
   const nfts = (await Promise.all(promises)).filter((n) => !!n);
 
   return nfts as INFT[];

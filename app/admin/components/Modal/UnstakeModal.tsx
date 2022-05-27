@@ -4,6 +4,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import useGlobalState from "../../hooks/useGlobalState";
 import ConfigSelector from "../ConfigSelector";
 import UserNFT from "../UserNFT";
+import { PublicKey } from "@solana/web3.js";
 
 const UnstakeModal: React.FC<{
   isOpen: boolean;
@@ -16,14 +17,18 @@ const UnstakeModal: React.FC<{
   const unstake = useGlobalState((state) => state.unstake);
   const wallet = useGlobalState((state) => state.wallet);
 
-  // const handleSelectNFT = (mint: string) => {
-  //   console.log("selectedNFT", selectedNFT);
-  //   if (selectedNFT.includes(mint)) {
-  //     setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
-  //   } else {
-  //     setSelectedNFT((nfts) => [...nfts, mint]);
-  //   }
-  // };
+  const handleSelectNFT = (mint: PublicKey) => {
+    console.log("selectedNFT", selectedNFT);
+    if (mint.toBase58() === selectedNFT?.toBase58()) {
+      return selectNFT(undefined);
+    }
+    return selectNFT(mint);
+    // if (selectedNFT.includes(mint)) {
+    //   setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
+    // } else {
+    //   setSelectedNFT((nfts) => [...nfts, mint]);
+    // }
+  };
   const closeModal = () => setIsOpen(false);
 
   return (
@@ -85,7 +90,7 @@ const UnstakeModal: React.FC<{
                     <p className="block mb-2 text-sm text-gray-500">
                       Select NFT to unstake:
                     </p>
-                    <UserNFT selected={selectedNFT} select={selectNFT} />
+                    <UserNFT selected={selectedNFT} select={handleSelectNFT} />
                   </div>
                 </div>
 

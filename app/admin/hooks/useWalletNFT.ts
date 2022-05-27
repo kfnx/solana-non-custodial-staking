@@ -35,7 +35,6 @@ const useWalletNfts = () => {
 
   const isEmpty = nfts.length === 0;
 
-  console.log("🚀 ", { isLoading, isEmpty, nfts });
   return { isLoading, isEmpty, nfts };
 };
 

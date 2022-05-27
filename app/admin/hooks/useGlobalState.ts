@@ -70,7 +70,7 @@ interface GlobalState {
   config: number;
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
-  selectNFT: (mint: PublicKey) => void;
+  selectNFT: (mint: PublicKey | undefined) => void;
   // program account fetch
   fetchUsers: () => void;
   fetchConfigs: () => void;
@@ -126,6 +126,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
       return set({ users: [], isFetchingUsers: false });
     }
 
+    toast("Fetching user PDAs..");
     const provider = new anchor.AnchorProvider(
       connection,
       wallet,
@@ -144,6 +145,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
       return set({ users: [], isFetchingConfigs: false });
     }
 
+    toast("Fetching staking config PDAs..");
     const provider = new anchor.AnchorProvider(
       connection,
       wallet,
@@ -235,9 +237,9 @@ const useGlobalState = create<GlobalState>((set, get) => ({
 
     const configId = new PublicKey(configs[config].publicKey);
 
-    const userATA = await findUserATA(wallet.publicKey, selectedNFT);
-    // console.log("user ATA", userATA.toBase58());
-    const [delegate] = await findDelegateAuthPDA(userATA);
+    const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
+    // console.log("user ATA", tokenAccount.toBase58());
+    const [delegate] = await findDelegateAuthPDA(tokenAccount);
     // console.log("user delegate", delegate.toBase58());
     const [edition] = await findEditionPDA(selectedNFT);
     // console.log("edition", edition.toBase58());
@@ -257,7 +259,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
         stakeInfo,
         config: configId,
         mint: selectedNFT,
-        tokenAccount: userATA,
+        tokenAccount,
         userState,
         delegate,
         edition,
@@ -290,12 +292,90 @@ const useGlobalState = create<GlobalState>((set, get) => ({
         toast.error("Transaction Error");
       })
       .finally(() => {
+        set({ selectedNFT: undefined });
         if (callbackOptions.onFinish) {
           callbackOptions.onFinish();
         }
       });
   },
-  unstake: async (callbackOptions) => {},
+  unstake: async (callbackOptions) => {
+    if (callbackOptions.onStart) {
+      callbackOptions.onStart();
+    }
+    const ixName = "Unstake";
+    const { connection, wallet, configs, config, selectedNFT } = get();
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return;
+    }
+    if (!selectedNFT) {
+      toast.error("NFT not selected");
+      return;
+    }
+
+    const provider = new anchor.AnchorProvider(
+      connection,
+      wallet,
+      anchor.AnchorProvider.defaultOptions()
+    );
+    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const configId = new PublicKey(configs[config].publicKey);
+
+    const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
+    // console.log("user ATA", tokenAccount.toBase58());
+    const [delegate] = await findDelegateAuthPDA(tokenAccount);
+    // console.log("user delegate", delegate.toBase58());
+    const [edition] = await findEditionPDA(selectedNFT);
+    // console.log("edition", edition.toBase58());
+    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    // console.log("user state", justinState.toBase58());
+    const [stakeInfo] = await findStakeInfoPDA(
+      selectedNFT,
+      wallet.publicKey,
+      configId
+    );
+    const metadata = await findMetadataPDA(selectedNFT);
+
+    const stakeNFTtx = program.methods
+      .unstake()
+      .accounts({
+        user: wallet.publicKey,
+        stakeInfo,
+        config: configId,
+        mint: selectedNFT,
+        tokenAccount,
+        userState,
+        delegate,
+        edition,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      })
+      .rpc();
+
+    toast
+      .promise(stakeNFTtx, {
+        loading: `${ixName}...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        console.log(`${ixName} sig`, val);
+        if (callbackOptions.onSuccess) {
+          callbackOptions.onSuccess();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Transaction Error");
+      })
+      .finally(() => {
+        set({ selectedNFT: undefined });
+        if (callbackOptions.onFinish) {
+          callbackOptions.onFinish();
+        }
+      });
+  },
   claim: async () => {},
 }));
 

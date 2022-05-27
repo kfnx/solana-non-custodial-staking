@@ -1,8 +1,9 @@
 import { Dispatch, FC, SetStateAction } from "react";
 import Image from "next/image";
 import useWalletNFT from "../hooks/useWalletNFT";
-import { CheckIcon } from "@heroicons/react/solid";
+import { CheckIcon, LockClosedIcon } from "@heroicons/react/solid";
 import { PublicKey } from "@solana/web3.js";
+import toast from "react-hot-toast";
 
 const NFTImage: FC<{ src: string; alt: string }> = ({ src, alt }) => {
   if (src) {
@@ -19,11 +20,22 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
   selected,
 }) => {
   // const index = nft.externalMetadata.name.replace(/.*#/, "");
+  const isFrozen = nft.state === "frozen";
 
   return (
     <div
       className="relative flex flex-col items-center border p-4 hover:bg-black/20 cursor-pointer rounded-md"
-      onClick={() => (typeof onClick === "function" ? onClick(nft.mint) : null)}
+      onClick={() => {
+        if (typeof onClick === "function") {
+          // if (isFrozen) {
+          //   toast.error(
+          //     `Cannot stake ${nft.externalMetadata.name} because it is staked`
+          //   );
+          //   return;
+          // }
+          return onClick(nft.mint);
+        }
+      }}
     >
       <NFTImage
         src={nft.externalMetadata.image}
@@ -32,11 +44,16 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
       <div className="flex justify-between mt-3 text-sm">
         <p>{nft.externalMetadata.name}</p>
       </div>
-      {selected ? (
+      {isFrozen && (
+        <span className="absolute top-2 left-2 flex items-center text-blue-900">
+          <LockClosedIcon className="h-8 w-8" aria-hidden="true" />
+        </span>
+      )}
+      {selected && (
         <span className="absolute top-2 right-2 flex items-center text-blue-900">
           <CheckIcon className="h-8 w-8" aria-hidden="true" />
         </span>
-      ) : null}
+      )}
     </div>
   );
 };
