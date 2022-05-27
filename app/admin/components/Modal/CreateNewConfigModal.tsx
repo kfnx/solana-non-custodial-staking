@@ -15,14 +15,14 @@ import {
 import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import toast from "react-hot-toast";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "../LoadingSpinner";
 import {
   findConfigAuthorityPDA,
   findRewardPotPDA,
   IDL,
   NcStaking,
   PROGRAM_ID,
-} from "../sdk";
+} from "../../sdk";
 
 interface Args {
   rewardMint: PublicKey;
@@ -136,119 +136,121 @@ const CreateNewConfigModal: React.FC<{
                   Create new staking config
                 </Dialog.Title>
 
-                <div className="my-2">
-                  <p className="block mb-2 text-sm text-gray-500">Admin:</p>
-                  <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                    {wallet?.publicKey.toBase58()}
+                <div className="my-6">
+                  <div className="my-2">
+                    <p className="block mb-2 text-sm text-gray-500">Admin (connected wallet):</p>
+                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
+                      {wallet?.publicKey.toBase58()}
+                    </div>
                   </div>
-                </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="reward-mint"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    Reward Mint (spl-token):
-                  </label>
-                  <input
-                    type="text"
-                    id="reward-mint"
-                    className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                    placeholder="igsvRjB6uyVMGcM9nbWwESxN1eTfVTPiQ1ThoCc8f2g"
-                    required
-                    value={rewardMint}
-                    onChange={(event) => setRewardMint(event.target.value)}
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="reward-mint"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      Reward Mint (spl-token):
+                    </label>
+                    <input
+                      type="text"
+                      id="reward-mint"
+                      className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      placeholder="igsvRjB6uyVMGcM9nbWwESxN1eTfVTPiQ1ThoCc8f2g"
+                      required
+                      value={rewardMint}
+                      onChange={(event) => setRewardMint(event.target.value)}
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="reward-rate"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    Reward rate per second:
-                  </label>
-                  <input
-                    type="number"
-                    id="reward-rate"
-                    className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                    placeholder="86400"
-                    required
-                    value={rewardRate}
-                    onChange={(event) =>
-                      event.target.value
-                        ? setRewardRate(parseInt(event.target.value, 10))
-                        : 0
-                    }
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="reward-rate"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      Reward rate per second:
+                    </label>
+                    <input
+                      type="number"
+                      id="reward-rate"
+                      className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      placeholder="86400"
+                      required
+                      value={rewardRate}
+                      onChange={(event) =>
+                        event.target.value
+                          ? setRewardRate(parseInt(event.target.value, 10))
+                          : 0
+                      }
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="reward-rate-denominator"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    Reward rate denominator:
-                  </label>
-                  <input
-                    type="number"
-                    id="reward-rate-denominator"
-                    className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                    placeholder="1"
-                    required
-                    value={rewardRateDenominator}
-                    onChange={(event) =>
-                      event.target.value
-                        ? setRewardRateDenominator(
-                            parseInt(event.target.value, 10)
-                          )
-                        : 0
-                    }
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="reward-rate-denominator"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      Reward rate denominator:
+                    </label>
+                    <input
+                      type="number"
+                      id="reward-rate-denominator"
+                      className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      placeholder="1"
+                      required
+                      value={rewardRateDenominator}
+                      onChange={(event) =>
+                        event.target.value
+                          ? setRewardRateDenominator(
+                              parseInt(event.target.value, 10)
+                            )
+                          : 0
+                      }
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="mint-staking-period"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    Minimum staking period (sec):
-                  </label>
-                  <input
-                    type="number"
-                    id="mint-staking-period"
-                    className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                    placeholder="86400"
-                    required
-                    value={minStakingPeriodSec}
-                    onChange={(event) =>
-                      event.target.value
-                        ? setMinStakingPeriodSec(
-                            parseInt(event.target.value, 10)
-                          )
-                        : 0
-                    }
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label
+                      htmlFor="mint-staking-period"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      Minimum staking period (sec):
+                    </label>
+                    <input
+                      type="number"
+                      id="mint-staking-period"
+                      className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      placeholder="86400"
+                      required
+                      value={minStakingPeriodSec}
+                      onChange={(event) =>
+                        event.target.value
+                          ? setMinStakingPeriodSec(
+                              parseInt(event.target.value, 10)
+                            )
+                          : 0
+                      }
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="creator-address"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    NFT collection creator address as whitelist:
-                  </label>
-                  <input
-                    type="text"
-                    id="creator-address"
-                    className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                    placeholder="BWWE1mrYNCZ2rapGiWhrURgqq9P2RHVCHnAeVHRoFsZv"
-                    required
-                    value={whitelistCreator}
-                    onChange={(event) =>
-                      setWhitelistCreator(event.target.value)
-                    }
-                  />
+                  <div className="mb-2">
+                    <label
+                      htmlFor="creator-address"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      NFT collection creator address as whitelist:
+                    </label>
+                    <input
+                      type="text"
+                      id="creator-address"
+                      className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      placeholder="BWWE1mrYNCZ2rapGiWhrURgqq9P2RHVCHnAeVHRoFsZv"
+                      required
+                      value={whitelistCreator}
+                      onChange={(event) =>
+                        setWhitelistCreator(event.target.value)
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -287,6 +289,7 @@ const CreateNewConfigModal: React.FC<{
                         }
                       }
 
+                      // TODO: move to zustand useGlobalState. but this kind of works for now :)
                       const createNewConfigTx = new Promise(
                         async (resolve, reject) => {
                           setLoading(true);

@@ -1,63 +1,168 @@
 import { useEffect, useState } from "react";
-import { RefreshIcon, UserAddIcon } from "@heroicons/react/solid";
-import InitiateStakingModal from "./InitiateStakingModal";
+import {
+  HandIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  RefreshIcon,
+  UserAddIcon,
+} from "@heroicons/react/solid";
+import InitiateStakingModal from "./Modal/InitiateStakingModal";
 import useGlobalState from "../hooks/useGlobalState";
+import ConfigSelector from "./ConfigSelector";
+import StakeModal from "./Modal/StakeModal";
+import UnstakeModal from "./Modal/UnstakeModal";
+import ClaimModal from "./Modal/ClaimModal";
 
 export default function User() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpenInitStaking, setIsModalOpenInitStaking] = useState(false);
+  const [isModalOpenStake, setIsModalOpenStake] = useState(false);
+  const [isModalOpenUnstake, setIsModalOpenUnstake] = useState(false);
+  const [isModalOpenClaim, setIsModalOpenClaim] = useState(false);
   const users = useGlobalState((state) => state.users);
   const isFetchingUsers = useGlobalState((state) => state.isFetchingUsers);
   const fetchUsers = useGlobalState((state) => state.fetchUsers);
+  const wallet = useGlobalState((state) => state.wallet);
+
+  const myInitiatedStakings =
+    users.length > 0
+      ? users.filter(
+          (user) =>
+            user?.account["user"].toString() === wallet?.publicKey.toBase58()
+        )
+      : [];
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   return (
-    <div>
-      <h2 className="mt-2 mb-4">Staking</h2>
+    <div className="text-sm">
+      <h2 className="mt-2 mb-4 text-slate-600 font-medium text-xs">Staking</h2>
+      <hr className="-mt-3 mb-4" />
+      <ConfigSelector />
       <button
-        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90 text-sm w-full"
-        onClick={() => setIsModalOpen(true)}
+        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90 w-full"
+        onClick={() => setIsModalOpenInitStaking(true)}
       >
-        Initiate staking w/ connected wallet{" "}
-        <UserAddIcon height={24} className="ml-2" />
+        Initiate staking <UserAddIcon height={20} className="ml-2" />
       </button>
+      <div className="grid grid-cols-3 gap-2 my-2">
+        <button
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          onClick={() => setIsModalOpenStake(true)}
+        >
+          Stake
+          <LockClosedIcon height={20} className="ml-2" />
+        </button>
+        <button
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          onClick={() => setIsModalOpenUnstake(true)}
+        >
+          Unstake
+          <LockOpenIcon height={20} className="ml-2" />
+        </button>
+        <button
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          onClick={() => setIsModalOpenClaim(true)}
+        >
+          Claim
+          <HandIcon height={20} className="ml-2" />
+        </button>
+      </div>
 
-      {users.length === 0 ? (
-        <div className="my-4">No user found</div>
-      ) : (
-        <div>
-          <h2 className="mt-8 my-4">
-            Available users from all configs ({users.length}):
-            <button
-              className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
-              onClick={fetchUsers}
-            >
-              <RefreshIcon
-                height={16}
-                className={isFetchingUsers ? "animate-spin" : ""}
-              />
-            </button>
-          </h2>
+      <div>
+        <h2 className="mt-8 my-4">
+          <span className="text-slate-600 font-medium text-xs">
+            My initated stakings:
+          </span>
+          <button
+            className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
+            onClick={fetchUsers}
+          >
+            <RefreshIcon
+              height={16}
+              className={isFetchingUsers ? "animate-spin" : ""}
+            />
+          </button>
+        </h2>
+        <hr className="-mt-3 mb-4" />
 
-          {users.map((config: any) => (
-            <div key={config.publicKey} className="text-xs mt-4">
-              <b>{config.publicKey.toString()}</b>
-              <div className="flex flex-column flex-wrap mt-2">
-                {Object.keys(config.account).map((v, id) => (
-                  <div key={id} className="flex w-full justify-between my-0.5">
-                    <span>{v}</span>
-                    <br />
-                    <span>{config.account[v].toString()}</span>
+        {myInitiatedStakings.length > 0
+          ? myInitiatedStakings.map((item: any, index) => (
+              <div key={item.publicKey} className="text-xs mt-4">
+                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600">
+                  {index + 1}
+                </span>
+                <div className="flex flex-column flex-wrap mt-2">
+                  <div className="flex w-full justify-between my-0.5">
+                    <span>PDA</span>
+                    <span>{item.publicKey.toString()}</span>
                   </div>
-                ))}
+                  {Object.keys(item.account).map((v, id) => (
+                    <div
+                      key={id}
+                      className="flex w-full justify-between my-0.5"
+                    >
+                      <span>{v}</span>
+                      <span>{item.account[v].toString()}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <InitiateStakingModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
+            ))
+          : "No initiated staking found"}
+
+        <h2 className="mt-8 my-4">
+          <span className="text-slate-600 font-medium text-xs">
+            Available users that initiated staking ({users.length}):
+          </span>
+          <button
+            className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
+            onClick={fetchUsers}
+          >
+            <RefreshIcon
+              height={16}
+              className={isFetchingUsers ? "animate-spin" : ""}
+            />
+          </button>
+        </h2>
+        <hr className="-mt-3 mb-4" />
+
+        {users.length > 0
+          ? users.map((item: any, index) => (
+              <div key={item.publicKey} className="text-xs mt-4">
+                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600">
+                  {index + 1}
+                </span>
+                <div className="flex flex-column flex-wrap mt-2">
+                  <div className="flex w-full justify-between my-0.5">
+                    <span>PDA</span>
+                    <span>{item.publicKey.toString()}</span>
+                  </div>
+                  {Object.keys(item.account).map((v, id) => (
+                    <div
+                      key={id}
+                      className="flex w-full justify-between my-0.5"
+                    >
+                      <span>{v}</span>
+                      <span>{item.account[v].toString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          : "No initiated staking found"}
+      </div>
+      <InitiateStakingModal
+        isOpen={isModalOpenInitStaking}
+        setIsOpen={setIsModalOpenInitStaking}
+      />
+      <StakeModal isOpen={isModalOpenStake} setIsOpen={setIsModalOpenStake} />
+      <UnstakeModal
+        isOpen={isModalOpenUnstake}
+        setIsOpen={setIsModalOpenUnstake}
+      />
+      <ClaimModal isOpen={isModalOpenClaim} setIsOpen={setIsModalOpenClaim} />
     </div>
   );
 }

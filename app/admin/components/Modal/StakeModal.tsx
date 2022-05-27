@@ -1,17 +1,10 @@
-import * as anchor from "@project-serum/anchor";
 import { Dialog, Transition } from "@headlessui/react";
-import { PublicKey } from "@solana/web3.js";
 import { Dispatch, Fragment, SetStateAction, useState } from "react";
-import toast from "react-hot-toast";
-import LoadingSpinner from "./LoadingSpinner";
-import useGlobalState from "../hooks/useGlobalState";
-import ConfigSelector from "./ConfigSelector";
+import LoadingSpinner from "../LoadingSpinner";
+import useGlobalState from "../../hooks/useGlobalState";
+import ConfigSelector from "../ConfigSelector";
 
-interface Args {
-  config: PublicKey;
-}
-
-const InitiateStakingModal: React.FC<{
+const StakeModal: React.FC<{
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
@@ -52,24 +45,35 @@ const InitiateStakingModal: React.FC<{
                   as="h3"
                   className="text-lg font-medium leading-6 text-gray-900"
                 >
-                  Initiate Staking
+                  Stake
                 </Dialog.Title>
 
-                <div className="my-2">
-                  <label
-                    htmlFor="creator-address"
-                    className="block mb-2 text-sm text-gray-500"
-                  >
-                    Config:
-                  </label>
+                <div className="my-6">
+                  <div className="my-2">
+                    <label
+                      htmlFor="creator-address"
+                      className="block mb-2 text-sm text-gray-500"
+                    >
+                      Config:
+                    </label>
 
-                  <ConfigSelector />
-                </div>
+                    <ConfigSelector />
+                  </div>
 
-                <div className="mt-4 mb-32">
-                  <p className="block mb-2 text-sm text-gray-500">User:</p>
-                  <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                    {wallet?.publicKey.toBase58()}
+                  <div className="my-2">
+                    <p className="block mb-2 text-sm text-gray-500">User (connected wallet):</p>
+                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
+                      {wallet?.publicKey.toBase58()}
+                    </div>
+                  </div>
+
+                  <div className="mt-2 mb-32">
+                    <p className="block mb-2 text-sm text-gray-500">
+                      Select NFT:
+                    </p>
+                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
+                      hmm TODO add NFT
+                    </div>
                   </div>
                 </div>
 
@@ -77,36 +81,16 @@ const InitiateStakingModal: React.FC<{
                   <button
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-progress"
-                    onClick={async () => {
-                      if (!wallet) {
-                        return toast.error("Wallet not connected");
-                      }
-
-                      const initStakingTx = new Promise(
-                        async (resolve, reject) => {
-                          setLoading(true);
-                          try {
-                            initStaking();
-                            closeModal();
-                            resolve(1);
-                          } catch (error) {
-                            console.error(error);
-                            reject();
-                          } finally {
-                            setLoading(false);
-                          }
-                        }
-                      );
-
-                      toast.promise(initStakingTx, {
-                        loading: "Processing transaction...",
-                        success: <b>Config created!</b>,
-                        error: <b>Transaction error</b>,
-                      });
-                    }}
+                    onClick={() =>
+                      initStaking({
+                        onStart: () => setLoading(true),
+                        onSuccess: () => closeModal(),
+                        onFinish: () => setLoading(false),
+                      })
+                    }
                     disabled={loading}
                   >
-                    {loading ? <LoadingSpinner /> : "Initiate staking"}
+                    {loading ? <LoadingSpinner /> : "Stake"}
                   </button>
                 </div>
               </Dialog.Panel>
@@ -118,4 +102,4 @@ const InitiateStakingModal: React.FC<{
   );
 };
 
-export default InitiateStakingModal;
+export default StakeModal;

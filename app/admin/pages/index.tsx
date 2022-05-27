@@ -7,6 +7,7 @@ import NetworkSelector from "../components/NetworkSelector";
 import { useEffect } from "react";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import useGlobalState from "../hooks/useGlobalState";
+import Image from "next/image";
 
 const Home: NextPage = () => {
   const wallet = useAnchorWallet();
@@ -26,10 +27,13 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className="text-3xl font-bold">
-          Welcome to Non Custodial staking!
-        </h1>
-        <div className="flex space-x-4 mt-8">
+        <Image
+          src="https://c.tenor.com/vYc_EzLX6-cAAAAC/meeko-meekolony.gif"
+          width={196}
+          height={109}
+          alt="meeko stake"
+        />
+        <div className="flex space-x-4 mt-8 mb-4">
           <NetworkSelector />
           <WalletMultiButton />
         </div>

@@ -10,8 +10,15 @@ type Network = {
   name: string;
 };
 
+type DispatchOptions = {
+  onStart: () => void;
+  onSuccess: () => void;
+  onFinish: () => void;
+};
+
 interface GlobalState {
   connection: Connection;
+  setConnection: (wallet: Connection) => void;
   wallet: null | AnchorWallet;
   setWallet: (wallet: AnchorWallet) => void;
   network: Network;
@@ -19,7 +26,7 @@ interface GlobalState {
   users: any[];
   isFetchingUsers: boolean;
   fetchUsers: () => void;
-  initiateStaking: () => void;
+  initiateStaking: (options: DispatchOptions) => void;
   configs: any[];
   isFetchingConfigs: boolean;
   fetchConfigs: () => void;
@@ -28,7 +35,12 @@ interface GlobalState {
 }
 
 const useGlobalState = create<GlobalState>((set, get) => ({
-  connection: new Connection("http://localhost:8899"),
+  connection: new Connection("http://localhost:8899", {
+    commitment: "confirmed",
+  }),
+  setConnection: (connection: Connection) => {
+    set({ connection });
+  },
   wallet: null,
   setWallet: (wallet: AnchorWallet) => {
     set({ wallet });
@@ -60,7 +72,10 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const users = await program.account.user.all();
     set({ users, isFetchingUsers: false });
   },
-  initiateStaking: async () => {
+  initiateStaking: async (options) => {
+    if (options.onStart) {
+      options.onStart();
+    }
     const connection = get().connection;
     const wallet = get().wallet;
     const configs = get().configs;
@@ -89,14 +104,32 @@ const useGlobalState = create<GlobalState>((set, get) => ({
       anchor.AnchorProvider.defaultOptions()
     );
     const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    try {
-      const tx = await program.methods.initStaking().accounts(accounts).rpc();
-      console.log("init staking sig", tx);
-    } catch (error) {
-      console.error(error);
-      toast.error("Transaction Error");
-    }
-    set({});
+    const initStakingTx = program.methods
+      .initStaking()
+      .accounts(accounts)
+      .rpc();
+
+    toast
+      .promise(initStakingTx, {
+        loading: "Processing transaction...",
+        success: "Config created!",
+        error: "Transaction failed",
+      })
+      .then((val) => {
+        console.log("onSuccess val", val);
+        if (options.onSuccess) {
+          options.onSuccess();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Transaction Failed");
+      })
+      .finally(() => {
+        if (options.onFinish) {
+          options.onFinish();
+        }
+      });
   },
   configs: [],
   isFetchingConfigs: false,

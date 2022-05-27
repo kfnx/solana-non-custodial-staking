@@ -11,13 +11,14 @@ function classNames(...classes: string[]) {
 const categories = {
   "as Admin": <Admin />,
   "as User": <User />,
+  // "Utility": <Utility />, // example: create NFT, create mint token, etc
 };
 
 export default function Tabs() {
   const wallet = useAnchorWallet();
 
   return (
-    <div className="w-full max-w-lg px-2 py-16 sm:px-0">
+    <div className="w-full max-w-lg py-2 sm:px-0">
       <Tab.Group>
         <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
           {Object.keys(categories).map((category) => (
