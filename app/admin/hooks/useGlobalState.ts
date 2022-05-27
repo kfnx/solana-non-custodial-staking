@@ -1,12 +1,19 @@
 import create, { GetState } from "zustand";
 import * as anchor from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js";
 import toast from "react-hot-toast";
 import {
+  findConfigAuthorityPDA,
   findDelegateAuthPDA,
   findEditionPDA,
   findMetadataPDA,
+  findRewardPotPDA,
   findStakeInfoPDA,
   findUserATA,
   findUserStatePDA,
@@ -17,7 +24,10 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
 } from "../sdk";
 import { WalletError } from "@solana/wallet-adapter-base";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 type Network = {
   endpoint: string;
@@ -193,7 +203,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
 
     toast
       .promise(initStakingTx, {
-        loading: `${ixName}...`,
+        loading: `Processing ${ixName} tx...`,
         success: `${ixName} success!`,
         error: `${ixName} failed`,
       })
@@ -244,7 +254,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const [edition] = await findEditionPDA(selectedNFT);
     // console.log("edition", edition.toBase58());
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
-    // console.log("user state", justinState.toBase58());
+    // console.log("user state", userState.toBase58());
     const [stakeInfo] = await findStakeInfoPDA(
       selectedNFT,
       wallet.publicKey,
@@ -277,7 +287,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
 
     toast
       .promise(stakeNFTtx, {
-        loading: `${ixName}...`,
+        loading: `Processing ${ixName} tx...`,
         success: `${ixName} success!`,
         error: `${ixName} failed`,
       })
@@ -329,13 +339,12 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const [edition] = await findEditionPDA(selectedNFT);
     // console.log("edition", edition.toBase58());
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
-    // console.log("user state", justinState.toBase58());
+    // console.log("user state", userState.toBase58());
     const [stakeInfo] = await findStakeInfoPDA(
       selectedNFT,
       wallet.publicKey,
       configId
     );
-    const metadata = await findMetadataPDA(selectedNFT);
 
     const stakeNFTtx = program.methods
       .unstake()
@@ -355,7 +364,7 @@ const useGlobalState = create<GlobalState>((set, get) => ({
 
     toast
       .promise(stakeNFTtx, {
-        loading: `${ixName}...`,
+        loading: `Processing ${ixName} tx...`,
         success: `${ixName} success!`,
         error: `${ixName} failed`,
       })
@@ -376,7 +385,81 @@ const useGlobalState = create<GlobalState>((set, get) => ({
         }
       });
   },
-  claim: async () => {},
+  claim: async (callbackOptions) => {
+    if (callbackOptions.onStart) {
+      callbackOptions.onStart();
+    }
+    const ixName = "Claim";
+    const { connection, wallet, configs, config } = get();
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return;
+    }
+
+    const provider = new anchor.AnchorProvider(
+      connection,
+      wallet,
+      anchor.AnchorProvider.defaultOptions()
+    );
+    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const configId = new PublicKey(configs[config].publicKey);
+    console.log("claim: ~ config", configs[config]);
+    const rewardMint = new PublicKey(configs[config].publicKey);
+
+    const [configAuth, configAuthBump] = await findConfigAuthorityPDA(configId);
+    // console.log("configAuth", configAuth.toBase58());
+
+    const [rewardPot, rewardPotBump] = await findRewardPotPDA(
+      configId,
+      rewardMint
+    );
+    // console.log("reward pot", rewardPot.toBase58());
+
+    const userATA = await findUserATA(wallet.publicKey, rewardMint);
+    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+
+    const claimTx = program.methods
+      .claim(configAuthBump, rewardPotBump)
+      .accounts({
+        user: wallet.publicKey,
+        userState,
+        config: configId,
+        configAuthority: configAuth,
+        rewardDestination: userATA,
+        rewardMint,
+        rewardPot,
+
+        // programs
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .rpc();
+
+    toast
+      .promise(claimTx, {
+        loading: `Processing ${ixName} tx...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        console.log(`${ixName} sig`, val);
+        if (callbackOptions.onSuccess) {
+          callbackOptions.onSuccess();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Transaction Error");
+      })
+      .finally(() => {
+        if (callbackOptions.onFinish) {
+          callbackOptions.onFinish();
+        }
+      });
+  },
 }));
 
 export default useGlobalState;

@@ -71,7 +71,7 @@ const createNewConfig = async (
       config: config.publicKey,
       configAuthority: configAuth,
       rewardMint: rewardMint,
-      rewardPot: rewardPot,
+      rewardPot,
       creatorAddressToWhitelist: whitelistCreator,
       // programs
       systemProgram: SystemProgram.programId,

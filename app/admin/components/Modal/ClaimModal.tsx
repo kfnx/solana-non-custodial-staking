@@ -9,8 +9,10 @@ const ClaimModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const initStaking = useGlobalState((state) => state.initiateStaking);
+  const claim = useGlobalState((state) => state.claim);
   const wallet = useGlobalState((state) => state.wallet);
+  const configs = useGlobalState((state) => state.configs);
+  const config = useGlobalState((state) => state.config);
 
   const closeModal = () => setIsOpen(false);
 
@@ -61,9 +63,20 @@ const ClaimModal: React.FC<{
                   </div>
 
                   <div className="my-2">
-                    <p className="block mb-2 text-sm text-gray-500">User (connected wallet):</p>
+                    <p className="block mb-2 text-sm text-gray-500">
+                      User (connected wallet):
+                    </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {wallet?.publicKey.toBase58()}
+                    </div>
+                  </div>
+
+                  <div className="my-2">
+                    <p className="block mb-2 text-sm text-gray-500">
+                      Token reward (from selected staking config):
+                    </p>
+                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
+                      {configs[config]?.account.rewardMint.toString()}
                     </div>
                   </div>
 
@@ -72,7 +85,7 @@ const ClaimModal: React.FC<{
                       My Reward:
                     </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                      hmm TODO add reward
+                      hmm TODO add more reward details
                     </div>
                   </div>
                 </div>
@@ -82,7 +95,7 @@ const ClaimModal: React.FC<{
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-progress"
                     onClick={() =>
-                      initStaking({
+                      claim({
                         onStart: () => setLoading(true),
                         onSuccess: () => closeModal(),
                         onFinish: () => setLoading(false),
