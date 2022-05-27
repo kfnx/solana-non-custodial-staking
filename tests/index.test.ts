@@ -390,10 +390,6 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
       const metadata = await findMetadataPDA(NFTmint.publicKey);
 
       const tx = await program.methods
@@ -413,11 +409,6 @@ describe("User journey", () => {
         .remainingAccounts([
           {
             pubkey: metadata,
-            isWritable: false,
-            isSigner: false,
-          },
-          {
-            pubkey: whitelist,
             isWritable: false,
             isSigner: false,
           },
@@ -457,10 +448,6 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
       const metadata = await findMetadataPDA(NFTmint.publicKey);
 
       try {
@@ -481,11 +468,6 @@ describe("User journey", () => {
           .remainingAccounts([
             {
               pubkey: metadata,
-              isWritable: false,
-              isSigner: false,
-            },
-            {
-              pubkey: whitelist,
               isWritable: false,
               isSigner: false,
             },
@@ -837,10 +819,6 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
       const metadata = await findMetadataPDA(justinNFTmint);
 
       await expect(
@@ -861,11 +839,6 @@ describe("User journey", () => {
           .remainingAccounts([
             {
               pubkey: metadata,
-              isWritable: false,
-              isSigner: false,
-            },
-            {
-              pubkey: whitelist,
               isWritable: false,
               isSigner: false,
             },
@@ -892,10 +865,6 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
       const metadata = await findMetadataPDA(justinNFTmint);
 
       await expect(
@@ -916,11 +885,6 @@ describe("User journey", () => {
           .remainingAccounts([
             {
               pubkey: metadata,
-              isWritable: false,
-              isSigner: false,
-            },
-            {
-              pubkey: whitelist,
               isWritable: false,
               isSigner: false,
             },
@@ -1059,10 +1023,6 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
-      const [whitelist] = await findWhitelistPDA(
-        config.publicKey,
-        dev.wallet.publicKey
-      );
 
       await expect(
         program.methods
@@ -1082,11 +1042,6 @@ describe("User journey", () => {
           .remainingAccounts([
             {
               pubkey: metadata,
-              isWritable: false,
-              isSigner: false,
-            },
-            {
-              pubkey: whitelist,
               isWritable: false,
               isSigner: false,
             },
