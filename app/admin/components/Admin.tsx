@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LibraryIcon, PlusIcon, RefreshIcon, TerminalIcon } from "@heroicons/react/solid";
+import { RefreshIcon, TerminalIcon } from "@heroicons/react/solid";
 import CreateNewConfigModal from "./Modal/CreateNewConfigModal";
 import useGlobalState from "../hooks/useGlobalState";
 
@@ -37,13 +37,15 @@ export default function Admin() {
 
       <div>
         <h2 className="mt-8 my-4">
-          <span className="text-slate-600 font-medium text-xs">My config:</span>
+          <span className="text-slate-600 font-medium text-xs">
+            My config ({myConfigs.length}):
+          </span>
           <button
             className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
             onClick={fetchConfigs}
           >
             <RefreshIcon
-              height={16}
+              height={14}
               className={isFetchingConfigs ? "animate-spin" : ""}
             />
           </button>
@@ -85,7 +87,7 @@ export default function Admin() {
             onClick={fetchConfigs}
           >
             <RefreshIcon
-              height={16}
+              height={14}
               className={isFetchingConfigs ? "animate-spin" : ""}
             />
           </button>

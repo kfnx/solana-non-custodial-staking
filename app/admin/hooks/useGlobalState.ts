@@ -26,6 +26,8 @@ interface GlobalState {
   users: any[];
   isFetchingUsers: boolean;
   fetchUsers: () => void;
+  myNFT: INFT[];
+  fetchMyNFT: () => void;
   initiateStaking: (options: DispatchOptions) => void;
   configs: any[];
   isFetchingConfigs: boolean;
@@ -72,6 +74,11 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const users = await program.account.user.all();
     set({ users, isFetchingUsers: false });
   },
+  myNFT: [],
+  fetchMyNFT: async () => {
+    // const myNFT = program.fetch
+    set({ myNFT: [] });
+  },
   initiateStaking: async (options) => {
     if (options.onStart) {
       options.onStart();
@@ -113,17 +120,17 @@ const useGlobalState = create<GlobalState>((set, get) => ({
       .promise(initStakingTx, {
         loading: "Processing transaction...",
         success: "Config created!",
-        error: "Transaction failed",
+        error: "Init staking failed",
       })
       .then((val) => {
-        console.log("onSuccess val", val);
+        console.log("init staking sig", val);
         if (options.onSuccess) {
           options.onSuccess();
         }
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Transaction Failed");
+        toast.error("Transaction Error");
       })
       .finally(() => {
         if (options.onFinish) {

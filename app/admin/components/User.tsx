@@ -6,7 +6,7 @@ import {
   RefreshIcon,
   UserAddIcon,
 } from "@heroicons/react/solid";
-import InitiateStakingModal from "./Modal/InitiateStakingModal";
+import InitStakingModal from "./Modal/InitStakingModal";
 import useGlobalState from "../hooks/useGlobalState";
 import ConfigSelector from "./ConfigSelector";
 import StakeModal from "./Modal/StakeModal";
@@ -73,14 +73,14 @@ export default function User() {
       <div>
         <h2 className="mt-8 my-4">
           <span className="text-slate-600 font-medium text-xs">
-            My initated stakings:
+            My initated stakings ({myInitiatedStakings.length}):
           </span>
           <button
             className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
             onClick={fetchUsers}
           >
             <RefreshIcon
-              height={16}
+              height={14}
               className={isFetchingUsers ? "animate-spin" : ""}
             />
           </button>
@@ -121,7 +121,7 @@ export default function User() {
             onClick={fetchUsers}
           >
             <RefreshIcon
-              height={16}
+              height={14}
               className={isFetchingUsers ? "animate-spin" : ""}
             />
           </button>
@@ -153,7 +153,7 @@ export default function User() {
             ))
           : "No initiated staking found"}
       </div>
-      <InitiateStakingModal
+      <InitStakingModal
         isOpen={isModalOpenInitStaking}
         setIsOpen={setIsModalOpenInitStaking}
       />

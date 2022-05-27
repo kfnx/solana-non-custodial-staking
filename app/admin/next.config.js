@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ["c.tenor.com"],
+    domains: ["c.tenor.com", "www.arweave.net"],
   },
 };
 

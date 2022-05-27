@@ -3,15 +3,25 @@ import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalState from "../../hooks/useGlobalState";
 import ConfigSelector from "../ConfigSelector";
+import UserNFT from "../UserNFT";
 
 const StakeModal: React.FC<{
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
+  const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
   const initStaking = useGlobalState((state) => state.initiateStaking);
   const wallet = useGlobalState((state) => state.wallet);
 
+  const handleSelectNFT = (mint: string) => {
+    console.log("selectedNFT", selectedNFT)
+    if (selectedNFT.includes(mint)) {
+      setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
+    } else {
+      setSelectedNFT((nfts) => [...nfts, mint]);
+    }
+  };
   const closeModal = () => setIsOpen(false);
 
   return (
@@ -61,19 +71,19 @@ const StakeModal: React.FC<{
                   </div>
 
                   <div className="my-2">
-                    <p className="block mb-2 text-sm text-gray-500">User (connected wallet):</p>
+                    <p className="block mb-2 text-sm text-gray-500">
+                      User (connected wallet):
+                    </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {wallet?.publicKey.toBase58()}
                     </div>
                   </div>
 
-                  <div className="mt-2 mb-32">
+                  <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
-                      Select NFT:
+                      Select NFT to stake:
                     </p>
-                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                      hmm TODO add NFT
-                    </div>
+                    <UserNFT selected={selectedNFT} select={handleSelectNFT} />
                   </div>
                 </div>
 

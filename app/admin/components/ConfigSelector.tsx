@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
-import { CheckIcon, SelectorIcon, CogIcon } from "@heroicons/react/solid";
+import { CheckIcon, SelectorIcon, TerminalIcon } from "@heroicons/react/solid";
 import useGlobalState from "../hooks/useGlobalState";
 
 export default function ConfigSelector() {
@@ -10,13 +10,15 @@ export default function ConfigSelector() {
 
   return (
     <Listbox value={config} onChange={setConfig}>
-      <div className="relative my-2">
-        <Listbox.Button className="relative w-full cursor-default rounded-lg text-gray-900 bg-gray-200  py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+      <div className="relative my-2 shadow rounded-md">
+        <Listbox.Button className="relative w-full cursor-default rounded-md bg-blue-900/20 hover:opacity-90 text-slate-600 py-2.5 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm hover:cursor-pointer">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-            <CogIcon className="h-5 w-5" aria-hidden="true" />
+            <TerminalIcon className="h-5 w-5" aria-hidden="true" />
           </span>
           <span className="block truncate ml-7">
-            {configs[config].publicKey.toBase58()}
+            {configs.length > 0
+              ? configs[config].publicKey.toBase58()
+              : "No config found"}
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <SelectorIcon className="h-5 w-5" aria-hidden="true" />

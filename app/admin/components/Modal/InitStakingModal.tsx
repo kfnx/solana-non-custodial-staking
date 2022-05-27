@@ -4,7 +4,7 @@ import useGlobalState from "../../hooks/useGlobalState";
 import LoadingSpinner from "../LoadingSpinner";
 import ConfigSelector from "../ConfigSelector";
 
-const InitiateStakingModal: React.FC<{
+const InitStakingModal: React.FC<{
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
@@ -60,7 +60,7 @@ const InitiateStakingModal: React.FC<{
                     <ConfigSelector />
                   </div>
 
-                  <div className="mt-2 mb-32">
+                  <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">User (connected wallet):</p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {wallet?.publicKey.toBase58()}
@@ -93,4 +93,4 @@ const InitiateStakingModal: React.FC<{
   );
 };
 
-export default InitiateStakingModal;
+export default InitStakingModal;
