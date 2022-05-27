@@ -1,7 +1,6 @@
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import type { NextPage } from "next";
 import Head from "next/head";
-import styles from "../styles/Home.module.css";
 import Tabs from "../components/Tabs";
 import NetworkSelector from "../components/NetworkSelector";
 import { useEffect } from "react";
@@ -26,7 +25,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
+      <main className="min-h-screen p-4 flex flex-col items-center">
         <Image
           src="https://c.tenor.com/vYc_EzLX6-cAAAAC/meeko-meekolony.gif"
           width={196}

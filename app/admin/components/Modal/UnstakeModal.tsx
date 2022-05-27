@@ -3,15 +3,27 @@ import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalState from "../../hooks/useGlobalState";
 import ConfigSelector from "../ConfigSelector";
+import UserNFT from "../UserNFT";
 
 const UnstakeModal: React.FC<{
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const initStaking = useGlobalState((state) => state.initiateStaking);
+  // const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
+  const selectedNFT = useGlobalState((state) => state.selectedNFT);
+  const selectNFT = useGlobalState((state) => state.selectNFT);
+  const unstake = useGlobalState((state) => state.unstake);
   const wallet = useGlobalState((state) => state.wallet);
 
+  // const handleSelectNFT = (mint: string) => {
+  //   console.log("selectedNFT", selectedNFT);
+  //   if (selectedNFT.includes(mint)) {
+  //     setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
+  //   } else {
+  //     setSelectedNFT((nfts) => [...nfts, mint]);
+  //   }
+  // };
   const closeModal = () => setIsOpen(false);
 
   return (
@@ -61,19 +73,19 @@ const UnstakeModal: React.FC<{
                   </div>
 
                   <div className="my-2">
-                    <p className="block mb-2 text-sm text-gray-500">User (connected wallet):</p>
+                    <p className="block mb-2 text-sm text-gray-500">
+                      User (connected wallet):
+                    </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {wallet?.publicKey.toBase58()}
                     </div>
                   </div>
 
-                  <div className="mt-2 mb-32">
+                  <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
-                      Select NFT:
+                      Select NFT to unstake:
                     </p>
-                    <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                      hmm TODO add NFT
-                    </div>
+                    <UserNFT selected={selectedNFT} select={selectNFT} />
                   </div>
                 </div>
 
@@ -82,7 +94,7 @@ const UnstakeModal: React.FC<{
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-progress"
                     onClick={() =>
-                      initStaking({
+                      unstake({
                         onStart: () => setLoading(true),
                         onSuccess: () => closeModal(),
                         onFinish: () => setLoading(false),

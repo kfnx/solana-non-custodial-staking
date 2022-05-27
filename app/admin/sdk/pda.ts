@@ -1,6 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./programId";
 import { programs } from "@metaplex/js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  // @ts-ignore
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(
@@ -71,3 +77,16 @@ export const findStakeInfoPDA = async (
     PROGRAM_ID
   );
 };
+
+export async function findUserATA(
+  user: PublicKey,
+  mint: PublicKey
+): Promise<PublicKey> {
+  return getAssociatedTokenAddress(
+    mint,
+    user,
+    false,
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+}

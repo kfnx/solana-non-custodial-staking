@@ -10,18 +10,20 @@ const StakeModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
-  const initStaking = useGlobalState((state) => state.initiateStaking);
+  // const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
+  const selectedNFT = useGlobalState((state) => state.selectedNFT);
+  const selectNFT = useGlobalState((state) => state.selectNFT);
+  const stake = useGlobalState((state) => state.stake);
   const wallet = useGlobalState((state) => state.wallet);
 
-  const handleSelectNFT = (mint: string) => {
-    console.log("selectedNFT", selectedNFT)
-    if (selectedNFT.includes(mint)) {
-      setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
-    } else {
-      setSelectedNFT((nfts) => [...nfts, mint]);
-    }
-  };
+  // const handleSelectNFT = (mint: string) => {
+  //   console.log("selectedNFT", selectedNFT);
+  //   if (selectedNFT.includes(mint)) {
+  //     setSelectedNFT((nfts) => nfts.filter((mint) => mint !== mint));
+  //   } else {
+  //     setSelectedNFT((nfts) => [...nfts, mint]);
+  //   }
+  // };
   const closeModal = () => setIsOpen(false);
 
   return (
@@ -83,7 +85,7 @@ const StakeModal: React.FC<{
                     <p className="block mb-2 text-sm text-gray-500">
                       Select NFT to stake:
                     </p>
-                    <UserNFT selected={selectedNFT} select={handleSelectNFT} />
+                    <UserNFT selected={selectedNFT} select={selectNFT} />
                   </div>
                 </div>
 
@@ -92,7 +94,7 @@ const StakeModal: React.FC<{
                     type="button"
                     className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-progress"
                     onClick={() =>
-                      initStaking({
+                      stake({
                         onStart: () => setLoading(true),
                         onSuccess: () => closeModal(),
                         onFinish: () => setLoading(false),

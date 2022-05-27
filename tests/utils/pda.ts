@@ -1,36 +1,42 @@
 import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
-import { NcStaking } from "../../target/types/nc_staking";
 import { programs } from "@metaplex/js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { NcStaking } from "../../target/types/nc_staking";
+import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 
-const { programId } = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+const { programId: PROGRAM_ID } = anchor.workspace
+  .NcStaking as anchor.Program<NcStaking>;
 
 export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findDelegateAuthPDA = async (tokenAccount: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findConfigAuthorityPDA = async (config: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("config"), config.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
 export const findRewardPotPDA = (config: PublicKey, rewardMint: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
@@ -52,7 +58,7 @@ export const findWhitelistPDA = async (
 ) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("whitelist"), config.toBytes(), creator.toBytes()],
-    programId
+    PROGRAM_ID
   );
 };
 
@@ -72,6 +78,19 @@ export const findStakeInfoPDA = async (
       user.toBytes(),
       config.toBytes(),
     ],
-    programId
+    PROGRAM_ID
   );
 };
+
+export async function findUserATA(
+  user: PublicKey,
+  mint: PublicKey
+): Promise<PublicKey> {
+  return getAssociatedTokenAddress(
+    mint,
+    user,
+    false,
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+}

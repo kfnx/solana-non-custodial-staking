@@ -67,7 +67,7 @@ const ClaimModal: React.FC<{
                     </div>
                   </div>
 
-                  <div className="mt-2 mb-32">
+                  <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
                       My Reward:
                     </p>

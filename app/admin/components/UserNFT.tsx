@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction } from "react";
 import Image from "next/image";
 import useWalletNFT from "../hooks/useWalletNFT";
 import { CheckIcon } from "@heroicons/react/solid";
+import { PublicKey } from "@solana/web3.js";
 
 const NFTImage: FC<{ src: string; alt: string }> = ({ src, alt }) => {
   if (src) {
@@ -22,9 +23,7 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
   return (
     <div
       className="relative flex flex-col items-center border p-4 hover:bg-black/20 cursor-pointer rounded-md"
-      onClick={() =>
-        typeof onClick === "function" ? onClick(nft.mint.toString()) : null
-      }
+      onClick={() => (typeof onClick === "function" ? onClick(nft.mint) : null)}
     >
       <NFTImage
         src={nft.externalMetadata.image}
@@ -43,7 +42,7 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
 };
 
 const UserNFT: React.FC<{
-  selected: string[];
+  selected: undefined | PublicKey;
   select?: Function;
 }> = ({ select = [], selected }) => {
   const { isLoading, isEmpty, nfts } = useWalletNFT();
@@ -62,7 +61,7 @@ const UserNFT: React.FC<{
         <MyNFTCard
           key={nft.mint.toString()}
           nft={nft}
-          selected={selected.includes(nft.mint.toString())}
+          selected={selected?.toBase58() === nft.mint.toString()}
           onClick={select}
         />
       ))}

@@ -73,9 +73,9 @@ export function createUsersWithAirdrop(
 
 /**
  * Give program with signers built in
- * @param program 
- * @param user 
- * @returns 
+ * @param program
+ * @param user
+ * @returns
  */
 export function programForUser(
   program: { idl: anchor.Idl; programId: anchor.Address },
@@ -114,17 +114,4 @@ export async function getTokenBalanceByATA(
   ata: PublicKey
 ): Promise<number> {
   return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
-}
-
-export async function findUserATA(
-  user: PublicKey,
-  mint: PublicKey
-): Promise<PublicKey> {
-  return getAssociatedTokenAddress(
-    mint,
-    user,
-    false,
-    TOKEN_PROGRAM_ID,
-    ASSOCIATED_TOKEN_PROGRAM_ID
-  );
 }
