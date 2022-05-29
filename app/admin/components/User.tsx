@@ -19,7 +19,9 @@ export default function User() {
   const [isModalOpenUnstake, setIsModalOpenUnstake] = useState(false);
   const [isModalOpenClaim, setIsModalOpenClaim] = useState(false);
   const users = useGlobalStore((state) => state.users);
-  const isFetchingUsers = useGlobalStore((state) => state.isFetchingUsers);
+  const loading = useGlobalStore((state) => state.fetchUsersLoading);
+  const success = useGlobalStore((state) => state.fetchUsersSuccess);
+  const running = useGlobalStore((state) => state.fetchUsersRunning);
   const fetchUsers = useGlobalStore((state) => state.fetchUsers);
   const wallet = useGlobalStore((state) => state.wallet);
 
@@ -32,8 +34,8 @@ export default function User() {
       : [];
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (!success && !loading && !running) fetchUsers();
+  }, [fetchUsers, loading, success, running]);
 
   return (
     <div className="text-sm">
@@ -81,7 +83,7 @@ export default function User() {
           >
             <RefreshIcon
               height={14}
-              className={isFetchingUsers ? "animate-spin" : ""}
+              className={loading ? "animate-spin" : ""}
             />
           </button>
         </h2>
@@ -122,7 +124,7 @@ export default function User() {
           >
             <RefreshIcon
               height={14}
-              className={isFetchingUsers ? "animate-spin" : ""}
+              className={loading ? "animate-spin" : ""}
             />
           </button>
         </h2>

@@ -6,9 +6,11 @@ import useGlobalStore from "../hooks/useGlobalStore";
 export default function Admin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const configs = useGlobalStore((state) => state.configs);
-  const isFetchingConfigs = useGlobalStore((state) => state.isFetchingConfigs);
-  const fetchConfigs = useGlobalStore((state) => state.fetchConfigs);
   const wallet = useGlobalStore((state) => state.wallet);
+  const loading = useGlobalStore((state) => state.fetchConfigsLoading);
+  const success = useGlobalStore((state) => state.fetchConfigsSuccess);
+  const running = useGlobalStore((state) => state.fetchConfigsRunning);
+  const fetchConfigs = useGlobalStore((state) => state.fetchConfigs);
 
   const myConfigs =
     configs.length > 0
@@ -19,8 +21,8 @@ export default function Admin() {
       : [];
 
   useEffect(() => {
-    fetchConfigs();
-  }, [fetchConfigs]);
+    if (!success && !loading && !running) fetchConfigs();
+  }, [fetchConfigs, loading, success, running]);
 
   return (
     <div className="text-sm">
@@ -46,7 +48,7 @@ export default function Admin() {
           >
             <RefreshIcon
               height={14}
-              className={isFetchingConfigs ? "animate-spin" : ""}
+              className={loading ? "animate-spin" : ""}
             />
           </button>
         </h2>
@@ -88,7 +90,7 @@ export default function Admin() {
           >
             <RefreshIcon
               height={14}
-              className={isFetchingConfigs ? "animate-spin" : ""}
+              className={loading ? "animate-spin" : ""}
             />
           </button>
         </h2>
