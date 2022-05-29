@@ -1,42 +1,51 @@
 import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { programs } from "@metaplex/js";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 import { NcStaking } from "../../target/types/nc_staking";
 import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 
 const { programId: PROGRAM_ID } = anchor.workspace
   .NcStaking as anchor.Program<NcStaking>;
 
-export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
+export const findUserStatePDA = async (
+  user: PublicKey,
+  config: PublicKey,
+  programId?: PublicKey
+) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
-    PROGRAM_ID
+    programId || PROGRAM_ID
   );
 };
 
-export const findDelegateAuthPDA = async (tokenAccount: PublicKey) => {
+export const findDelegateAuthPDA = async (
+  tokenAccount: PublicKey,
+  programId?: PublicKey
+) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
-    PROGRAM_ID
+    programId || PROGRAM_ID
   );
 };
 
-export const findConfigAuthorityPDA = async (config: PublicKey) => {
+export const findConfigAuthorityPDA = async (
+  config: PublicKey,
+  programId?: PublicKey
+) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("config"), config.toBytes()],
-    PROGRAM_ID
+    programId || PROGRAM_ID
   );
 };
 
-export const findRewardPotPDA = (config: PublicKey, rewardMint: PublicKey) => {
+export const findRewardPotPDA = (
+  config: PublicKey,
+  rewardMint: PublicKey,
+  programId?: PublicKey
+) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
-    PROGRAM_ID
+    programId || PROGRAM_ID
   );
 };
 
@@ -52,16 +61,6 @@ export const findEditionPDA = (mint: PublicKey) => {
   );
 };
 
-export const findWhitelistPDA = async (
-  config: PublicKey,
-  creator: PublicKey
-) => {
-  return PublicKey.findProgramAddress(
-    [Buffer.from("whitelist"), config.toBytes(), creator.toBytes()],
-    PROGRAM_ID
-  );
-};
-
 export const findMetadataPDA = async (mint: PublicKey) => {
   return await programs.metadata.Metadata.getPDA(mint);
 };
@@ -69,7 +68,8 @@ export const findMetadataPDA = async (mint: PublicKey) => {
 export const findStakeInfoPDA = async (
   mint: PublicKey,
   user: PublicKey,
-  config: PublicKey
+  config: PublicKey,
+  programId?: PublicKey
 ) => {
   return PublicKey.findProgramAddress(
     [
@@ -78,6 +78,6 @@ export const findStakeInfoPDA = async (
       user.toBytes(),
       config.toBytes(),
     ],
-    PROGRAM_ID
+    programId || PROGRAM_ID
   );
 };

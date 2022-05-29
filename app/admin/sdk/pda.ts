@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
-import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./programId";
 import { programs } from "@metaplex/js";
+import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./programId";
 
 export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(
@@ -39,16 +39,6 @@ export const findEditionPDA = (mint: PublicKey) => {
       Buffer.from("edition"),
     ],
     TOKEN_METADATA_PROGRAM_ID
-  );
-};
-
-export const findWhitelistPDA = async (
-  config: PublicKey,
-  creator: PublicKey
-) => {
-  return PublicKey.findProgramAddress(
-    [Buffer.from("whitelist"), config.toBytes(), creator.toBytes()],
-    PROGRAM_ID
   );
 };
 

@@ -16,6 +16,14 @@ type CreatorConfig = {
   skipEntirely: boolean;
 };
 
+type MetadataJson = {
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: number;
+  creators: any[];
+};
+
 export async function createMetadata(
   connection: Connection,
   wallet: Wallet,
@@ -25,10 +33,11 @@ export async function createMetadata(
     ourCreatorN: 1,
     leaveUnverified: false,
     skipEntirely: false,
-  }
+  },
+  metadataJson?: MetadataJson
 ) {
   const metadataData = parseMetadata(
-    readJSON("./tests/artifacts/metadata.json")
+    metadataJson || readJSON("./tests/artifacts/metadata.json")
   );
 
   const { totalCreatorsN, ourCreatorN, leaveUnverified, skipEntirely } =
