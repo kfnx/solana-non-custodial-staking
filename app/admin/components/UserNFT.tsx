@@ -1,9 +1,8 @@
-import { Dispatch, FC, SetStateAction } from "react";
+import { FC } from "react";
 import Image from "next/image";
-import useWalletNFT from "../hooks/useWalletNFT";
 import { CheckIcon, LockClosedIcon } from "@heroicons/react/solid";
 import { PublicKey } from "@solana/web3.js";
-import toast from "react-hot-toast";
+import useWalletNFT from "../hooks/useWalletNFT";
 
 const NFTImage: FC<{ src: string; alt: string }> = ({ src, alt }) => {
   if (src) {

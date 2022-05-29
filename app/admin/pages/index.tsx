@@ -1,23 +1,11 @@
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import type { NextPage } from "next";
 import Head from "next/head";
-import Tabs from "../components/Tabs";
-import NetworkSelector from "../components/NetworkSelector";
-import { useEffect } from "react";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import useGlobalStore from "../hooks/useGlobalStore";
 import Image from "next/image";
+import NetworkSelector from "../components/NetworkSelector";
+import Tabs from "../components/Tabs";
 
 const Home: NextPage = () => {
-  const wallet = useAnchorWallet();
-  const setWallet = useGlobalStore((state) => state.setWallet);
-
-  useEffect(() => {
-    if (wallet) {
-      setWallet(wallet);
-    }
-  }, [setWallet, wallet]);
-
   return (
     <div className="p-4">
       <Head>
@@ -34,7 +22,7 @@ const Home: NextPage = () => {
         />
         <div className="flex space-x-4 mt-8 mb-4">
           <NetworkSelector />
-          <WalletMultiButton />
+          <WalletMultiButton className="bg-blue-900/20 text-slate-600 shadow hover:text-white" />
         </div>
         <Tabs />
       </main>

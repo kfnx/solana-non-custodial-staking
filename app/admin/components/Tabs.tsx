@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Tab } from "@headlessui/react";
-import Admin from "./Admin";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import useGlobalStore from "../hooks/useGlobalStore";
+import Admin from "./Admin";
 import User from "./User";
 
 function classNames(...classes: string[]) {
@@ -15,7 +16,15 @@ const categories = {
 };
 
 export default function Tabs() {
-  const wallet = useAnchorWallet();
+  const anchorWallet = useAnchorWallet();
+  const setWallet = useGlobalStore((state) => state.setWallet);
+  const wallet = useGlobalStore((state) => state.wallet);
+
+  useEffect(() => {
+    if (anchorWallet?.publicKey) {
+      setWallet(anchorWallet);
+    }
+  }, [anchorWallet, setWallet]);
 
   return (
     <div className="w-full max-w-lg py-2 sm:px-0">
@@ -38,7 +47,7 @@ export default function Tabs() {
             </Tab>
           ))}
         </Tab.List>
-        {!wallet?.publicKey ? (
+        {!wallet ? (
           <div className="text-center py-4">Connect wallet to get started</div>
         ) : (
           <Tab.Panels className="mt-2">

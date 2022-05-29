@@ -1,12 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "./programId";
 import { programs } from "@metaplex/js";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  // @ts-ignore
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 
 export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   return await PublicKey.findProgramAddress(

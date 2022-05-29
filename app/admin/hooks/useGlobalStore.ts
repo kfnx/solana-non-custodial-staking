@@ -1,5 +1,5 @@
 import create, { GetState } from "zustand";
-import * as anchor from "@project-serum/anchor";
+import { AnchorProvider, Program } from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -42,22 +42,22 @@ type CallbackOptions = {
 };
 
 // TODO: complete abstraction, if needed.
-const AnchorProgramBuilder = (
-  get: GetState<GlobalState>
-): anchor.Program<NcStaking> | WalletError => {
-  const { wallet, connection } = get();
-  if (!wallet) {
-    toast.error("Wallet Not Connected");
-    return new WalletError();
-  }
+// const AnchorProgramBuilder = (
+//   get: GetState<GlobalState>
+// ): Program<NcStaking> | WalletError => {
+//   const { wallet, connection } = get();
+//   if (!wallet) {
+//     toast.error("Wallet Not Connected");
+//     return new WalletError();
+//   }
 
-  const provider = new anchor.AnchorProvider(
-    connection,
-    wallet,
-    anchor.AnchorProvider.defaultOptions()
-  );
-  return new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-};
+//   const provider = new AnchorProvider(
+//     connection,
+//     wallet,
+//     AnchorProvider.defaultOptions()
+//   );
+//   return new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+// };
 
 interface GlobalState {
   // setters
@@ -76,10 +76,14 @@ interface GlobalState {
 
   // program account fetch
   users: any[];
-  isFetchingUsers: boolean;
+  fetchUsersRunning: boolean;
+  fetchUsersLoading: boolean;
+  fetchUsersSuccess: boolean;
   fetchUsers: () => void;
   configs: any[];
-  isFetchingConfigs: boolean;
+  fetchConfigsRunning: boolean;
+  fetchConfigsLoading: boolean;
+  fetchConfigsSuccess: boolean;
   fetchConfigs: () => void;
   userTokenBalance: undefined | number;
   fetchUserTokenBalance: () => void;
@@ -125,46 +129,68 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
 
   // program accounts fetchs
   users: [],
-  isFetchingUsers: false,
+  fetchUsersRunning: false,
+  fetchUsersLoading: false,
+  fetchUsersSuccess: false,
   fetchUsers: async () => {
-    set({ isFetchingUsers: true });
+    set({
+      fetchUsersLoading: true,
+      fetchConfigsRunning: true,
+      fetchUsersSuccess: false,
+    });
     const connection = get().connection;
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
-      return set({ users: [], isFetchingUsers: false });
+      return set({
+        users: [],
+        fetchUsersLoading: false,
+        fetchConfigsRunning: false,
+        fetchUsersSuccess: false,
+      });
     }
 
     toast("Fetching user PDAs..");
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const users = await program.account.user.all();
-    set({ users, isFetchingUsers: false });
+    set({
+      users,
+      fetchUsersLoading: false,
+      fetchConfigsRunning: false,
+      fetchUsersSuccess: true,
+    });
   },
   configs: [],
-  isFetchingConfigs: false,
+  fetchConfigsRunning: false,
+  fetchConfigsLoading: false,
+  fetchConfigsSuccess: false,
   fetchConfigs: async () => {
-    set({ isFetchingConfigs: true });
+    set({ fetchConfigsLoading: true, fetchConfigsSuccess: false });
     const connection = get().connection;
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
-      return set({ users: [], isFetchingConfigs: false });
+      return set({
+        users: [],
+        fetchConfigsLoading: false,
+        fetchConfigsSuccess: false,
+      });
     }
 
     toast("Fetching staking config PDAs..");
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const configs = await program.account.stakingConfig.all();
-    set({ configs, isFetchingConfigs: false });
+    set({ configs, fetchConfigsLoading: false, fetchConfigsSuccess: true });
   },
   userTokenBalance: undefined,
   fetchUserTokenBalance: async () => {},
@@ -178,15 +204,15 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const { connection, wallet, configs, config } = get();
     if (!wallet) {
       toast.error("Wallet Not Connected");
-      return set({ users: [], isFetchingUsers: false });
+      return;
     }
 
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
     const configId = new PublicKey(configs[config].publicKey);
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
@@ -242,12 +268,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
 
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
     const configId = new PublicKey(configs[config].publicKey);
 
@@ -327,12 +353,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
 
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
     const configId = new PublicKey(configs[config].publicKey);
 
@@ -400,12 +426,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
 
-    const provider = new anchor.AnchorProvider(
+    const provider = new AnchorProvider(
       connection,
       wallet,
-      anchor.AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions()
     );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
     const configId = new PublicKey(configs[config].publicKey);
     console.log("claim: ~ config", configs[config]);

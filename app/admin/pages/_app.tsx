@@ -15,15 +15,16 @@ import {
   SolletWalletAdapter,
   TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
-import { Toaster } from "react-hot-toast";
-import useGlobalState from "../hooks/useGlobalState";
+import toast, { Toaster } from "react-hot-toast";
+import useGlobalStore from "../hooks/useGlobalStore";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 // Use require instead of import since order matters
-require("../styles/globals.css");
 require("@solana/wallet-adapter-react-ui/styles.css");
+require("../styles/globals.css");
 
 const App: FC<AppProps> = ({ Component, pageProps }) => {
-  const network = useGlobalState((state) => state.network);
+  const network = useGlobalStore((state) => state.network);
   const wallets = useMemo(
     () => [
       new GlowWalletAdapter(),
@@ -40,17 +41,19 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <StrictMode>
-      <ConnectionProvider
-        endpoint={network.endpoint}
-        config={{ commitment: "confirmed" }}
-      >
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <Component {...pageProps} />
-            <Toaster />
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
+      <ErrorBoundary>
+        <ConnectionProvider
+          endpoint={network.endpoint}
+          config={{ commitment: "confirmed" }}
+        >
+          <WalletProvider wallets={wallets} autoConnect onError={() => toast.error("Wallet Error")}>
+            <WalletModalProvider>
+              <Component {...pageProps} />
+              <Toaster />
+            </WalletModalProvider>
+          </WalletProvider>
+        </ConnectionProvider>
+      </ErrorBoundary>
     </StrictMode>
   );
 };
