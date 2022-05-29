@@ -18,6 +18,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import useGlobalStore from "../hooks/useGlobalStore";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
 
 // Use require instead of import since order matters
 require("@solana/wallet-adapter-react-ui/styles.css");
@@ -46,7 +47,15 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
           endpoint={network.endpoint}
           config={{ commitment: "confirmed" }}
         >
-          <WalletProvider wallets={wallets} autoConnect onError={() => toast.error("Wallet Error")}>
+          <WalletProvider
+            wallets={wallets}
+            autoConnect
+            onError={(err) => {
+              if (err.constructor.name === WalletSignTransactionError.name) {
+                toast.error("Request rejected");
+              }
+            }}
+          >
             <WalletModalProvider>
               <Component {...pageProps} />
               <Toaster />

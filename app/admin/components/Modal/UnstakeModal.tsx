@@ -18,7 +18,7 @@ const UnstakeModal: React.FC<{
   const wallet = useGlobalStore((state) => state.wallet);
 
   const handleSelectNFT = (mint: PublicKey) => {
-    console.log("selectedNFT", selectedNFT);
+    console.log("selectedNFT", selectedNFT?.toBase58());
     if (mint.toBase58() === selectedNFT?.toBase58()) {
       return selectNFT(undefined);
     }

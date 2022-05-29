@@ -138,7 +138,9 @@ const CreateNewConfigModal: React.FC<{
 
                 <div className="my-6">
                   <div className="my-2">
-                    <p className="block mb-2 text-sm text-gray-500">Admin (connected wallet):</p>
+                    <p className="block mb-2 text-sm text-gray-500">
+                      Admin (connected wallet):
+                    </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {wallet?.publicKey.toBase58()}
                     </div>
@@ -309,8 +311,14 @@ const CreateNewConfigModal: React.FC<{
                             });
                             closeModal();
                             resolve(1);
-                          } catch (error) {
+                          } catch (error: any) {
                             console.error(error);
+                            if (
+                              error.message ===
+                              "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+                            ) {
+                              toast.error("Your solana balance is empty");
+                            }
                             reject();
                           } finally {
                             setLoading(false);

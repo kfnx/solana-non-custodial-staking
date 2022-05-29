@@ -22,13 +22,13 @@ import {
   PROGRAM_ID,
   TOKEN_METADATA_PROGRAM_ID,
 } from "../sdk";
-import { WalletError } from "@solana/wallet-adapter-base";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   // @ts-ignore
-  getOrCreateAssociatedTokenAccount,
+  getAssociatedTokenAddress,
 } from "@solana/spl-token";
+import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
 
 type Network = {
   endpoint: string;
@@ -214,6 +214,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
+      return;
+    }
     const configId = new PublicKey(configs[config].publicKey);
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
 
@@ -243,9 +250,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
           callbackOptions.onSuccess();
         }
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err);
-        toast.error("Transaction Error");
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else {
+          toast.error("Transaction Error");
+        }
       })
       .finally(() => {
         if (callbackOptions.onFinish) {
@@ -261,10 +275,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const { connection, wallet, configs, config, selectedNFT } = get();
     if (!wallet) {
       toast.error("Wallet Not Connected");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
       return;
     }
     if (!selectedNFT) {
       toast.error("NFT not selected");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
       return;
     }
 
@@ -275,6 +295,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
+      return;
+    }
     const configId = new PublicKey(configs[config].publicKey);
 
     const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
@@ -328,6 +355,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         }
       })
       .catch((err) => {
+        console.log(err.name);
         console.error(err);
         toast.error("Transaction Error");
       })
@@ -346,10 +374,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const { connection, wallet, configs, config, selectedNFT } = get();
     if (!wallet) {
       toast.error("Wallet Not Connected");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
       return;
     }
     if (!selectedNFT) {
       toast.error("NFT not selected");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
       return;
     }
 
@@ -360,6 +394,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
+      return;
+    }
     const configId = new PublicKey(configs[config].publicKey);
 
     const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
@@ -423,6 +464,9 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const { connection, wallet, configs, config } = get();
     if (!wallet) {
       toast.error("Wallet Not Connected");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
       return;
     }
 
@@ -433,9 +477,15 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
+      return;
+    }
     const configId = new PublicKey(configs[config].publicKey);
-    console.log("claim: ~ config", configs[config]);
-    const rewardMint = new PublicKey(configs[config].publicKey);
+    const rewardMint = configs[config].account.rewardMint;
 
     const [configAuth, configAuthBump] = await findConfigAuthorityPDA(configId);
     // console.log("configAuth", configAuth.toBase58());
@@ -447,12 +497,18 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     // console.log("reward pot", rewardPot.toBase58());
 
     // const userATA = await findUserATA(wallet.publicKey, rewardMint);
-    const userATA = await getOrCreateAssociatedTokenAccount(
-      connection,
-      wallet,
+    const userATA = await getAssociatedTokenAddress(
       rewardMint,
       wallet.publicKey
     );
+    // const userATA = await getOrCreateAssociatedTokenAccount(
+    //   connection,
+    //   wallet,
+    //   rewardMint,
+    //   wallet.publicKey
+    // );
+    console.log("userATA", userATA.toBase58());
+
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
 
     const claimTx = program.methods
