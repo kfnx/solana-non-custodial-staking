@@ -7,7 +7,7 @@ import {
   UserAddIcon,
 } from "@heroicons/react/solid";
 import InitStakingModal from "./Modal/InitStakingModal";
-import useGlobalState from "../hooks/useGlobalState";
+import useGlobalStore from "../hooks/useGlobalStore";
 import ConfigSelector from "./ConfigSelector";
 import StakeModal from "./Modal/StakeModal";
 import UnstakeModal from "./Modal/UnstakeModal";
@@ -18,10 +18,10 @@ export default function User() {
   const [isModalOpenStake, setIsModalOpenStake] = useState(false);
   const [isModalOpenUnstake, setIsModalOpenUnstake] = useState(false);
   const [isModalOpenClaim, setIsModalOpenClaim] = useState(false);
-  const users = useGlobalState((state) => state.users);
-  const isFetchingUsers = useGlobalState((state) => state.isFetchingUsers);
-  const fetchUsers = useGlobalState((state) => state.fetchUsers);
-  const wallet = useGlobalState((state) => state.wallet);
+  const users = useGlobalStore((state) => state.users);
+  const isFetchingUsers = useGlobalStore((state) => state.isFetchingUsers);
+  const fetchUsers = useGlobalStore((state) => state.fetchUsers);
+  const wallet = useGlobalStore((state) => state.wallet);
 
   const myInitiatedStakings =
     users.length > 0

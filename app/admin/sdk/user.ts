@@ -1,6 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  // @ts-ignore
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";

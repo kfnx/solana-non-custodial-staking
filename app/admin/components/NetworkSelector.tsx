@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, SelectorIcon, GlobeAltIcon } from "@heroicons/react/solid";
-import useGlobalState from "../hooks/useGlobalState";
+import useGlobalStore from "../hooks/useGlobalStore";
 
 const networks = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
@@ -12,8 +12,8 @@ const networks = [
 ];
 
 export default function NetworkSelector() {
-  const network = useGlobalState((state) => state.network);
-  const setNetwork = useGlobalState((state) => state.setNetwork);
+  const network = useGlobalStore((state) => state.network);
+  const setNetwork = useGlobalStore((state) => state.setNetwork);
 
   return (
     <Listbox value={network} onChange={setNetwork}>

@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Dispatch, Fragment, SetStateAction, useState } from "react";
-import useGlobalState from "../../hooks/useGlobalState";
+import useGlobalStore from "../../hooks/useGlobalStore";
 import LoadingSpinner from "../LoadingSpinner";
 import ConfigSelector from "../ConfigSelector";
 
@@ -9,8 +9,8 @@ const InitStakingModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const initStaking = useGlobalState((state) => state.initiateStaking);
-  const wallet = useGlobalState((state) => state.wallet);
+  const initStaking = useGlobalStore((state) => state.initiateStaking);
+  const wallet = useGlobalStore((state) => state.wallet);
 
   const closeModal = () => setIsOpen(false);
 

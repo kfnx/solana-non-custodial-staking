@@ -5,12 +5,12 @@ import Tabs from "../components/Tabs";
 import NetworkSelector from "../components/NetworkSelector";
 import { useEffect } from "react";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import useGlobalState from "../hooks/useGlobalState";
+import useGlobalStore from "../hooks/useGlobalStore";
 import Image from "next/image";
 
 const Home: NextPage = () => {
   const wallet = useAnchorWallet();
-  const setWallet = useGlobalState((state) => state.setWallet);
+  const setWallet = useGlobalStore((state) => state.setWallet);
 
   useEffect(() => {
     if (wallet) {

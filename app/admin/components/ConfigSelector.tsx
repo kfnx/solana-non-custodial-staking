@@ -1,12 +1,12 @@
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, SelectorIcon, TerminalIcon } from "@heroicons/react/solid";
-import useGlobalState from "../hooks/useGlobalState";
+import useGlobalStore from "../hooks/useGlobalStore";
 
 export default function ConfigSelector() {
-  const configs = useGlobalState((state) => state.configs);
-  const config = useGlobalState((state) => state.config);
-  const setConfig = useGlobalState((state) => state.setConfig);
+  const configs = useGlobalStore((state) => state.configs);
+  const config = useGlobalStore((state) => state.config);
+  const setConfig = useGlobalStore((state) => state.setConfig);
 
   return (
     <Listbox value={config} onChange={setConfig}>

@@ -1,7 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
-import useGlobalState from "../../hooks/useGlobalState";
+import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
 import UserNFT from "../UserNFT";
 import { PublicKey } from "@solana/web3.js";
@@ -12,10 +12,10 @@ const StakeModal: React.FC<{
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
   // const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
-  const selectedNFT = useGlobalState((state) => state.selectedNFT);
-  const selectNFT = useGlobalState((state) => state.selectNFT);
-  const stake = useGlobalState((state) => state.stake);
-  const wallet = useGlobalState((state) => state.wallet);
+  const selectedNFT = useGlobalStore((state) => state.selectedNFT);
+  const selectNFT = useGlobalStore((state) => state.selectNFT);
+  const stake = useGlobalStore((state) => state.stake);
+  const wallet = useGlobalStore((state) => state.wallet);
 
   const handleSelectNFT = (mint: PublicKey) => {
     console.log("selectedNFT", selectedNFT);

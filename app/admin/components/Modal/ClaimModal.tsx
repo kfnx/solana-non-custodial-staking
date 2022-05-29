@@ -1,18 +1,30 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Dispatch, Fragment, SetStateAction, useState } from "react";
+import {
+  Dispatch,
+  Fragment,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import LoadingSpinner from "../LoadingSpinner";
-import useGlobalState from "../../hooks/useGlobalState";
+import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
+import { findUserATA, getTokenBalanceByATA } from "../../sdk";
+import toast from "react-hot-toast";
 
 const ClaimModal: React.FC<{
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  const claim = useGlobalState((state) => state.claim);
-  const wallet = useGlobalState((state) => state.wallet);
-  const configs = useGlobalState((state) => state.configs);
-  const config = useGlobalState((state) => state.config);
+  const claim = useGlobalStore((state) => state.claim);
+  const wallet = useGlobalStore((state) => state.wallet);
+  const connection = useGlobalStore((state) => state.connection);
+  const configs = useGlobalStore((state) => state.configs);
+  const config = useGlobalStore((state) => state.config);
+  const selectedConfig = configs[config];
+  const rewardMint = selectedConfig?.account.rewardMint;
 
   const closeModal = () => setIsOpen(false);
 
@@ -76,16 +88,18 @@ const ClaimModal: React.FC<{
                       Token reward (from selected staking config):
                     </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                      {configs[config]?.account.rewardMint.toString()}
+                      {selectedConfig?.account.rewardMint.toString()}
                     </div>
                   </div>
 
                   <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
-                      My Reward:
+                      My Token Reward Balance:
                     </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-                      hmm TODO add more reward details
+                      {/* { */}
+                      TODO get userRewardTokenBalance
+                      {/* } */}
                     </div>
                   </div>
                 </div>

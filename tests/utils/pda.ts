@@ -81,16 +81,3 @@ export const findStakeInfoPDA = async (
     PROGRAM_ID
   );
 };
-
-export async function findUserATA(
-  user: PublicKey,
-  mint: PublicKey
-): Promise<PublicKey> {
-  return getAssociatedTokenAddress(
-    mint,
-    user,
-    false,
-    TOKEN_PROGRAM_ID,
-    ASSOCIATED_TOKEN_PROGRAM_ID
-  );
-}

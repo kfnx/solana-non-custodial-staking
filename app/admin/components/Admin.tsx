@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { RefreshIcon, TerminalIcon } from "@heroicons/react/solid";
 import CreateNewConfigModal from "./Modal/CreateNewConfigModal";
-import useGlobalState from "../hooks/useGlobalState";
+import useGlobalStore from "../hooks/useGlobalStore";
 
 export default function Admin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const configs = useGlobalState((state) => state.configs);
-  const isFetchingConfigs = useGlobalState((state) => state.isFetchingConfigs);
-  const fetchConfigs = useGlobalState((state) => state.fetchConfigs);
-  const wallet = useGlobalState((state) => state.wallet);
+  const configs = useGlobalStore((state) => state.configs);
+  const isFetchingConfigs = useGlobalStore((state) => state.isFetchingConfigs);
+  const fetchConfigs = useGlobalStore((state) => state.fetchConfigs);
+  const wallet = useGlobalStore((state) => state.wallet);
 
   const myConfigs =
     configs.length > 0

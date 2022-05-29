@@ -17,7 +17,6 @@ import {
   findStakeInfoPDA,
   findUserATA,
   findUserStatePDA,
-  findWhitelistPDA,
   IDL,
   NcStaking,
   PROGRAM_ID,
@@ -27,6 +26,8 @@ import { WalletError } from "@solana/wallet-adapter-base";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  // @ts-ignore
+  getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
 
 type Network = {
@@ -58,11 +59,6 @@ const AnchorProgramBuilder = (
   return new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
 };
 
-interface StakeInstructionAccounts {
-  mint: PublicKey;
-  config: PublicKey;
-}
-
 interface GlobalState {
   // setters
   connection: Connection;
@@ -71,19 +67,23 @@ interface GlobalState {
   setWallet: (wallet: AnchorWallet) => void;
   network: Network;
   setNetwork: (network: Network) => void;
-  users: any[];
-  isFetchingUsers: boolean;
   myNFT: INFT[];
   fetchMyNFT: () => void;
-  configs: any[];
-  isFetchingConfigs: boolean;
   config: number;
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
   selectNFT: (mint: PublicKey | undefined) => void;
+
   // program account fetch
+  users: any[];
+  isFetchingUsers: boolean;
   fetchUsers: () => void;
+  configs: any[];
+  isFetchingConfigs: boolean;
   fetchConfigs: () => void;
+  userTokenBalance: undefined | number;
+  fetchUserTokenBalance: () => void;
+
   // instruction dispatch
   initiateStaking: (cbOptions: CallbackOptions) => void;
   stake: (cbOptions: CallbackOptions) => void;
@@ -91,7 +91,7 @@ interface GlobalState {
   claim: (cbOptions: CallbackOptions) => void;
 }
 
-const useGlobalState = create<GlobalState>((set, get) => ({
+const useGlobalStore = create<GlobalState>((set, get) => ({
   connection: new Connection("http://localhost:8899", {
     commitment: "confirmed",
   }),
@@ -109,15 +109,11 @@ const useGlobalState = create<GlobalState>((set, get) => ({
   setNetwork: (network: Network) => {
     set({ network });
   },
-  users: [],
-  isFetchingUsers: false,
   myNFT: [],
   fetchMyNFT: async () => {
     // const myNFT = program.fetch
     set({ myNFT: [] });
   },
-  configs: [],
-  isFetchingConfigs: false,
   config: 0,
   setConfig: (index) => {
     set({ config: index });
@@ -126,7 +122,10 @@ const useGlobalState = create<GlobalState>((set, get) => ({
   selectNFT: (selectedNFT) => {
     set({ selectedNFT });
   },
+
   // program accounts fetchs
+  users: [],
+  isFetchingUsers: false,
   fetchUsers: async () => {
     set({ isFetchingUsers: true });
     const connection = get().connection;
@@ -146,6 +145,8 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const users = await program.account.user.all();
     set({ users, isFetchingUsers: false });
   },
+  configs: [],
+  isFetchingConfigs: false,
   fetchConfigs: async () => {
     set({ isFetchingConfigs: true });
     const connection = get().connection;
@@ -165,6 +166,9 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     const configs = await program.account.stakingConfig.all();
     set({ configs, isFetchingConfigs: false });
   },
+  userTokenBalance: undefined,
+  fetchUserTokenBalance: async () => {},
+
   // instruction dispatcher
   initiateStaking: async (callbackOptions) => {
     if (callbackOptions.onStart) {
@@ -416,7 +420,13 @@ const useGlobalState = create<GlobalState>((set, get) => ({
     );
     // console.log("reward pot", rewardPot.toBase58());
 
-    const userATA = await findUserATA(wallet.publicKey, rewardMint);
+    // const userATA = await findUserATA(wallet.publicKey, rewardMint);
+    const userATA = await getOrCreateAssociatedTokenAccount(
+      connection,
+      wallet,
+      rewardMint,
+      wallet.publicKey
+    );
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
 
     const claimTx = program.methods
@@ -462,4 +472,4 @@ const useGlobalState = create<GlobalState>((set, get) => ({
   },
 }));
 
-export default useGlobalState;
+export default useGlobalStore;

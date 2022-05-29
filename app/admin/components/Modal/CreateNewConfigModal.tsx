@@ -289,7 +289,7 @@ const CreateNewConfigModal: React.FC<{
                         }
                       }
 
-                      // TODO: move to zustand useGlobalState. but this kind of works for now :)
+                      // TODO: move to zustand useGlobalStore. but this kind of works for now :)
                       const createNewConfigTx = new Promise(
                         async (resolve, reject) => {
                           setLoading(true);
