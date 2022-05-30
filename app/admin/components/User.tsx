@@ -39,32 +39,32 @@ export default function User() {
 
   return (
     <div className="text-sm">
-      <h2 className="mt-2 mb-4 text-slate-600 font-medium text-xs">Staking</h2>
+      <h2 className="mt-2 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">Staking</h2>
       <hr className="-mt-3 mb-4" />
       <ConfigSelector />
       <button
-        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90 w-full"
+        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
         onClick={() => setIsModalOpenInitStaking(true)}
       >
         Initiate staking <UserAddIcon height={20} className="ml-2" />
       </button>
       <div className="grid grid-cols-3 gap-2 my-2">
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
           onClick={() => setIsModalOpenStake(true)}
         >
           Stake
           <LockClosedIcon height={20} className="ml-2" />
         </button>
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
           onClick={() => setIsModalOpenUnstake(true)}
         >
           Unstake
           <LockOpenIcon height={20} className="ml-2" />
         </button>
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
           onClick={() => setIsModalOpenClaim(true)}
         >
           Claim
@@ -74,11 +74,11 @@ export default function User() {
 
       <div>
         <h2 className="mt-8 my-4">
-          <span className="text-slate-600 font-medium text-xs">
+          <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
             My initated stakings ({myInitiatedStakings.length}):
           </span>
           <button
-            className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
+            className="rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 hover:opacity-90 p-1 ml-2"
             onClick={fetchUsers}
           >
             <RefreshIcon
@@ -92,7 +92,7 @@ export default function User() {
         {myInitiatedStakings.length > 0
           ? myInitiatedStakings.map((item: any, index) => (
               <div key={item.publicKey} className="text-xs mt-4">
-                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600">
+                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600 dark:text-gray-200">
                   {index + 1}
                 </span>
                 <div className="flex flex-column flex-wrap mt-2">
@@ -115,11 +115,11 @@ export default function User() {
           : "No initiated staking found"}
 
         <h2 className="mt-8 my-4">
-          <span className="text-slate-600 font-medium text-xs">
+          <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
             Available users that initiated staking ({users.length}):
           </span>
           <button
-            className="rounded-md shadow bg-blue-900/20 text-slate-600 hover:opacity-90 p-1 ml-2"
+            className="rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 hover:opacity-90 p-1 ml-2"
             onClick={fetchUsers}
           >
             <RefreshIcon
@@ -133,7 +133,7 @@ export default function User() {
         {users.length > 0
           ? users.map((item: any, index) => (
               <div key={item.publicKey} className="text-xs mt-4">
-                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600">
+                <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600 dark:text-gray-200">
                   {index + 1}
                 </span>
                 <div className="flex flex-column flex-wrap mt-2">

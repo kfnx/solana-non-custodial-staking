@@ -18,17 +18,17 @@ export default function NetworkSelector() {
   return (
     <Listbox value={network} onChange={setNetwork}>
       <div className="relative">
-        <Listbox.Button className="relative w-44 h-12 cursor-default shadow rounded bg-blue-900/20 text-slate-600 font-bold hover:opacity-90 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm hover:cursor-pointer">
+        <Listbox.Button className="relative w-44 h-12 cursor-default shadow rounded bg-blue-900/20 text-slate-600 dark:text-gray-200 font-bold hover:opacity-90 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm hover:cursor-pointer">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
             <GlobeAltIcon
-              className="h-5 w-5 text-slate-600"
+              className="h-5 w-5 text-slate-600 dark:text-gray-200"
               aria-hidden="true"
             />
           </span>
           <span className="block truncate ml-7">{network.name}</span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <SelectorIcon
-              className="h-5 w-5 text-slate-600"
+              className="h-5 w-5 text-slate-600 dark:text-gray-200"
               aria-hidden="true"
             />
           </span>

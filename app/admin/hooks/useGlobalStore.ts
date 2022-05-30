@@ -135,7 +135,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   fetchUsers: async () => {
     set({
       fetchUsersLoading: true,
-      fetchConfigsRunning: true,
+      fetchUsersRunning: true,
       fetchUsersSuccess: false,
     });
     const connection = get().connection;
@@ -145,7 +145,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return set({
         users: [],
         fetchUsersLoading: false,
-        fetchConfigsRunning: false,
+        fetchUsersRunning: false,
         fetchUsersSuccess: false,
       });
     }
@@ -161,7 +161,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     set({
       users,
       fetchUsersLoading: false,
-      fetchConfigsRunning: false,
+      fetchUsersRunning: false,
       fetchUsersSuccess: true,
     });
   },
@@ -170,15 +170,20 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   fetchConfigsLoading: false,
   fetchConfigsSuccess: false,
   fetchConfigs: async () => {
-    set({ fetchConfigsLoading: true, fetchConfigsSuccess: false });
+    set({
+      fetchConfigsLoading: true,
+      fetchConfigsSuccess: false,
+      fetchConfigsRunning: true,
+    });
     const connection = get().connection;
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
       return set({
-        users: [],
+        configs: [],
         fetchConfigsLoading: false,
         fetchConfigsSuccess: false,
+        fetchConfigsRunning: false,
       });
     }
 
@@ -189,8 +194,24 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const configs = await program.account.stakingConfig.all();
-    set({ configs, fetchConfigsLoading: false, fetchConfigsSuccess: true });
+    try {
+      const configs = await program.account.stakingConfig.all();
+      set({
+        configs,
+        fetchConfigsLoading: false,
+        fetchConfigsRunning: false,
+        fetchConfigsSuccess: true,
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Request failed");
+      set({
+        configs: [],
+        fetchConfigsLoading: false,
+        fetchConfigsRunning: false,
+        fetchConfigsSuccess: false,
+      });
+    }
   },
   userTokenBalance: undefined,
   fetchUserTokenBalance: async () => {},

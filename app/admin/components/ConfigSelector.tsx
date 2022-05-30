@@ -11,7 +11,7 @@ export default function ConfigSelector() {
   return (
     <Listbox value={config} onChange={setConfig}>
       <div className="relative my-2 shadow rounded-md">
-        <Listbox.Button className="relative w-full cursor-default rounded-md bg-blue-900/20 hover:opacity-90 text-slate-600 py-2.5 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm hover:cursor-pointer">
+        <Listbox.Button className="relative w-full cursor-default rounded-md bg-blue-900/20 hover:opacity-90 text-slate-600 dark:text-gray-200 py-2.5 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm hover:cursor-pointer">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
             <TerminalIcon className="h-5 w-5" aria-hidden="true" />
           </span>

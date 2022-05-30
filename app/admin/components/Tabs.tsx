@@ -35,11 +35,11 @@ export default function Tabs() {
               key={category}
               className={({ selected }) =>
                 classNames(
-                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700",
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700 dark:text-blue-200",
                   "ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2",
                   selected
-                    ? "bg-white shadow"
-                    : "text-blue-100 hover:bg-white/[0.12] hover:text-white"
+                    ? "bg-white dark:bg-gray-600 shadow"
+                    : "text-blue-100 dark:text-blue-600/50 hover:bg-white/[0.12] hover:text-white"
                 )
               }
             >
@@ -55,7 +55,7 @@ export default function Tabs() {
               <Tab.Panel
                 key={idx}
                 className={classNames(
-                  "rounded-xl bg-white p-3",
+                  "rounded-xl bg-white dark:bg-gray-600 p-3",
                   "ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2"
                 )}
               >
