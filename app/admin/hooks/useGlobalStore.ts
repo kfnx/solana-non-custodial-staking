@@ -28,7 +28,6 @@ import {
   // @ts-ignore
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
 
 type Network = {
   endpoint: string;
@@ -254,6 +253,15 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     console.log("userState", accounts.userState.toBase58());
     console.log("config", accounts.config.toBase58());
 
+    const acc = await connection.getAccountInfoAndContext(accounts.userState);
+    if (acc.value) {
+      toast.error("Account already initated in current config");
+      if (callbackOptions.onFinish) {
+        callbackOptions.onFinish();
+      }
+      return;
+    }
+
     const initStakingTx = program.methods
       .initStaking()
       .accounts(accounts)
@@ -271,7 +279,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
           callbackOptions.onSuccess();
         }
       })
-      .catch((err: Error) => {
+      .catch((err) => {
         console.error(err);
         if (
           err.message ===
@@ -376,9 +384,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         }
       })
       .catch((err) => {
-        console.log(err.name);
-        console.error(err);
-        toast.error("Transaction Error");
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
       })
       .finally(() => {
         set({ selectedNFT: undefined });
@@ -468,7 +483,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Transaction Error");
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
       })
       .finally(() => {
         set({ selectedNFT: undefined });
@@ -565,7 +589,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Transaction Error");
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
       })
       .finally(() => {
         if (callbackOptions.onFinish) {

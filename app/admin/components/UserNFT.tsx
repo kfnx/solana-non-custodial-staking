@@ -60,7 +60,9 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
 const UserNFT: React.FC<{
   selected: undefined | PublicKey;
   select?: Function;
-}> = ({ select = [], selected }) => {
+  staked?: boolean;
+  unstaked?: boolean;
+}> = ({ select = [], selected, staked = false, unstaked = false }) => {
   const { isLoading, isEmpty, nfts } = useWalletNFT();
 
   if (isLoading) {
@@ -73,14 +75,24 @@ const UserNFT: React.FC<{
 
   return (
     <div className="grid grid-cols-4 gap-2">
-      {nfts.map((nft) => (
-        <MyNFTCard
-          key={nft.mint.toString()}
-          nft={nft}
-          selected={selected?.toBase58() === nft.mint.toString()}
-          onClick={select}
-        />
-      ))}
+      {nfts
+        .filter((nft) => {
+          if (unstaked) {
+            return nft.state === "initialized";
+          }
+          if (staked) {
+            return nft.state === "frozen";
+          }
+          return true;
+        })
+        .map((nft) => (
+          <MyNFTCard
+            key={nft.mint.toString()}
+            nft={nft}
+            selected={selected?.toBase58() === nft.mint.toString()}
+            onClick={select}
+          />
+        ))}
     </div>
   );
 };

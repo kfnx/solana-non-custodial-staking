@@ -8,7 +8,6 @@ const useWalletNfts = () => {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
 
-  // TODO: provide type of NFT
   const [nfts, setNfts] = useState<INFT[]>([]);
 
   useEffect(() => {
