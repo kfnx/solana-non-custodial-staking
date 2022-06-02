@@ -1,6 +1,6 @@
 import { actions, programs, Wallet } from "@metaplex/js";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import fs from "fs";
+import { readJSON } from "./helper";
 import { delay } from "./index";
 
 // https://github.com/gemworks/gem-farm/blob/f387d43628ae079a42301336bade2cda1cb25522/tests/metaplex.ts
@@ -83,10 +83,6 @@ export async function createMetadata(
   );
 
   return metadata;
-}
-
-function readJSON(path: string) {
-  return JSON.parse(fs.readFileSync(path, "utf-8"));
 }
 
 function parseMetadata(jsonMetadata: any) {

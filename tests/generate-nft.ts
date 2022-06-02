@@ -1,4 +1,3 @@
-import * as anchor from "@project-serum/anchor";
 import {
   Keypair,
   PublicKey,
@@ -14,7 +13,13 @@ import {
   createMintToInstruction,
   transfer,
 } from "@solana/spl-token";
-import { getTokenBalanceByATA, createMetadata, createUser } from "./utils";
+import {
+  getTokenBalanceByATA,
+  createMetadata,
+  createUser,
+  allSynchronously,
+  airdropUser,
+} from "./utils";
 
 /**
  * this file used for testing, create some NFT with NFTcreator address as creator in metadata and send the NFT to a user address when needed
@@ -23,31 +28,21 @@ import { getTokenBalanceByATA, createMetadata, createUser } from "./utils";
  * because i want to run this on top of a running local solana node
  */
 const NFTcreator = createUser(
-  anchor.AnchorProvider.env().connection,
   Keypair.fromSecretKey(
     Uint8Array.from(
-      // insert Uint8Array privateKey here
+      // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
       [
-        21, 124, 160, 85, 54, 89, 204, 138, 121, 88, 186, 91, 21, 228, 237, 215,
-        171, 49, 198, 188, 61, 95, 39, 25, 177, 216, 214, 181, 93, 118, 87, 11,
-        89, 60, 231, 7, 48, 132, 172, 228, 170, 58, 213, 169, 165, 145, 15, 176,
-        34, 243, 166, 62, 36, 8, 227, 172, 150, 102, 58, 94, 133, 211, 96, 160,
+        46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156,
+        176, 71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222,
+        171, 222, 87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127,
+        111, 117, 250, 132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134, 82,
+        70, 103, 165, 27,
       ]
     )
   )
 );
 
 console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
-
-async function allSynchronously<T>(
-  resolvables: (() => Promise<T>)[]
-): Promise<T[]> {
-  const results = [];
-  for (const resolvable of resolvables) {
-    results.push(await resolvable());
-  }
-  return results;
-}
 
 const user = new PublicKey("HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL");
 const allJsonMetadata = [
@@ -201,6 +196,7 @@ const createNFT = async (meta: {
   );
 
   console.log("fromATA.address", NFTcreatorATA.address.toBase58());
+  await airdropUser(user);
 
   const toATA = await getOrCreateAssociatedTokenAccount(
     NFTcreator.provider.connection,

@@ -26,8 +26,8 @@ export interface User {
  * @returns
  */
 export function createUser(
-  connection: Connection = anchor.AnchorProvider.env().connection,
   keypair: Keypair = Keypair.generate(),
+  connection: Connection = anchor.AnchorProvider.env().connection,
   providerOpts = anchor.AnchorProvider.defaultOptions()
 ): User {
   let wallet = new anchor.Wallet(keypair);
@@ -43,28 +43,26 @@ export function createUser(
 
 export async function airdropUser(
   publicKey: PublicKey,
-  connection: Connection = anchor.AnchorProvider.env().connection,
-  airdropBalance: number = 1 * LAMPORTS_PER_SOL
+  airdropBalance: number = 1 * LAMPORTS_PER_SOL,
+  connection: Connection = anchor.AnchorProvider.env().connection
 ): Promise<void> {
   let sig = await connection.requestAirdrop(publicKey, airdropBalance);
   await connection.confirmTransaction(sig);
 }
 
 export function createUsers(connection: Connection, numUsers: number) {
-  for (let i = 0; i < numUsers; i++) {
-    createUser(connection, undefined);
-  }
+  for (let i = 0; i < numUsers; i++) createUser(undefined, connection);
 }
 
 export function createUsersWithAirdrop(
-  connection: Connection,
+  numUsers: number,
   airdropBalance = 1 * LAMPORTS_PER_SOL,
-  numUsers: number
+  connection: Connection
 ) {
   let promises = [];
   for (let i = 0; i < numUsers; i++) {
-    const user = createUser(connection);
-    const tx = airdropUser(user.keypair.publicKey, connection, airdropBalance);
+    const user = createUser(undefined, connection);
+    const tx = airdropUser(user.keypair.publicKey, airdropBalance, connection);
     promises.push(tx);
   }
 
@@ -116,6 +114,9 @@ export async function getTokenBalanceByATA(
   return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
 }
 
+/**
+ * findUserATA can be used to get publickey of previously created ATA, for creating ATA use anchor function createAssociatedTokenAccount
+ */
 export async function findUserATA(
   user: PublicKey,
   mint: PublicKey

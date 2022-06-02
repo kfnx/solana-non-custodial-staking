@@ -49,7 +49,6 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
         >
           <WalletProvider
             wallets={wallets}
-            autoConnect
             onError={(err) => {
               if (err.constructor.name === WalletSignTransactionError.name) {
                 toast.error("Request rejected");

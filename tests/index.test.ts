@@ -33,7 +33,6 @@ import {
   findConfigAuthorityPDA,
   findRewardPotPDA,
   delay,
-  findWhitelistPDA,
   findMetadataPDA,
   findStakeInfoPDA,
 } from "./utils";
@@ -49,7 +48,20 @@ chai.use(chaiAsPromised);
  */
 describe("User journey", () => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-  const dev = createUser();
+  const dev = createUser(
+    Keypair.fromSecretKey(
+      Uint8Array.from(
+        // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+        [
+          46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156,
+          176, 71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222,
+          171, 222, 87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127,
+          111, 117, 250, 132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134,
+          82, 70, 103, 165, 27,
+        ]
+      )
+    )
+  );
   const config = Keypair.generate();
   const stakingConfig = {
     rewardRate: new BN(10),
