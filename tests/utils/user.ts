@@ -110,8 +110,18 @@ export async function userToken(
 export async function getTokenBalanceByATA(
   connection: Connection,
   ata: PublicKey
-): Promise<number | null> {
-  return (await connection.getTokenAccountBalance(ata)).value.uiAmount;
+): Promise<number> {
+  const tokenAmount = await connection
+    .getTokenAccountBalance(ata)
+    .then((val) => val)
+    .catch(() => null);
+
+  if (tokenAmount) {
+    if (tokenAmount.value.uiAmount) {
+      return tokenAmount.value.uiAmount;
+    }
+  }
+  return 0;
 }
 
 /**

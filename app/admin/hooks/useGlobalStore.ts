@@ -378,11 +378,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     // console.log("edition", edition.toBase58());
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
     // console.log("user state", userState.toBase58());
-    const [stakeInfo] = await findStakeInfoPDA(
-      selectedNFT,
-      wallet.publicKey,
-      configId
-    );
+    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT);
     const metadata = await findMetadataPDA(selectedNFT);
 
     const stakeNFTtx = program.methods
@@ -484,11 +480,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     // console.log("edition", edition.toBase58());
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
     // console.log("user state", userState.toBase58());
-    const [stakeInfo] = await findStakeInfoPDA(
-      selectedNFT,
-      wallet.publicKey,
-      configId
-    );
+    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT);
 
     const stakeNFTtx = program.methods
       .unstake()
