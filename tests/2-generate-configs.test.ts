@@ -17,10 +17,12 @@ import {
   allSynchronously,
   findConfigAuthorityPDA,
   findRewardPotPDA,
+  getTokenBalanceByATA,
 } from "./utils";
 import { NcStaking } from "../app/admin/sdk";
 import { assert } from "chai";
 import { createToken } from "./utils/transaction";
+import { createMintToInstruction } from "@solana/spl-token";
 
 /**
  * to make this work change Anchor.toml test = with this file and run anchor test
@@ -290,5 +292,39 @@ describe("Generate staking configs", () => {
       prevTotalConfigs + configs.length,
       "total created staking config account should be right"
     );
+  });
+
+  it("Fund config reward pot so user can claim token rewards", async () => {
+    const configId = configs[0].keypair.publicKey;
+    const rewardMintId = configs[0].rewardTokenMintId;
+    const [rewardPotATA] = await findRewardPotPDA(configId, rewardMintId);
+
+    const mint_tokens_to_reward_pot_tx = new Transaction({
+      feePayer: dev.wallet.publicKey,
+    });
+    const mint_amount = 10_000_000;
+    mint_tokens_to_reward_pot_tx.add(
+      createMintToInstruction(
+        rewardMintId, // mint
+        rewardPotATA, // receiver (sholud be a token account)
+        dev.wallet.publicKey, // mint authority
+        mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+        [], // only multisig account will use. leave it empty now.
+        TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
+      )
+    );
+
+    const tx = await dev.provider.sendAndConfirm(mint_tokens_to_reward_pot_tx, [
+      dev.keypair,
+    ]);
+    // console.log("mint tokens to reward pot tx", tx);
+
+    const rewardPotBalance = await getTokenBalanceByATA(
+      dev.provider.connection,
+      rewardPotATA
+    );
+    // console.log("funded reward pot token balance: ", rewardPotBalance);
+
+    assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
   });
 });
