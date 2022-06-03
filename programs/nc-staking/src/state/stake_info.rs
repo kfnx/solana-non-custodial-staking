@@ -2,5 +2,6 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct StakeInfo {
-    pub start_time: u64,
+    pub config: Pubkey,
+    pub staking_start_time: u64,
 }

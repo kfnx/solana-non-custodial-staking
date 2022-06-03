@@ -11,6 +11,9 @@ pub enum ErrorCode {
     #[msg("Unauthorized, invalid user state PDA")]
     InvalidUserState,
 
+    #[msg("Unauthorized, invalid staking config PDA")]
+    InvalidStakingConfig,
+
     #[msg("Cannot claim, user never stake anything")]
     UserNeverStake,
 
@@ -25,5 +28,4 @@ pub enum ErrorCode {
 
     #[msg("NFT is in lock period, cannot unstake yet until it reach minimum staking period")]
     CannotUnstakeYet,
-    
 }

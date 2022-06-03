@@ -66,18 +66,12 @@ export const findMetadataPDA = async (mint: PublicKey) => {
 };
 
 export const findStakeInfoPDA = async (
-  mint: PublicKey,
   user: PublicKey,
-  config: PublicKey,
+  mint: PublicKey,
   programId?: PublicKey
 ) => {
   return PublicKey.findProgramAddress(
-    [
-      Buffer.from("stake_info"),
-      mint.toBytes(),
-      user.toBytes(),
-      config.toBytes(),
-    ],
+    [Buffer.from("stake_info"), user.toBytes(), mint.toBytes()],
     programId || PROGRAM_ID
   );
 };

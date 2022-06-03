@@ -36,6 +36,7 @@ import {
   findMetadataPDA,
   findStakeInfoPDA,
 } from "./utils";
+import { createToken } from "./utils/transaction";
 
 chai.use(chaiAsPromised);
 
@@ -81,35 +82,7 @@ describe("User journey", () => {
     });
 
     it("Dev create staking reward token", async () => {
-      const create_mint_tx = new Transaction({
-        feePayer: dev.wallet.publicKey,
-      });
-
-      create_mint_tx.add(
-        SystemProgram.createAccount({
-          fromPubkey: dev.wallet.publicKey,
-          newAccountPubkey: rewardMint.publicKey,
-          space: MintLayout.span,
-          lamports: await getMinimumBalanceForRentExemptMint(
-            dev.provider.connection
-          ),
-          programId: TOKEN_PROGRAM_ID,
-        })
-      );
-      create_mint_tx.add(
-        createInitializeMintInstruction(
-          rewardMint.publicKey, // rewardMint pubkey
-          0, // decimals
-          dev.wallet.publicKey, // rewardMint authority
-          dev.wallet.publicKey, // freeze authority (if you don't need it, you can set `null`)
-          TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
-        )
-      );
-      const create_mint_tx_sig = await dev.provider.sendAndConfirm(
-        create_mint_tx,
-        [dev.keypair, rewardMint]
-      );
-      // console.log("create rewardMint tx", create_mint_tx_sig);
+      await createToken(dev.keypair, rewardMint);
     });
 
     it("Dev create staking config #1", async () => {
@@ -147,13 +120,6 @@ describe("User journey", () => {
         .signers([dev.keypair, config])
         .rpc();
       // console.log("init config tx", initStakingTx);
-
-      const allStakingAccounts = await program.account.stakingConfig.all();
-      assert.equal(
-        allStakingAccounts.length,
-        1,
-        "should be only 1 staking config account"
-      );
 
       const account = await program.account.stakingConfig.fetch(
         config.publicKey
@@ -398,9 +364,8 @@ describe("User journey", () => {
       );
       // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
-        NFTmint.publicKey,
         justin.wallet.publicKey,
-        config.publicKey
+        NFTmint.publicKey
       );
       const metadata = await findMetadataPDA(NFTmint.publicKey);
 
@@ -440,7 +405,7 @@ describe("User journey", () => {
       assert.ok(account.nftsStaked.toNumber() === 1);
     });
 
-    it("Justin cant stake same NFT twice", async () => {
+    it("Justin cannot stake same NFT twice", async () => {
       const justinATA = await findUserATA(
         justin.wallet.publicKey,
         NFTmint.publicKey
@@ -456,9 +421,8 @@ describe("User journey", () => {
       );
       // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
-        NFTmint.publicKey,
         justin.wallet.publicKey,
-        config.publicKey
+        NFTmint.publicKey
       );
       const metadata = await findMetadataPDA(NFTmint.publicKey);
 
@@ -577,28 +541,6 @@ describe("User journey", () => {
       );
     });
 
-    // TODO: create more NFT
-    // it("Justin stake another NFT (now 2)", async () => {
-    //   await delay(1000);
-    //   const [userState, _vaultBump] = await findUserStatePDA(
-    //     justin.wallet.publicKey
-    //   );
-
-    //   await program.methods
-    //     .stake()
-    //     .accounts({
-    //       userState,
-    //       user: justin.wallet.publicKey,
-    //     })
-    //     .signers([justin.keypair])
-    //     .rpc();
-
-    //   const account = await program.account.user.fetch(userState);
-
-    //   assert.ok(account.user.equals(justin.wallet.publicKey));
-    //   assert.ok(account.nftsStaked.toNumber() === 2);
-    // });
-
     it("Justin cannot transfer his NFT if its staked (freze) to anyone", async () => {
       const justinATA = await findUserATA(
         justin.wallet.publicKey,
@@ -645,9 +587,8 @@ describe("User journey", () => {
       );
       // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
-        NFTmint.publicKey,
         justin.wallet.publicKey,
-        config.publicKey
+        NFTmint.publicKey
       );
 
       // first unstake attemp, cannot unstake because haven't reach minimum staking period
@@ -721,13 +662,16 @@ describe("User journey", () => {
       );
       // console.log("justin state", justinState.toBase58());
       const [stakeInfo] = await findStakeInfoPDA(
-        NFTmint.publicKey,
         justin.wallet.publicKey,
-        config.publicKey
+        NFTmint.publicKey
       );
 
-      try {
-        const tx = await program.methods
+      const prevState = (
+        await program.account.user.fetch(justinState)
+      ).nftsStaked.toNumber();
+
+      await expect(
+        program.methods
           .unstake()
           .accounts({
             user: justin.wallet.publicKey,
@@ -742,18 +686,13 @@ describe("User journey", () => {
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
           })
           .signers([justin.keypair])
-          .rpc();
-        // console.log("Unstake tx", tx);
-      } catch (error) {
-        console.error(error);
-        assert.equal(
-          error.message,
-          "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0xd"
-        );
-        const account = await program.account.user.fetch(justinState);
-        assert.ok(account.user.equals(justin.wallet.publicKey));
-        assert.ok(account.nftsStaked.toNumber() === 0, "nothing should change");
-      }
+          .rpc()
+      ).to.be.rejectedWith("EmptyVault.");
+
+      const currentState = (
+        await program.account.user.fetch(justinState)
+      ).nftsStaked.toNumber();
+      assert.ok(currentState === prevState, "nothing should change");
     });
 
     it("Justin can transfer his NFT if its unstaked (thaw) to anyone", async () => {
@@ -827,9 +766,8 @@ describe("User journey", () => {
         config.publicKey
       );
       const [stakeInfo] = await findStakeInfoPDA(
-        justinNFTmint,
         markers.wallet.publicKey,
-        config.publicKey
+        justinNFTmint
       );
       const metadata = await findMetadataPDA(justinNFTmint);
 
@@ -873,9 +811,8 @@ describe("User journey", () => {
         config.publicKey
       );
       const [stakeInfo] = await findStakeInfoPDA(
-        justinNFTmint,
         justin.wallet.publicKey,
-        config.publicKey
+        justinNFTmint
       );
       const metadata = await findMetadataPDA(justinNFTmint);
 
@@ -1031,9 +968,8 @@ describe("User journey", () => {
         config.publicKey
       );
       const [stakeInfo] = await findStakeInfoPDA(
-        markersNFTmint,
         markers.wallet.publicKey,
-        config.publicKey
+        markersNFTmint
       );
 
       await expect(
@@ -1069,6 +1005,14 @@ describe("User journey", () => {
       const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
       assert.equal(parsed.info.state, "initialized");
     });
+
+    // TODO: verify this
+    // it("Markers cannot unstake from with his own staking config if he previously stake on different config", async () => {
+    // });
+
+    // TODO: verify this
+    // it("Markers cannot abuse claim reward token by creating his own staking config", async () => {
+    // });
   });
 
   describe("Final program state", () => {

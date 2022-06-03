@@ -10,7 +10,7 @@ pub struct Unstake<'info> {
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
     #[account(
-        seeds=[b"stake_info", mint.key().as_ref(), user.key().as_ref(), config.key().as_ref()],
+        seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
         bump
     )]
     /// CHECK: PDA
@@ -39,11 +39,22 @@ fn assert_unstake_allowed<'info>(
     stake_info: &Account<'info, StakeInfo>,
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
+    msg!(
+        "config.min_staking_period_sec {}",
+        config.min_staking_period_sec
+    );
+    msg!(
+        "stake_info_acc.staking_start_time {}",
+        stake_info.staking_start_time
+    );
+
+    if stake_info.config != config.key() {
+        return Err(error!(ErrorCode::InvalidStakingConfig));
+    }
+
     let time_now = now_ts()?;
     msg!("time_now {}", time_now);
-    msg!("stake_info_acc.start_time {}", stake_info.start_time);
-    let time_before_unlock = stake_info.start_time + config.min_staking_period_sec;
-    msg!("config.min_staking_period_sec {}", config.min_staking_period_sec);
+    let time_before_unlock = stake_info.staking_start_time + config.min_staking_period_sec;
     msg!("time_before_unlock {}", time_before_unlock);
     if time_before_unlock > time_now {
         msg!("STAKE LOCKED");
@@ -61,6 +72,16 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     let stake_info = &ctx.accounts.stake_info;
     assert_unstake_allowed(stake_info, config)?;
     msg!("after assert stake");
+
+    let user_state = &mut ctx.accounts.user_state;
+    let user = *ctx.accounts.user.to_account_info().key;
+
+    if user_state.user != user {
+        return Err(error!(ErrorCode::InvalidUserState));
+    }
+    if user_state.nfts_staked < 1 {
+        return Err(error!(ErrorCode::EmptyVault));
+    }
 
     let seeds = [
         b"delegate",
@@ -85,15 +106,6 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
     msg!("instruction handler: Thaw");
 
-    let user_state = &mut ctx.accounts.user_state;
-    let user = *ctx.accounts.user.to_account_info().key;
-
-    if user_state.user != user {
-        return Err(error!(ErrorCode::InvalidUserState));
-    }
-    if user_state.nfts_staked < 1 {
-        return Err(error!(ErrorCode::EmptyVault));
-    }
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
 
     let config = &mut ctx.accounts.config;

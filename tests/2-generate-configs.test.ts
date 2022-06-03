@@ -20,6 +20,7 @@ import {
 } from "./utils";
 import { NcStaking } from "../app/admin/sdk";
 import { assert } from "chai";
+import { createToken } from "./utils/transaction";
 
 /**
  * to make this work change Anchor.toml test = with this file and run anchor test
@@ -41,8 +42,6 @@ const dev = createUser(
   )
 );
 
-console.log("Dev address", dev.wallet.publicKey.toBase58());
-
 const rewardToken = Keypair.fromSecretKey(
   // rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq
   Uint8Array.from([
@@ -52,8 +51,6 @@ const rewardToken = Keypair.fromSecretKey(
     199, 186, 193, 64, 86, 6, 202, 168, 169, 198, 59, 225, 25, 127, 222,
   ])
 );
-
-console.log("rewardToken address", rewardToken.publicKey.toBase58());
 
 /**
  *
@@ -200,37 +197,6 @@ const configs: StakingConfigArgs[] = [
   },
 ];
 
-async function createToken(creator: Keypair, token: Keypair) {
-  const connection = anchor.AnchorProvider.env().connection;
-  const create_mint_tx = new Transaction({
-    feePayer: creator.publicKey,
-  });
-
-  create_mint_tx.add(
-    SystemProgram.createAccount({
-      fromPubkey: creator.publicKey,
-      newAccountPubkey: token.publicKey,
-      space: MintLayout.span,
-      lamports: await getMinimumBalanceForRentExemptMint(connection),
-      programId: TOKEN_PROGRAM_ID,
-    })
-  );
-  create_mint_tx.add(
-    createInitializeMintInstruction(
-      token.publicKey, // rewardTokenMintId pubkey
-      0, // decimals
-      creator.publicKey, // rewardTokenMintId authority
-      creator.publicKey, // freeze authority (if you don't need it, you can set `null`)
-      TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
-    )
-  );
-  const create_mint_tx_sig = await dev.provider.sendAndConfirm(create_mint_tx, [
-    creator,
-    token,
-  ]);
-  console.log("create rewardTokenMintId tx", create_mint_tx_sig);
-}
-
 interface StakingConfigArgs {
   keypair: Keypair;
   rewardRate: number;
@@ -279,35 +245,50 @@ const createStakingConfig = async (
   console.log("init config tx", initStakingTx);
 };
 
-const checkTotalResult = async (configs) => {
+const checkConfigResult = async (
+  creator: Keypair,
+  config: StakingConfigArgs
+) => {
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-  const allStakingAccounts = await program.account.stakingConfig.all();
-  assert.equal(
-    allStakingAccounts.length,
-    configs.length,
-    `should be ${configs.length} staking config account`
-  );
-};
 
-const checkConfigResult = async (config: StakingConfigArgs) => {
-  const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const account = await program.account.stakingConfig.fetch(
     config.keypair.publicKey
   );
 
-  assert.ok(account.admin.equals(dev.wallet.publicKey));
+  assert.ok(account.admin.equals(creator.publicKey));
   assert.ok(account.rewardMint.equals(config.rewardTokenMintId));
   assert.ok(account.rewardRate.toNumber() === config.rewardRate);
   assert.equal(
     account.creatorWhitelist.toBase58(),
-    dev.wallet.publicKey.toBase58(),
+    creator.publicKey.toBase58(),
     "config whitelist is the dev address as creator address"
   );
 };
 
-allSynchronously([
-  () => createToken(dev.keypair, rewardToken),
-  ...configs.map((config) => () => createStakingConfig(dev.keypair, config)),
-  () => checkTotalResult(configs),
-  ...configs.map((config) => () => checkConfigResult(config)),
-]);
+describe("Generate staking configs", () => {
+  console.log("Dev/admin address", dev.wallet.publicKey.toBase58());
+  console.log("rewardToken address", rewardToken.publicKey.toBase58());
+  it("Create token", async () => {
+    await createToken(dev.keypair, rewardToken);
+  });
+
+  it("Create Configs", async () => {
+    const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+    const prevTotalConfigs = (await program.account.stakingConfig.all()).length;
+
+    await allSynchronously(
+      configs.map((config) => async () => {
+        await createStakingConfig(dev.keypair, config);
+        await checkConfigResult(dev.keypair, config);
+      })
+    );
+
+    const currentAmount = (await program.account.stakingConfig.all()).length;
+
+    assert.equal(
+      currentAmount,
+      prevTotalConfigs + configs.length,
+      "total created staking config account should be right"
+    );
+  });
+});

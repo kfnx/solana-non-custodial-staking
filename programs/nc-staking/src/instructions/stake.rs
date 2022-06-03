@@ -14,7 +14,7 @@ pub struct Stake<'info> {
     pub config: Account<'info, StakingConfig>,
     #[account(
         init_if_needed,
-        seeds = [b"stake_info".as_ref(), mint.key().as_ref(), user.key().as_ref(), config.key().as_ref()],
+        seeds = [b"stake_info".as_ref(), user.key().as_ref(), mint.key().as_ref()],
         bump,
         payer = user,
         space = 8 + std::mem::size_of::<StakeInfo>()
@@ -158,8 +158,9 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     msg!("instruction handler: Stake");
 
     let stake_info = &mut *ctx.accounts.stake_info;
-    stake_info.start_time = now_ts()?;
+    stake_info.staking_start_time = now_ts()?;
+    stake_info.config = ctx.accounts.config.key();
 
-    msg!("stake begin at: {}", stake_info.start_time);
+    msg!("stake begin at: {}", stake_info.staking_start_time);
     Ok(())
 }

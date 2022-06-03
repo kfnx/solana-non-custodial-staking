@@ -1,5 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
@@ -11,11 +11,10 @@ const StakeModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  // const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
+  const wallet = useGlobalStore((state) => state.wallet);
   const selectedNFT = useGlobalStore((state) => state.selectedNFT);
   const selectNFT = useGlobalStore((state) => state.selectNFT);
   const stake = useGlobalStore((state) => state.stake);
-  const wallet = useGlobalStore((state) => state.wallet);
 
   const handleSelectNFT = (mint: PublicKey) => {
     if (mint.toBase58() === selectedNFT?.toBase58()) {

@@ -23,6 +23,7 @@ export default function User() {
   const success = useGlobalStore((state) => state.fetchUsersSuccess);
   const running = useGlobalStore((state) => state.fetchUsersRunning);
   const fetchUsers = useGlobalStore((state) => state.fetchUsers);
+  const userState = useGlobalStore((state) => state.userState);
   const wallet = useGlobalStore((state) => state.wallet);
 
   const myInitiatedStakings =
@@ -39,7 +40,9 @@ export default function User() {
 
   return (
     <div className="text-sm">
-      <h2 className="mt-2 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">Staking</h2>
+      <h2 className="mt-2 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
+        Staking
+      </h2>
       <hr className="-mt-3 mb-4" />
       <ConfigSelector />
       <button
@@ -48,24 +51,31 @@ export default function User() {
       >
         Initiate staking <UserAddIcon height={20} className="ml-2" />
       </button>
+      <p className="mt-2 text-center">
+        user state in selected config:{" "}
+        {userState ? "initiated" : "not initiated"}{" "}
+      </p>
       <div className="grid grid-cols-3 gap-2 my-2">
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setIsModalOpenStake(true)}
+          disabled={!userState}
         >
           Stake
           <LockClosedIcon height={20} className="ml-2" />
         </button>
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setIsModalOpenUnstake(true)}
+          disabled={!userState}
         >
           Unstake
           <LockOpenIcon height={20} className="ml-2" />
         </button>
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setIsModalOpenClaim(true)}
+          disabled={!userState}
         >
           Claim
           <HandIcon height={20} className="ml-2" />

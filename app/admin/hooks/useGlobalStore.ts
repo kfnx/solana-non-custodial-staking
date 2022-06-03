@@ -72,6 +72,8 @@ interface GlobalState {
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
   selectNFT: (mint: PublicKey | undefined) => void;
+  userState: any;
+  setUserState: () => void;
 
   // program account fetch
   users: any[];
@@ -125,6 +127,10 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   selectNFT: (selectedNFT) => {
     set({ selectedNFT });
   },
+  userState: undefined,
+  setUserState: () => {
+    // set({ userState });
+  },
 
   // program accounts fetchs
   users: [],
@@ -137,7 +143,6 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       fetchUsersRunning: true,
       fetchUsersSuccess: false,
     });
-    const connection = get().connection;
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
@@ -150,6 +155,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     }
 
     toast("Fetching user PDAs..");
+    const connection = get().connection;
     const provider = new AnchorProvider(
       connection,
       wallet,
@@ -157,8 +163,39 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const users = await program.account.user.all();
+
+    // check user state on current config
+    let getUserState = false;
+    try {
+      const { configs, config } = get();
+      const currentConfig = configs[config];
+      console.log(
+        "fetchStakingAccounts: ~ config",
+        currentConfig.publicKey.toBase58()
+      );
+      const [userStatePDA] = await findUserStatePDA(
+        wallet.publicKey,
+        currentConfig.publicKey
+      );
+      console.log(
+        "fetchStakingAccounts: ~ userStatePDA",
+        userStatePDA.toBase58()
+      );
+      const userState = await program.account.user.fetch(userStatePDA);
+      console.log(
+        "fetchStakingAccounts: ~ userState",
+        JSON.stringify(userState, null, 2)
+      );
+      console.log("✅");
+      getUserState = true;
+    } catch (error) {
+      console.error(error);
+      console.log("❌");
+    }
+
     set({
       users,
+      userState: getUserState,
       fetchUsersLoading: false,
       fetchUsersRunning: false,
       fetchUsersSuccess: true,

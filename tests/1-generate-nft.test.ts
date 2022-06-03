@@ -11,7 +11,6 @@ import {
   createInitializeMintInstruction,
   getOrCreateAssociatedTokenAccount,
   createMintToInstruction,
-  transfer,
 } from "@solana/spl-token";
 import {
   getTokenBalanceByATA,
@@ -19,7 +18,10 @@ import {
   createUser,
   allSynchronously,
   airdropUser,
+  findUserATA,
 } from "./utils";
+import { assert } from "chai";
+import { transferToken } from "./utils/transaction";
 
 /**
  * this file used for testing, create some NFT with NFTcreator address as creator in metadata and send the NFT to a user address when needed
@@ -42,9 +44,7 @@ const NFTcreator = createUser(
   )
 );
 
-console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
-
-const user = new PublicKey("HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL");
+const userId = new PublicKey("HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL");
 const allJsonMetadata = [
   {
     name: "Meekolony #1",
@@ -90,16 +90,18 @@ const allJsonMetadata = [
   },
 ];
 
-const createNFT = async (meta: {
-  name: string;
-  symbol: string;
-  uri: string;
-  sellerFeeBasisPoints: number;
-  creators: any[];
-}) => {
-  console.log(`creating NFT`, meta.name);
-  const mint = Keypair.generate();
-  //   await airdropUser(NFTcreator.wallet.publicKey);
+const createNFT = async (
+  creator: Keypair,
+  mint: Keypair,
+  meta: {
+    name: string;
+    symbol: string;
+    uri: string;
+    sellerFeeBasisPoints: number;
+    creators: any[];
+  }
+) => {
+  const NFTcreator = createUser(creator);
   const create_mint_tx = new Transaction({
     feePayer: NFTcreator.wallet.publicKey,
   });
@@ -129,7 +131,7 @@ const createNFT = async (meta: {
     create_mint_tx,
     [NFTcreator.keypair, mint]
   );
-  console.log("create mint tx", create_mint_tx_sig);
+  // console.log("create mint tx", create_mint_tx_sig);
 
   const NFTcreatorATA = await getOrCreateAssociatedTokenAccount(
     NFTcreator.provider.connection,
@@ -138,7 +140,7 @@ const createNFT = async (meta: {
     NFTcreator.wallet.publicKey
   );
 
-  console.log("create and init ATA", NFTcreatorATA.address.toBase58());
+  // console.log("create and init ATA", NFTcreatorATA.address.toBase58());
 
   const mint_token_tx = new Transaction({
     feePayer: NFTcreator.wallet.publicKey,
@@ -159,15 +161,15 @@ const createNFT = async (meta: {
     mint_token_tx,
     [NFTcreator.keypair]
   );
-  console.log("mint some tokens to reward pot tx", mint_token_tx_sig);
+  // console.log("mint tx", mint_token_tx_sig);
 
-  const ataBalance = await getTokenBalanceByATA(
-    NFTcreator.provider.connection,
-    NFTcreatorATA.address
-  );
-  console.log("mint", mint.publicKey.toBase58());
-  console.log("ATA", NFTcreatorATA.address.toBase58());
-  console.log("balance", ataBalance);
+  // const ataBalance = await getTokenBalanceByATA(
+  //   NFTcreator.provider.connection,
+  //   NFTcreatorATA.address
+  // );
+  // console.log("mint", mint.publicKey.toBase58());
+  // console.log("ATA", NFTcreatorATA.address.toBase58());
+  // console.log("balance", ataBalance);
 
   const metadata = await createMetadata(
     NFTcreator.provider.connection,
@@ -182,40 +184,46 @@ const createNFT = async (meta: {
     meta
   );
 
-  console.log("metadata", metadata.toBase58());
+  // console.log("metadata", metadata.toBase58());
   console.log(
     `🔗 https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
   );
-
-  // transfer to an address if needed
-  const fromATA = await getOrCreateAssociatedTokenAccount(
-    NFTcreator.provider.connection,
-    NFTcreator.wallet.payer,
-    mint.publicKey,
-    NFTcreator.wallet.publicKey
-  );
-
-  console.log("fromATA.address", NFTcreatorATA.address.toBase58());
-  await airdropUser(user);
-
-  const toATA = await getOrCreateAssociatedTokenAccount(
-    NFTcreator.provider.connection,
-    NFTcreator.wallet.payer,
-    mint.publicKey,
-    user
-  );
-  console.log("toATA.address", toATA.address.toBase58());
-
-  const transfer_token_tx = await transfer(
-    NFTcreator.provider.connection,
-    NFTcreator.wallet.payer,
-    fromATA.address,
-    toATA.address,
-    NFTcreator.wallet.publicKey,
-    1
-  );
-  console.log("transfer NFT to user tx", transfer_token_tx);
   console.log(`✅ finish creating NFT`, meta.name);
 };
 
-allSynchronously(allJsonMetadata.map((meta) => () => createNFT(meta)));
+describe("Generate Meekolony NFTs", () => {
+  it("Create mint and metadata", async () => {
+    console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
+    await airdropUser(userId);
+    console.log("NFT holder address", userId.toBase58());
+
+    await allSynchronously(
+      allJsonMetadata.map((meta) => async () => {
+        const mint = Keypair.generate();
+
+        await createNFT(NFTcreator.keypair, mint, meta);
+
+        // verify
+        const createdATA = await findUserATA(
+          NFTcreator.keypair.publicKey,
+          mint.publicKey
+        );
+        const createdATAbalance = await getTokenBalanceByATA(
+          NFTcreator.provider.connection,
+          createdATA
+        );
+        assert.equal(createdATAbalance, 1, "token amount 1");
+
+        await transferToken(NFTcreator.keypair, userId, mint.publicKey);
+
+        // verify
+        const userATA = await findUserATA(userId, mint.publicKey);
+        const userATAbalance = await getTokenBalanceByATA(
+          NFTcreator.provider.connection,
+          userATA
+        );
+        assert.equal(userATAbalance, 1, "token amount 1");
+      })
+    );
+  });
+});

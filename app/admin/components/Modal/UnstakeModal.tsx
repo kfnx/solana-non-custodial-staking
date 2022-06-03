@@ -11,7 +11,6 @@ const UnstakeModal: React.FC<{
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
-  // const [selectedNFT, setSelectedNFT] = useState<string[]>([]);
   const selectedNFT = useGlobalStore((state) => state.selectedNFT);
   const selectNFT = useGlobalStore((state) => state.selectNFT);
   const unstake = useGlobalStore((state) => state.unstake);
