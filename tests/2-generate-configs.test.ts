@@ -270,6 +270,7 @@ const checkConfigResult = async (
 describe("Generate staking configs", () => {
   console.log("Dev/admin address", dev.wallet.publicKey.toBase58());
   console.log("rewardToken address", rewardToken.publicKey.toBase58());
+
   it("Create token", async () => {
     await createToken(dev.keypair, rewardToken);
   });
@@ -295,36 +296,32 @@ describe("Generate staking configs", () => {
   });
 
   it("Fund config reward pot so user can claim token rewards", async () => {
-    const configId = configs[0].keypair.publicKey;
-    const rewardMintId = configs[0].rewardTokenMintId;
-    const [rewardPotATA] = await findRewardPotPDA(configId, rewardMintId);
+    await allSynchronously(
+      configs.map((config) => async () => {
+        const configId = config.keypair.publicKey;
+        const rewardMintId = config.rewardTokenMintId;
+        const [rewardPotATA] = await findRewardPotPDA(configId, rewardMintId);
+        const mint_tokens_to_reward_pot_tx = new Transaction({
+          feePayer: dev.wallet.publicKey,
+        });
+        const mint_amount = 10_000_000;
+        mint_tokens_to_reward_pot_tx.add(
+          createMintToInstruction(
+            rewardMintId, // mint
+            rewardPotATA, // receiver (sholud be a token account)
+            dev.wallet.publicKey, // mint authority
+            mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+            [], // only multisig account will use. leave it empty now.
+            TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
+          )
+        );
 
-    const mint_tokens_to_reward_pot_tx = new Transaction({
-      feePayer: dev.wallet.publicKey,
-    });
-    const mint_amount = 10_000_000;
-    mint_tokens_to_reward_pot_tx.add(
-      createMintToInstruction(
-        rewardMintId, // mint
-        rewardPotATA, // receiver (sholud be a token account)
-        dev.wallet.publicKey, // mint authority
-        mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
-        [], // only multisig account will use. leave it empty now.
-        TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
-      )
+        const tx = await dev.provider.sendAndConfirm(
+          mint_tokens_to_reward_pot_tx,
+          [dev.keypair]
+        );
+        // console.log("fund reward token tx", tx);
+      })
     );
-
-    const tx = await dev.provider.sendAndConfirm(mint_tokens_to_reward_pot_tx, [
-      dev.keypair,
-    ]);
-    // console.log("mint tokens to reward pot tx", tx);
-
-    const rewardPotBalance = await getTokenBalanceByATA(
-      dev.provider.connection,
-      rewardPotATA
-    );
-    // console.log("funded reward pot token balance: ", rewardPotBalance);
-
-    assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
   });
 });

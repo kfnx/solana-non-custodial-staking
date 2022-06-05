@@ -77,12 +77,10 @@ interface GlobalState {
 
   // program account fetch
   users: any[];
-  fetchUsersRunning: boolean;
   fetchUsersLoading: boolean;
   fetchUsersSuccess: boolean;
   fetchUsers: () => void;
   configs: any[];
-  fetchConfigsRunning: boolean;
   fetchConfigsLoading: boolean;
   fetchConfigsSuccess: boolean;
   fetchConfigs: () => void;
@@ -134,13 +132,11 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
 
   // program accounts fetchs
   users: [],
-  fetchUsersRunning: false,
   fetchUsersLoading: false,
   fetchUsersSuccess: false,
   fetchUsers: async () => {
     set({
       fetchUsersLoading: true,
-      fetchUsersRunning: true,
       fetchUsersSuccess: false,
     });
     const wallet = get().wallet;
@@ -149,7 +145,6 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return set({
         users: [],
         fetchUsersLoading: false,
-        fetchUsersRunning: false,
         fetchUsersSuccess: false,
       });
     }
@@ -197,29 +192,24 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       users,
       userState: getUserState,
       fetchUsersLoading: false,
-      fetchUsersRunning: false,
       fetchUsersSuccess: true,
     });
   },
   configs: [],
-  fetchConfigsRunning: false,
   fetchConfigsLoading: false,
   fetchConfigsSuccess: false,
   fetchConfigs: async () => {
     set({
       fetchConfigsLoading: true,
       fetchConfigsSuccess: false,
-      fetchConfigsRunning: true,
     });
     const connection = get().connection;
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
       return set({
-        configs: [],
         fetchConfigsLoading: false,
         fetchConfigsSuccess: false,
-        fetchConfigsRunning: false,
       });
     }
 
@@ -235,16 +225,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       set({
         configs,
         fetchConfigsLoading: false,
-        fetchConfigsRunning: false,
         fetchConfigsSuccess: true,
       });
     } catch (error) {
       console.error(error);
       toast.error("Request failed");
       set({
-        configs: [],
         fetchConfigsLoading: false,
-        fetchConfigsRunning: false,
         fetchConfigsSuccess: false,
       });
     }
