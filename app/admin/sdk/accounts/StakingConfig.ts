@@ -27,7 +27,7 @@ export type StakingConfigArgs = {
   initiatedUsers: beet.bignum
   activeStakers: beet.bignum
   minStakingPeriodSec: beet.bignum
-  whitelistedCreator: boolean
+  creatorWhitelist: web3.PublicKey
 }
 
 const stakingConfigDiscriminator = [45, 134, 252, 82, 37, 57, 84, 25]
@@ -52,7 +52,7 @@ export class StakingConfig implements StakingConfigArgs {
     readonly initiatedUsers: beet.bignum,
     readonly activeStakers: beet.bignum,
     readonly minStakingPeriodSec: beet.bignum,
-    readonly whitelistedCreator: boolean
+    readonly creatorWhitelist: web3.PublicKey
   ) {}
 
   /**
@@ -72,7 +72,7 @@ export class StakingConfig implements StakingConfigArgs {
       args.initiatedUsers,
       args.activeStakers,
       args.minStakingPeriodSec,
-      args.whitelistedCreator
+      args.creatorWhitelist
     )
   }
 
@@ -233,7 +233,7 @@ export class StakingConfig implements StakingConfigArgs {
         }
         return x
       })(),
-      whitelistedCreator: this.whitelistedCreator,
+      creatorWhitelist: this.creatorWhitelist.toBase58(),
     }
   }
 }
@@ -262,7 +262,7 @@ export const stakingConfigBeet = new beet.BeetStruct<
     ['initiatedUsers', beet.u64],
     ['activeStakers', beet.u64],
     ['minStakingPeriodSec', beet.u64],
-    ['whitelistedCreator', beet.bool],
+    ['creatorWhitelist', beetSolana.publicKey],
   ],
   StakingConfig.fromArgs,
   'StakingConfig'

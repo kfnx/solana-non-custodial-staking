@@ -5,8 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet'
+import * as beetSolana from '@metaplex-foundation/beet-solana'
 
 /**
  * Arguments used to create {@link StakeInfo}
@@ -14,7 +15,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type StakeInfoArgs = {
-  startTime: beet.bignum
+  config: web3.PublicKey
+  stakingStartTime: beet.bignum
 }
 
 const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235]
@@ -26,13 +28,16 @@ const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235]
  * @category generated
  */
 export class StakeInfo implements StakeInfoArgs {
-  private constructor(readonly startTime: beet.bignum) {}
+  private constructor(
+    readonly config: web3.PublicKey,
+    readonly stakingStartTime: beet.bignum
+  ) {}
 
   /**
    * Creates a {@link StakeInfo} instance from the provided args.
    */
   static fromArgs(args: StakeInfoArgs) {
-    return new StakeInfo(args.startTime)
+    return new StakeInfo(args.config, args.stakingStartTime)
   }
 
   /**
@@ -120,8 +125,9 @@ export class StakeInfo implements StakeInfoArgs {
    */
   pretty() {
     return {
-      startTime: (() => {
-        const x = <{ toNumber: () => number }>this.startTime
+      config: this.config.toBase58(),
+      stakingStartTime: (() => {
+        const x = <{ toNumber: () => number }>this.stakingStartTime
         if (typeof x.toNumber === 'function') {
           try {
             return x.toNumber()
@@ -147,7 +153,8 @@ export const stakeInfoBeet = new beet.BeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['startTime', beet.u64],
+    ['config', beetSolana.publicKey],
+    ['stakingStartTime', beet.u64],
   ],
   StakeInfo.fromArgs,
   'StakeInfo'

@@ -10,52 +10,50 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category AddWhitelist
+ * @category ModifyWhitelist
  * @category generated
  */
-export const addWhitelistStruct = new beet.BeetArgsStruct<{
+export const modifyWhitelistStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'AddWhitelistInstructionArgs'
+  'ModifyWhitelistInstructionArgs'
 )
 /**
- * Accounts required by the _addWhitelist_ instruction
+ * Accounts required by the _modifyWhitelist_ instruction
  *
  * @property [_writable_, **signer**] admin
  * @property [_writable_] config
  * @property [] creatorAddressToWhitelist
- * @property [_writable_] whitelist
  * @category Instructions
- * @category AddWhitelist
+ * @category ModifyWhitelist
  * @category generated
  */
-export type AddWhitelistInstructionAccounts = {
+export type ModifyWhitelistInstructionAccounts = {
   admin: web3.PublicKey
   config: web3.PublicKey
   creatorAddressToWhitelist: web3.PublicKey
-  whitelist: web3.PublicKey
 }
 
-export const addWhitelistInstructionDiscriminator = [
-  215, 46, 143, 176, 108, 113, 24, 1,
+export const modifyWhitelistInstructionDiscriminator = [
+  186, 220, 49, 3, 161, 249, 168, 199,
 ]
 
 /**
- * Creates a _AddWhitelist_ instruction.
+ * Creates a _ModifyWhitelist_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category AddWhitelist
+ * @category ModifyWhitelist
  * @category generated
  */
-export function createAddWhitelistInstruction(
-  accounts: AddWhitelistInstructionAccounts
+export function createModifyWhitelistInstruction(
+  accounts: ModifyWhitelistInstructionAccounts
 ) {
-  const { admin, config, creatorAddressToWhitelist, whitelist } = accounts
+  const { admin, config, creatorAddressToWhitelist } = accounts
 
-  const [data] = addWhitelistStruct.serialize({
-    instructionDiscriminator: addWhitelistInstructionDiscriminator,
+  const [data] = modifyWhitelistStruct.serialize({
+    instructionDiscriminator: modifyWhitelistInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -71,11 +69,6 @@ export function createAddWhitelistInstruction(
     {
       pubkey: creatorAddressToWhitelist,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: whitelist,
-      isWritable: true,
       isSigner: false,
     },
     {

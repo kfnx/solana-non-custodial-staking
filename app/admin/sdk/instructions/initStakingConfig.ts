@@ -42,6 +42,7 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
  *
  * @property [_writable_, **signer**] admin
  * @property [_writable_, **signer**] config
+ * @property [] creatorAddressToWhitelist
  * @property [_writable_] configAuthority
  * @property [_writable_] rewardPot
  * @property [] rewardMint
@@ -52,6 +53,7 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
 export type InitStakingConfigInstructionAccounts = {
   admin: web3.PublicKey
   config: web3.PublicKey
+  creatorAddressToWhitelist: web3.PublicKey
   configAuthority: web3.PublicKey
   rewardPot: web3.PublicKey
   rewardMint: web3.PublicKey
@@ -75,7 +77,14 @@ export function createInitStakingConfigInstruction(
   accounts: InitStakingConfigInstructionAccounts,
   args: InitStakingConfigInstructionArgs
 ) {
-  const { admin, config, configAuthority, rewardPot, rewardMint } = accounts
+  const {
+    admin,
+    config,
+    creatorAddressToWhitelist,
+    configAuthority,
+    rewardPot,
+    rewardMint,
+  } = accounts
 
   const [data] = initStakingConfigStruct.serialize({
     instructionDiscriminator: initStakingConfigInstructionDiscriminator,
@@ -91,6 +100,11 @@ export function createInitStakingConfigInstruction(
       pubkey: config,
       isWritable: true,
       isSigner: true,
+    },
+    {
+      pubkey: creatorAddressToWhitelist,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: configAuthority,

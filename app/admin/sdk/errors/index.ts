@@ -81,13 +81,36 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * InvalidStakingConfig: 'Unauthorized, invalid staking config PDA'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidStakingConfigError extends Error {
+  readonly code: number = 0x1773
+  readonly name: string = 'InvalidStakingConfig'
+  constructor() {
+    super('Unauthorized, invalid staking config PDA')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidStakingConfigError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1773, () => new InvalidStakingConfigError())
+createErrorFromNameLookup.set(
+  'InvalidStakingConfig',
+  () => new InvalidStakingConfigError()
+)
+
+/**
  * UserNeverStake: 'Cannot claim, user never stake anything'
  *
  * @category Errors
  * @category generated
  */
 export class UserNeverStakeError extends Error {
-  readonly code: number = 0x1773
+  readonly code: number = 0x1774
   readonly name: string = 'UserNeverStake'
   constructor() {
     super('Cannot claim, user never stake anything')
@@ -97,7 +120,7 @@ export class UserNeverStakeError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1773, () => new UserNeverStakeError())
+createErrorFromCodeLookup.set(0x1774, () => new UserNeverStakeError())
 createErrorFromNameLookup.set('UserNeverStake', () => new UserNeverStakeError())
 
 /**
@@ -107,7 +130,7 @@ createErrorFromNameLookup.set('UserNeverStake', () => new UserNeverStakeError())
  * @category generated
  */
 export class EmptyVaultError extends Error {
-  readonly code: number = 0x1774
+  readonly code: number = 0x1775
   readonly name: string = 'EmptyVault'
   constructor() {
     super('Vault empty, nothing to unstake')
@@ -117,7 +140,7 @@ export class EmptyVaultError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1774, () => new EmptyVaultError())
+createErrorFromCodeLookup.set(0x1775, () => new EmptyVaultError())
 createErrorFromNameLookup.set('EmptyVault', () => new EmptyVaultError())
 
 /**
@@ -127,7 +150,7 @@ createErrorFromNameLookup.set('EmptyVault', () => new EmptyVaultError())
  * @category generated
  */
 export class NotWhitelistedError extends Error {
-  readonly code: number = 0x1775
+  readonly code: number = 0x1776
   readonly name: string = 'NotWhitelisted'
   constructor() {
     super('NFT creator address is not present in any of the whitelists')
@@ -137,7 +160,7 @@ export class NotWhitelistedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1775, () => new NotWhitelistedError())
+createErrorFromCodeLookup.set(0x1776, () => new NotWhitelistedError())
 createErrorFromNameLookup.set('NotWhitelisted', () => new NotWhitelistedError())
 
 /**
@@ -147,7 +170,7 @@ createErrorFromNameLookup.set('NotWhitelisted', () => new NotWhitelistedError())
  * @category generated
  */
 export class NotStakedError extends Error {
-  readonly code: number = 0x1776
+  readonly code: number = 0x1777
   readonly name: string = 'NotStaked'
   constructor() {
     super('NFT is not present in any stake proof')
@@ -157,7 +180,7 @@ export class NotStakedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new NotStakedError())
+createErrorFromCodeLookup.set(0x1777, () => new NotStakedError())
 createErrorFromNameLookup.set('NotStaked', () => new NotStakedError())
 
 /**
@@ -167,7 +190,7 @@ createErrorFromNameLookup.set('NotStaked', () => new NotStakedError())
  * @category generated
  */
 export class CannotUnstakeYetError extends Error {
-  readonly code: number = 0x1777
+  readonly code: number = 0x1778
   readonly name: string = 'CannotUnstakeYet'
   constructor() {
     super(
@@ -179,7 +202,7 @@ export class CannotUnstakeYetError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1777, () => new CannotUnstakeYetError())
+createErrorFromCodeLookup.set(0x1778, () => new CannotUnstakeYetError())
 createErrorFromNameLookup.set(
   'CannotUnstakeYet',
   () => new CannotUnstakeYetError()
