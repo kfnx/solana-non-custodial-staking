@@ -57,11 +57,15 @@ export type NcStaking = {
           type: "u8";
         },
         {
-          name: "rewardRate";
+          name: "rewardPerSec";
           type: "u64";
         },
         {
-          name: "minStakingPeriodSec";
+          name: "rewardDenominator";
+          type: "u64";
+        },
+        {
+          name: "stakingLockDurationInSec";
           type: "u64";
         }
       ];
@@ -360,7 +364,15 @@ export type NcStaking = {
             };
           },
           {
-            name: "rewardRate";
+            name: "rewardPerSec";
+            type: "u64";
+          },
+          {
+            name: "rewardDenominator";
+            type: "u64";
+          },
+          {
+            name: "stakingLockDurationInSec";
             type: "u64";
           },
           {
@@ -377,10 +389,6 @@ export type NcStaking = {
           },
           {
             name: "activeStakers";
-            type: "u64";
-          },
-          {
-            name: "minStakingPeriodSec";
             type: "u64";
           },
           {
@@ -441,26 +449,31 @@ export type NcStaking = {
     },
     {
       code: 6003;
+      name: "InvalidStakingConfig";
+      msg: "Unauthorized, invalid staking config PDA";
+    },
+    {
+      code: 6004;
       name: "UserNeverStake";
       msg: "Cannot claim, user never stake anything";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "EmptyVault";
       msg: "Vault empty, nothing to unstake";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "NotWhitelisted";
       msg: "NFT creator address is not present in any of the whitelists";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "NotStaked";
       msg: "NFT is not present in any stake proof";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "CannotUnstakeYet";
       msg: "NFT is in lock period, cannot unstake yet until it reach minimum staking period";
     }
@@ -526,11 +539,15 @@ export const IDL: NcStaking = {
           type: "u8",
         },
         {
-          name: "rewardRate",
+          name: "rewardPerSec",
           type: "u64",
         },
         {
-          name: "minStakingPeriodSec",
+          name: "rewardDenominator",
+          type: "u64",
+        },
+        {
+          name: "stakingLockDurationInSec",
           type: "u64",
         },
       ],
@@ -829,7 +846,15 @@ export const IDL: NcStaking = {
             },
           },
           {
-            name: "rewardRate",
+            name: "rewardPerSec",
+            type: "u64",
+          },
+          {
+            name: "rewardDenominator",
+            type: "u64",
+          },
+          {
+            name: "stakingLockDurationInSec",
             type: "u64",
           },
           {
@@ -846,10 +871,6 @@ export const IDL: NcStaking = {
           },
           {
             name: "activeStakers",
-            type: "u64",
-          },
-          {
-            name: "minStakingPeriodSec",
             type: "u64",
           },
           {
@@ -910,26 +931,31 @@ export const IDL: NcStaking = {
     },
     {
       code: 6003,
+      name: "InvalidStakingConfig",
+      msg: "Unauthorized, invalid staking config PDA",
+    },
+    {
+      code: 6004,
       name: "UserNeverStake",
       msg: "Cannot claim, user never stake anything",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "EmptyVault",
       msg: "Vault empty, nothing to unstake",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "NotWhitelisted",
       msg: "NFT creator address is not present in any of the whitelists",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "NotStaked",
       msg: "NFT is not present in any stake proof",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "CannotUnstakeYet",
       msg: "NFT is in lock period, cannot unstake yet until it reach minimum staking period",
     },

@@ -2,8 +2,9 @@ import { ProgramAccount } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { useState } from "react";
 import useGlobalStore from "../hooks/useGlobalStore";
-import { getTokenBalanceByATA } from "../sdk";
 import { StakingConfig } from "../sdk/accounts";
+import { getTokenBalanceByATA } from "../sdk/user";
+import { convertSecondsToReadableTime } from "../utils/convertSecToReadableTime";
 
 const Config: React.FC<{
   config: ProgramAccount<StakingConfig>;
@@ -60,8 +61,23 @@ const Config: React.FC<{
           <span>{config.account.configAuthorityBumpSeed.toString()}</span>
         </div>
         <div className="flex w-full justify-between my-0.5">
-          <span>rewardRate</span>
-          <span>{config.account.rewardRate.toString()}</span>
+          <span>rewardPerSec</span>
+          <span>{config.account.rewardPerSec.toString()}</span>
+        </div>
+        <div className="flex w-full justify-between my-0.5">
+          <span>rewardDenominator</span>
+          <span>{config.account.rewardDenominator.toString()}</span>
+        </div>
+        <div className="flex w-full justify-between my-0.5">
+          <span>stakingLockedDurationInSec </span>
+          <span>
+            {`${config.account.stakingLockDurationInSec.toString()} seconds or 
+            ${
+              convertSecondsToReadableTime(
+                Number(config.account.stakingLockDurationInSec.toString())
+              ) || " Flexible"
+            }`}
+          </span>
         </div>
         <div className="flex w-full justify-between my-0.5">
           <span>rewardAccrued</span>
@@ -78,10 +94,6 @@ const Config: React.FC<{
         <div className="flex w-full justify-between my-0.5">
           <span>activeStakers</span>
           <span>{config.account.activeStakers.toString()}</span>
-        </div>
-        <div className="flex w-full justify-between my-0.5">
-          <span>minStakingPeriodSec</span>
-          <span>{config.account.minStakingPeriodSec.toString()}</span>
         </div>
         <div className="flex w-full justify-between my-0.5">
           <span>whitelistedCreator</span>

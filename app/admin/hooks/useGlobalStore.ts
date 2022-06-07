@@ -9,25 +9,23 @@ import {
 } from "@solana/web3.js";
 import toast from "react-hot-toast";
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  // @ts-ignore
+  getAssociatedTokenAddress,
+} from "@solana/spl-token";
+import {
   findConfigAuthorityPDA,
   findDelegateAuthPDA,
   findEditionPDA,
   findMetadataPDA,
   findRewardPotPDA,
   findStakeInfoPDA,
-  findUserATA,
   findUserStatePDA,
-  IDL,
-  NcStaking,
-  PROGRAM_ID,
-  TOKEN_METADATA_PROGRAM_ID,
-} from "../sdk";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  // @ts-ignore
-  getAssociatedTokenAddress,
-} from "@solana/spl-token";
+} from "../sdk/pda";
+import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/programId";
+import { IDL, NcStaking } from "../sdk/nc_staking";
+import { findUserATA } from "../sdk/user";
 
 type Network = {
   endpoint: string;
@@ -40,23 +38,18 @@ type CallbackOptions = {
   onFinish?: () => void;
 };
 
-// TODO: complete abstraction, if needed.
-// const AnchorProgramBuilder = (
-//   get: GetState<GlobalState>
-// ): Program<NcStaking> | WalletError => {
-//   const { wallet, connection } = get();
-//   if (!wallet) {
-//     toast.error("Wallet Not Connected");
-//     return new WalletError();
-//   }
-
-//   const provider = new AnchorProvider(
-//     connection,
-//     wallet,
-//     AnchorProvider.defaultOptions()
-//   );
-//   return new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-// };
+async function checkUserInitiated(
+  userStatePDA: PublicKey,
+  program: Program<NcStaking>
+) {
+  try {
+    // will throw error if not found
+    await program.account.user.fetch(userStatePDA);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 interface GlobalState {
   // setters
@@ -72,8 +65,9 @@ interface GlobalState {
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
   selectNFT: (mint: PublicKey | undefined) => void;
-  userState: any;
-  setUserState: () => void;
+  userInitiated: boolean;
+  setUserState: (isInit: Boolean) => void;
+  checkUserInitiated: () => void;
 
   // program account fetch
   users: any[];
@@ -125,9 +119,41 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   selectNFT: (selectedNFT) => {
     set({ selectedNFT });
   },
-  userState: undefined,
-  setUserState: () => {
-    // set({ userState });
+  userInitiated: false,
+  setUserState: (userInitiated) => {
+    set({ userInitiated: Boolean(userInitiated) });
+  },
+  checkUserInitiated: async () => {
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return set({
+        userInitiated: false,
+      });
+    }
+    const connection = get().connection;
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const { configs, config } = get();
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      return;
+    }
+    const configId = configs[config].publicKey;
+    console.log("fetchStakingAccounts: ~ config", configId.toBase58());
+    const [userStatePDA] = await findUserStatePDA(wallet.publicKey, configId);
+    console.log(
+      "fetchStakingAccounts: ~ userStatePDA",
+      userStatePDA.toBase58()
+    );
+
+    const isUserInitiated = await checkUserInitiated(userStatePDA, program);
+    set({ userInitiated: isUserInitiated });
   },
 
   // program accounts fetchs
@@ -159,38 +185,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const users = await program.account.user.all();
 
-    // check user state on current config
-    let getUserState = false;
-    try {
-      const { configs, config } = get();
-      const currentConfig = configs[config];
-      console.log(
-        "fetchStakingAccounts: ~ config",
-        currentConfig.publicKey.toBase58()
-      );
-      const [userStatePDA] = await findUserStatePDA(
-        wallet.publicKey,
-        currentConfig.publicKey
-      );
-      console.log(
-        "fetchStakingAccounts: ~ userStatePDA",
-        userStatePDA.toBase58()
-      );
-      const userState = await program.account.user.fetch(userStatePDA);
-      console.log(
-        "fetchStakingAccounts: ~ userState",
-        JSON.stringify(userState, null, 2)
-      );
-      console.log("✅");
-      getUserState = true;
-    } catch (error) {
-      console.error(error);
-      console.log("❌");
-    }
-
     set({
       users,
-      userState: getUserState,
       fetchUsersLoading: false,
       fetchUsersSuccess: true,
     });
@@ -265,7 +261,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       }
       return;
     }
-    const configId = new PublicKey(configs[config].publicKey);
+    const configId = configs[config].publicKey;
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
 
     const accounts = {
@@ -299,6 +295,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       })
       .then((val) => {
         console.log(`${ixName} sig`, val);
+        set({ userInitiated: true });
         if (callbackOptions.onSuccess) {
           callbackOptions.onSuccess();
         }

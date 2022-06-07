@@ -1,17 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
-import {
-  Dispatch,
-  Fragment,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
-import { findUserATA, getTokenBalanceByATA } from "../../sdk";
-import toast from "react-hot-toast";
 
 const ClaimModal: React.FC<{
   isOpen: boolean;
@@ -20,11 +11,9 @@ const ClaimModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const claim = useGlobalStore((state) => state.claim);
   const wallet = useGlobalStore((state) => state.wallet);
-  const connection = useGlobalStore((state) => state.connection);
   const configs = useGlobalStore((state) => state.configs);
   const config = useGlobalStore((state) => state.config);
   const selectedConfig = configs[config];
-  const rewardMint = selectedConfig?.account.rewardMint;
 
   const closeModal = () => setIsOpen(false);
 

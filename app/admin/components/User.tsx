@@ -22,7 +22,13 @@ export default function User() {
   const loading = useGlobalStore((state) => state.fetchUsersLoading);
   const success = useGlobalStore((state) => state.fetchUsersSuccess);
   const fetchUsers = useGlobalStore((state) => state.fetchUsers);
-  const userState = useGlobalStore((state) => state.userState);
+  const config = useGlobalStore((state) => state.config);
+  const configs = useGlobalStore((state) => state.configs);
+
+  const userInitiated = useGlobalStore((state) => state.userInitiated);
+  const checkUserInitiated = useGlobalStore(
+    (state) => state.checkUserInitiated
+  );
   const wallet = useGlobalStore((state) => state.wallet);
 
   const myInitiatedStakings =
@@ -36,6 +42,10 @@ export default function User() {
   useEffect(() => {
     if (!success && !loading) fetchUsers();
   }, [fetchUsers, loading, success]);
+
+  useEffect(() => {
+    if (wallet && configs.length > 0) checkUserInitiated();
+  }, [checkUserInitiated, config, configs.length, wallet]);
 
   return (
     <div className="text-sm">
@@ -52,13 +62,13 @@ export default function User() {
       </button>
       <p className="mt-2 text-center">
         user state in selected config:{" "}
-        {userState ? "initiated" : "not initiated"}{" "}
+        {userInitiated ? "✅ initiated" : "❌ not initiated"}{" "}
       </p>
       <div className="grid grid-cols-3 gap-2 my-2">
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowStake(true)}
-          disabled={!userState}
+          disabled={!userInitiated}
         >
           Stake
           <LockClosedIcon height={20} className="ml-2" />
@@ -66,7 +76,7 @@ export default function User() {
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowUnstake(true)}
-          disabled={!userState}
+          disabled={!userInitiated}
         >
           Unstake
           <LockOpenIcon height={20} className="ml-2" />
@@ -74,7 +84,7 @@ export default function User() {
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowClaim(true)}
-          disabled={!userState}
+          disabled={!userInitiated}
         >
           Claim
           <HandIcon height={20} className="ml-2" />
