@@ -16,14 +16,16 @@ pub mod nc_staking {
     pub fn init_staking_config(
         ctx: Context<InitStakingConfig>,
         bump_config_auth: u8,
-        reward_rate: u64,
-        min_staking_period_sec: u64,
+        reward_per_sec: u64,
+        reward_denominator: u64,
+        staking_lock_duration_in_sec: u64,
     ) -> Result<()> {
         instructions::init_staking_config::handler(
             ctx,
             bump_config_auth,
-            reward_rate,
-            min_staking_period_sec,
+            reward_per_sec,
+            reward_denominator,
+            staking_lock_duration_in_sec,
         )
     }
     pub fn init_staking(ctx: Context<InitStaking>) -> Result<()> {

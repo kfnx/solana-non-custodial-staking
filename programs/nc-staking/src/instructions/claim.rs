@@ -60,7 +60,14 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         }
         now_ts()? - user_state.last_stake_time
     };
-    let reward_amount = config.reward_rate * time_accrued;
+    msg!("time_accrued: {}", time_accrued);
+
+    let reward_per_sec_denominated = config.reward_per_sec / config.reward_denominator;
+    msg!("reward_per_sec_denominated: {}", reward_per_sec_denominated);
+
+    let reward_amount = reward_per_sec_denominated * time_accrued;
+    msg!("reward_amount: {}", reward_amount);
+
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
@@ -75,6 +82,6 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     user_state.reward_accrued = user_state.reward_accrued + reward_amount;
     user_state.time_last_claim = now_ts()?;
 
-    msg!("instruction handler: ClaimStakingReward. user");
+    msg!("instruction handler: ClaimStakingReward");
     Ok(())
 }

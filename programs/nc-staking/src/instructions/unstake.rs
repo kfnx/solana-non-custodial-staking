@@ -40,8 +40,8 @@ fn assert_unstake_allowed<'info>(
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
     msg!(
-        "config.min_staking_period_sec {}",
-        config.min_staking_period_sec
+        "config.staking_lock_duration_in_sec {}",
+        config.staking_lock_duration_in_sec
     );
     msg!(
         "stake_info_acc.staking_start_time {}",
@@ -54,7 +54,7 @@ fn assert_unstake_allowed<'info>(
 
     let time_now = now_ts()?;
     msg!("time_now {}", time_now);
-    let time_before_unlock = stake_info.staking_start_time + config.min_staking_period_sec;
+    let time_before_unlock = stake_info.staking_start_time + config.staking_lock_duration_in_sec;
     msg!("time_before_unlock {}", time_before_unlock);
     if time_before_unlock > time_now {
         msg!("STAKE LOCKED");
