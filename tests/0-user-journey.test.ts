@@ -65,15 +65,14 @@ describe("User journey", () => {
   );
   const config = Keypair.generate();
   const stakingConfig = {
-    rewardRate: new BN(10),
-    minStakingPeriodInSeconds: new BN(5),
+    rewardPerSec: new BN(100),
+    rewardDenominator: new BN(1),
+    stakingLockDurationInSec: new BN(5),
   };
   const rewardMint = Keypair.generate();
   const justin = createUser();
   const markers = createUser();
   const NFTmint = Keypair.generate();
-  // TODO: create a bunch of NFT for more sophisticated test
-  // const NftCollectionMints = [Keypair.generate(), Keypair.generate(), Keypair.generate()];
 
   describe("Dev create NFT and setup staking config", () => {
     it("User Dev created", async () => {
@@ -102,8 +101,9 @@ describe("User journey", () => {
       const initStakingTx = await program.methods
         .initStakingConfig(
           configAuthBump,
-          stakingConfig.rewardRate,
-          stakingConfig.minStakingPeriodInSeconds
+          stakingConfig.rewardPerSec,
+          stakingConfig.rewardDenominator,
+          stakingConfig.stakingLockDurationInSec
         )
         .accounts({
           admin: dev.wallet.publicKey,
@@ -128,13 +128,14 @@ describe("User journey", () => {
       assert.ok(account.admin.equals(dev.wallet.publicKey));
       assert.ok(account.rewardMint.equals(rewardMint.publicKey));
       assert.ok(
-        account.rewardRate.toNumber() === stakingConfig.rewardRate.toNumber()
+        account.rewardPerSec.toNumber() ===
+          stakingConfig.rewardPerSec.toNumber()
       );
-      assert.equal(
-        account.creatorWhitelist.toBase58(),
-        dev.wallet.publicKey.toBase58(),
-        "config whitelist is the dev address as creator address"
+      assert.ok(
+        account.rewardDenominator.toNumber() ===
+          stakingConfig.rewardDenominator.toNumber()
       );
+      assert.ok(account.creatorWhitelist.equals(dev.wallet.publicKey));
     });
 
     it("Dev fund reward pot so user can claim reward tokens", async () => {
@@ -466,78 +467,72 @@ describe("User journey", () => {
       const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
         config.publicKey
       );
-      // console.log("configAuth", configAuth.toBase58());
-
+      console.log("configAuth", configAuth.toBase58());
       const [rewardPot, rewardPotBump] = await findRewardPotPDA(
         config.publicKey,
         rewardMint.publicKey
       );
-      // console.log("reward pot", rewardPot.toBase58());
+      console.log("reward pot", rewardPot.toBase58());
       const earlyRewardPotBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         rewardPot
       );
-      // console.log(
-      //   "reward pot token balance (before claim): ",
-      //   earlyRewardPotBalance
-      // );
-
+      console.log("reward pot balance before claim: ", earlyRewardPotBalance);
       const userATA = await findUserATA(
         justin.wallet.publicKey,
         rewardMint.publicKey
       );
+      console.log("userATA", userATA.toBase58());
       const [userState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
       );
+      console.log("userState", userState.toBase58());
 
-      // console.log("userATA", userATA.toBase58());
       await delay(2000);
-      const claimTx = await program.methods
-        .claim(configAuthBump, rewardPotBump)
-        .accounts({
-          user: justin.wallet.publicKey,
-          userState,
-          config: config.publicKey,
-          configAuthority: configAuth,
-          rewardDestination: userATA,
-          rewardMint: rewardMint.publicKey,
-          rewardPot: rewardPot,
+      try {
+        const claimTx = await program.methods
+          .claim(configAuthBump, rewardPotBump)
+          .accounts({
+            user: justin.wallet.publicKey,
+            userState,
+            config: config.publicKey,
+            configAuthority: configAuth,
+            rewardDestination: userATA,
+            rewardMint: rewardMint.publicKey,
+            rewardPot: rewardPot,
 
-          // programs
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-        })
-        .signers([justin.keypair])
-        .rpc();
-
-      // console.log("claim tx", claimTx);
+            // programs
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+          })
+          .signers([justin.keypair])
+          .rpc();
+        console.log("claim tx", claimTx);
+      } catch (error) {
+        console.log(error);
+      }
 
       const finalRewardPotBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         rewardPot
       );
-      // console.log(
-      //   "reward pot token balance (after claim): ",
-      //   finalRewardPotBalance
-      // );
+      console.log("reward pot balance after claim: ", finalRewardPotBalance);
 
       const finalUserTokenBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         userATA
       );
-      // console.log(
-      //   "justin token balance (after claim): ",
-      //   finalUserTokenBalance
-      // );
+      console.log("justin reward balance after claim: ", finalUserTokenBalance);
 
       assert.ok(finalUserTokenBalance > 0, "justin got the reward");
+      const rewardPotBalanceNow = earlyRewardPotBalance - finalUserTokenBalance;
       assert.equal(
-        earlyRewardPotBalance - finalUserTokenBalance,
+        rewardPotBalanceNow,
         finalRewardPotBalance,
-        "reward pot reduced by reward amount"
+        "final reward pot should be equal to early pot balance reduced by claimed reward"
       );
     });
 
@@ -617,7 +612,7 @@ describe("User journey", () => {
       assert.equal(parsedAcc.info.state, "frozen");
 
       // second attenp, after reach minimum staking period
-      await delay(stakingConfig.minStakingPeriodInSeconds.toNumber() * 1000);
+      await delay(stakingConfig.stakingLockDurationInSec.toNumber() * 1000);
       await program.methods
         .unstake()
         .accounts({
