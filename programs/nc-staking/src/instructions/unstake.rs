@@ -13,7 +13,7 @@ pub struct Unstake<'info> {
         seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
         bump
     )]
-    /// CHECK: PDA
+    #[account(mut)]
     stake_info: Account<'info, StakeInfo>,
     #[account(
         mut,
@@ -114,6 +114,10 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
+
+    // clear stake info
+    let stake_info = &mut ctx.accounts.stake_info;
+    stake_info.staking_start_time = 0;
 
     msg!("instruction handler: Unstake");
     Ok(())
