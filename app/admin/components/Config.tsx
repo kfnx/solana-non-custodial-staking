@@ -61,12 +61,23 @@ const Config: React.FC<{
           <span>{config.account.configAuthorityBumpSeed.toString()}</span>
         </div>
         <div className="flex w-full justify-between my-0.5">
-          <span>rewardPerSec</span>
-          <span>{config.account.rewardPerSec.toString()}</span>
+          <span>reward config</span>
+          <span>
+            base: {config.account.rewardPerSec.toString()} | denominator:{" "}
+            {config.account.rewardDenominator.toString()}
+          </span>
         </div>
         <div className="flex w-full justify-between my-0.5">
-          <span>rewardDenominator</span>
-          <span>{config.account.rewardDenominator.toString()}</span>
+          <span>reward</span>
+          <span>
+            per sec:{" "}
+            {Number(config.account.rewardPerSec.toString()) /
+              Number(config.account.rewardDenominator.toString())}{" "}
+            | daily:{" "}
+            {(Number(config.account.rewardPerSec.toString()) /
+              Number(config.account.rewardDenominator.toString())) *
+              86_400}
+          </span>
         </div>
         <div className="flex w-full justify-between my-0.5">
           <span>stakingLockedDurationInSec </span>

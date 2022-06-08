@@ -6,6 +6,7 @@ pub mod instructions;
 pub mod mpl;
 pub mod state;
 pub mod utils;
+pub mod safe_math;
 
 declare_id!("stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E");
 

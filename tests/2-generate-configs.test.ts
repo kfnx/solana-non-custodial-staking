@@ -124,7 +124,7 @@ const configs: StakingConfig[] = [
       // baseRate: 0.001157407407,
       rewardPerSec: new anchor.BN(1157407),
       rewardDenominator: denominator,
-      minStakingDurationInSec: new anchor.BN(0),
+      stakingLockDurationInSec: new anchor.BN(0),
     },
     keypair: Keypair.fromSecretKey(
       // sc1B2RFctpCyFchTv3tmNAcCNuhNwojQFtx7NgSSUXN;
@@ -143,7 +143,7 @@ const configs: StakingConfig[] = [
       // baseRate: 0.001808449,
       rewardPerSec: new anchor.BN(1808449),
       rewardDenominator: denominator,
-      minStakingDurationInSec: new anchor.BN(60),
+      stakingLockDurationInSec: new anchor.BN(60),
     },
     keypair: Keypair.fromSecretKey(
       // sc2VLzGNJK4QeqfVTp1wkvpfKgK6kWAnSrd4uhFVB5T;
@@ -162,7 +162,7 @@ const configs: StakingConfig[] = [
       // baseRate: 0.002314814,
       rewardPerSec: new anchor.BN(2314814),
       rewardDenominator: denominator,
-      minStakingDurationInSec: new anchor.BN(600),
+      stakingLockDurationInSec: new anchor.BN(600),
     },
     keypair: Keypair.fromSecretKey(
       // sc3j8siipRaBZgAdtC2Virp93L9eQeGXBjpHKRULsKP;
@@ -181,7 +181,7 @@ const configs: StakingConfig[] = [
       // baseRate: 0.002893518,
       rewardPerSec: new anchor.BN(2893518),
       rewardDenominator: denominator,
-      minStakingDurationInSec: new anchor.BN(5184000),
+      stakingLockDurationInSec: new anchor.BN(5184000),
     },
     keypair: Keypair.fromSecretKey(
       // sc4iq8PqXqjWF8sG6PguMxkGvUWfVnyoGc2YP4LLEaS
@@ -200,7 +200,7 @@ const configs: StakingConfig[] = [
       // baseRate: 0.003472222,
       rewardPerSec: new anchor.BN(3472222),
       rewardDenominator: denominator,
-      minStakingDurationInSec: new anchor.BN(7776000),
+      stakingLockDurationInSec: new anchor.BN(7776000),
     },
     keypair: Keypair.fromSecretKey(
       // sc5yvCo9RovPfgZDxCexfJysnPYKTzMm6cWEcSz7Nco
@@ -223,7 +223,7 @@ interface StakingConfig {
 interface StakingConfigOption {
   rewardPerSec: anchor.BN;
   rewardDenominator: anchor.BN;
-  minStakingDurationInSec: anchor.BN;
+  stakingLockDurationInSec: anchor.BN;
 }
 
 const createStakingConfig = async (
@@ -244,9 +244,9 @@ const createStakingConfig = async (
   const initStakingTx = await program.methods
     .initStakingConfig(
       configAuthBump,
-      new anchor.BN(option.rewardPerSec),
-      new anchor.BN(option.rewardDenominator),
-      new anchor.BN(option.minStakingDurationInSec)
+      option.rewardPerSec,
+      option.rewardDenominator,
+      option.stakingLockDurationInSec
     )
     .accounts({
       admin: creator.publicKey,
