@@ -177,7 +177,7 @@ export type NcStaking = {
         },
         {
           name: "stakeInfo";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -439,41 +439,56 @@ export type NcStaking = {
     },
     {
       code: 6001;
+      name: "Overflow";
+      msg: "Failed to perform math operation, integer overflow";
+    },
+    {
+      code: 6002;
+      name: "Underflow";
+      msg: "Failed to perform math operation, integer underflow";
+    },
+    {
+      code: 6003;
+      name: "DivisionByZero";
+      msg: "Failed to perform math operation, Division by zero";
+    },
+    {
+      code: 6004;
       name: "AnchorSerializationIssue";
       msg: "Anchor serialization issue";
     },
     {
-      code: 6002;
+      code: 6005;
       name: "InvalidUserState";
       msg: "Unauthorized, invalid user state PDA";
     },
     {
-      code: 6003;
+      code: 6006;
       name: "InvalidStakingConfig";
       msg: "Unauthorized, invalid staking config PDA";
     },
     {
-      code: 6004;
+      code: 6007;
       name: "UserNeverStake";
       msg: "Cannot claim, user never stake anything";
     },
     {
-      code: 6005;
+      code: 6008;
       name: "EmptyVault";
       msg: "Vault empty, nothing to unstake";
     },
     {
-      code: 6006;
+      code: 6009;
       name: "NotWhitelisted";
       msg: "NFT creator address is not present in any of the whitelists";
     },
     {
-      code: 6007;
+      code: 6010;
       name: "NotStaked";
       msg: "NFT is not present in any stake proof";
     },
     {
-      code: 6008;
+      code: 6011;
       name: "CannotUnstakeYet";
       msg: "NFT is in lock period, cannot unstake yet until it reach minimum staking period";
     }
@@ -659,7 +674,7 @@ export const IDL: NcStaking = {
         },
         {
           name: "stakeInfo",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -921,41 +936,56 @@ export const IDL: NcStaking = {
     },
     {
       code: 6001,
+      name: "Overflow",
+      msg: "Failed to perform math operation, integer overflow",
+    },
+    {
+      code: 6002,
+      name: "Underflow",
+      msg: "Failed to perform math operation, integer underflow",
+    },
+    {
+      code: 6003,
+      name: "DivisionByZero",
+      msg: "Failed to perform math operation, Division by zero",
+    },
+    {
+      code: 6004,
       name: "AnchorSerializationIssue",
       msg: "Anchor serialization issue",
     },
     {
-      code: 6002,
+      code: 6005,
       name: "InvalidUserState",
       msg: "Unauthorized, invalid user state PDA",
     },
     {
-      code: 6003,
+      code: 6006,
       name: "InvalidStakingConfig",
       msg: "Unauthorized, invalid staking config PDA",
     },
     {
-      code: 6004,
+      code: 6007,
       name: "UserNeverStake",
       msg: "Cannot claim, user never stake anything",
     },
     {
-      code: 6005,
+      code: 6008,
       name: "EmptyVault",
       msg: "Vault empty, nothing to unstake",
     },
     {
-      code: 6006,
+      code: 6009,
       name: "NotWhitelisted",
       msg: "NFT creator address is not present in any of the whitelists",
     },
     {
-      code: 6007,
+      code: 6010,
       name: "NotStaked",
       msg: "NFT is not present in any stake proof",
     },
     {
-      code: 6008,
+      code: 6011,
       name: "CannotUnstakeYet",
       msg: "NFT is in lock period, cannot unstake yet until it reach minimum staking period",
     },

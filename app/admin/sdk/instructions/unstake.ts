@@ -26,7 +26,7 @@ export const unstakeStruct = new beet.BeetArgsStruct<{
  * @property [**signer**] user
  * @property [_writable_] userState
  * @property [_writable_] config
- * @property [] stakeInfo
+ * @property [_writable_] stakeInfo
  * @property [_writable_] tokenAccount
  * @property [] delegate
  * @property [] edition
@@ -94,7 +94,7 @@ export function createUnstakeInstruction(accounts: UnstakeInstructionAccounts) {
     },
     {
       pubkey: stakeInfo,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
