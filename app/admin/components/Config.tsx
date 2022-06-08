@@ -32,7 +32,7 @@ const Config: React.FC<{
         </span>
       </div>
       <div className="flex flex-column flex-wrap mt-2">
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>PDA</span>
           <span>{config.publicKey.toString()}</span>
         </div>
@@ -40,7 +40,7 @@ const Config: React.FC<{
           <span>admin</span>
           <span>{config.account.admin.toString()}</span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>rewardPot</span>
           <span>{config.account.rewardPot.toString()}</span>
         </div>
@@ -48,7 +48,7 @@ const Config: React.FC<{
           <span>rewardMint</span>
           <span>{config.account.rewardMint.toString()}</span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>configAuthority</span>
           <span>{config.account.configAuthority.toString()}</span>
         </div>
@@ -56,7 +56,7 @@ const Config: React.FC<{
           <span>configAuthoritySeed</span>
           <span>{config.account.configAuthoritySeed.toString()}</span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>configAuthorityBumpSeed</span>
           <span>{config.account.configAuthorityBumpSeed.toString()}</span>
         </div>
@@ -67,7 +67,7 @@ const Config: React.FC<{
             {config.account.rewardDenominator.toString()}
           </span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>reward</span>
           <span>
             per sec:{" "}
@@ -90,7 +90,7 @@ const Config: React.FC<{
             }`}
           </span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>rewardAccrued</span>
           <span>{config.account.rewardAccrued.toString()}</span>
         </div>
@@ -98,7 +98,7 @@ const Config: React.FC<{
           <span>nftsStaked</span>
           <span>{config.account.nftsStaked.toString()}</span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>initiatedUsers</span>
           <span>{config.account.initiatedUsers.toString()}</span>
         </div>
@@ -106,7 +106,7 @@ const Config: React.FC<{
           <span>activeStakers</span>
           <span>{config.account.activeStakers.toString()}</span>
         </div>
-        <div className="flex w-full justify-between my-0.5">
+        <div className="flex w-full justify-between my-0.5 bg-slate-200">
           <span>whitelistedCreator</span>
           <span>{config.account.creatorWhitelist.toString()}</span>
         </div>

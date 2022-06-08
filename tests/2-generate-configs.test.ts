@@ -115,8 +115,8 @@ const rewardToken = Keypair.fromSecretKey(
  */
 
 // we reduce the zeros because we want to work with higher number in testing
-// produciton denom will be 100_000_000_000 (2 more zero)
-const denominator = new anchor.BN(1_000_000_000);
+// produciton denom will be 100_000_000_000 (4 more zero)
+const denominator = new anchor.BN(10_000_000);
 const configs: StakingConfig[] = [
   {
     // 1 / Day

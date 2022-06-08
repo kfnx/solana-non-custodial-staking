@@ -25,7 +25,7 @@ import {
 } from "../sdk/pda";
 import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/programId";
 import { IDL, NcStaking } from "../sdk/nc_staking";
-import { findUserATA } from "../sdk/user";
+import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
 
 type Network = {
   endpoint: string;
@@ -232,8 +232,32 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       });
     }
   },
-  userTokenBalance: undefined,
-  fetchUserTokenBalance: async () => {},
+  userTokenBalance: 0,
+  fetchUserTokenBalance: async () => {
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return;
+    }
+
+    // const { program, connection, selectedStakeDuration } = get();
+    // const configId = new PublicKey(selectedStakeDuration.value);
+    // if (!program) {
+    //   toast.error("Program not ready");
+    //   return;
+    // }
+    const rewardMint = new PublicKey(
+      "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
+    );
+    const userATA = await findUserATA(wallet.publicKey, rewardMint);
+    const connection = get().connection;
+    const userTokenBalance =
+      (await getTokenBalanceByATA(connection, userATA)) || 0;
+
+    return set({
+      userTokenBalance,
+    });
+  },
 
   // instruction dispatcher
   initiateStaking: async (callbackOptions) => {

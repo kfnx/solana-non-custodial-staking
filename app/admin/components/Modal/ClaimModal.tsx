@@ -13,6 +13,7 @@ const ClaimModal: React.FC<{
   const wallet = useGlobalStore((state) => state.wallet);
   const configs = useGlobalStore((state) => state.configs);
   const config = useGlobalStore((state) => state.config);
+  const fetchBalance = useGlobalStore((state) => state.fetchUserTokenBalance);
   const selectedConfig = configs[config];
 
   const closeModal = () => setIsOpen(false);
@@ -83,11 +84,11 @@ const ClaimModal: React.FC<{
 
                   <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
-                      My Token Reward Balance:
+                      Accrued Reward Simulation:
                     </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {/* { */}
-                      TODO get userRewardTokenBalance
+                      TODO get calculate this
                       {/* } */}
                     </div>
                   </div>
@@ -100,7 +101,10 @@ const ClaimModal: React.FC<{
                     onClick={() =>
                       claim({
                         onStart: () => setLoading(true),
-                        onSuccess: () => closeModal(),
+                        onSuccess: () => {
+                          fetchBalance();
+                          closeModal();
+                        },
                         onFinish: () => setLoading(false),
                       })
                     }
