@@ -5,6 +5,15 @@ pub enum ErrorCode {
     #[msg("Failed to perform math operation safely")]
     ArithmeticError,
 
+    #[msg("Failed to perform math operation, integer overflow")]
+    Overflow,
+
+    #[msg("Failed to perform math operation, integer underflow")]
+    Underflow,
+
+    #[msg("Failed to perform math operation, Division by zero")]
+    DivisionByZero,
+
     #[msg("Anchor serialization issue")]
     AnchorSerializationIssue,
 

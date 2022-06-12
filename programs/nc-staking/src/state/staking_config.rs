@@ -14,13 +14,13 @@ pub struct StakingConfig {
     pub config_authority: Pubkey,
     pub config_authority_seed: Pubkey,
     pub config_authority_bump_seed: [u8; 1],
-    pub reward_rate: u64,
-    // pub reward_rate_denominator: u64,
+    pub reward_per_sec: u64,
+    pub reward_denominator: u64,
+    pub staking_lock_duration_in_sec: u64,
     pub reward_accrued: u64,
     pub nfts_staked: u64,
     pub initiated_users: u64,
     pub active_stakers: u64,
-    pub min_staking_period_sec: u64,
     pub creator_whitelist: Pubkey,
 }
 

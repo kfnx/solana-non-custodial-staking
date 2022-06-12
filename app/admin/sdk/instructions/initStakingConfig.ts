@@ -16,8 +16,9 @@ import * as web3 from '@solana/web3.js'
  */
 export type InitStakingConfigInstructionArgs = {
   bumpConfigAuth: number
-  rewardRate: beet.bignum
-  minStakingPeriodSec: beet.bignum
+  rewardPerSec: beet.bignum
+  rewardDenominator: beet.bignum
+  stakingLockDurationInSec: beet.bignum
 }
 /**
  * @category Instructions
@@ -32,8 +33,9 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['bumpConfigAuth', beet.u8],
-    ['rewardRate', beet.u64],
-    ['minStakingPeriodSec', beet.u64],
+    ['rewardPerSec', beet.u64],
+    ['rewardDenominator', beet.u64],
+    ['stakingLockDurationInSec', beet.u64],
   ],
   'InitStakingConfigInstructionArgs'
 )
@@ -42,6 +44,7 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
  *
  * @property [_writable_, **signer**] admin
  * @property [_writable_, **signer**] config
+ * @property [] creatorAddressToWhitelist
  * @property [_writable_] configAuthority
  * @property [_writable_] rewardPot
  * @property [] rewardMint
@@ -52,6 +55,7 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
 export type InitStakingConfigInstructionAccounts = {
   admin: web3.PublicKey
   config: web3.PublicKey
+  creatorAddressToWhitelist: web3.PublicKey
   configAuthority: web3.PublicKey
   rewardPot: web3.PublicKey
   rewardMint: web3.PublicKey
@@ -75,7 +79,14 @@ export function createInitStakingConfigInstruction(
   accounts: InitStakingConfigInstructionAccounts,
   args: InitStakingConfigInstructionArgs
 ) {
-  const { admin, config, configAuthority, rewardPot, rewardMint } = accounts
+  const {
+    admin,
+    config,
+    creatorAddressToWhitelist,
+    configAuthority,
+    rewardPot,
+    rewardMint,
+  } = accounts
 
   const [data] = initStakingConfigStruct.serialize({
     instructionDiscriminator: initStakingConfigInstructionDiscriminator,
@@ -91,6 +102,11 @@ export function createInitStakingConfigInstruction(
       pubkey: config,
       isWritable: true,
       isSigner: true,
+    },
+    {
+      pubkey: creatorAddressToWhitelist,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: configAuthority,

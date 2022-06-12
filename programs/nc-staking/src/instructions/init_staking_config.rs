@@ -38,8 +38,9 @@ pub struct InitStakingConfig<'info> {
 pub fn handler(
   ctx: Context<InitStakingConfig>,
   bump_config_auth: u8,
-  reward_rate: u64,
-  min_staking_period_sec: u64,
+  reward_per_sec: u64,
+  reward_denominator: u64,
+  staking_lock_duration_in_sec: u64,
 ) -> Result<()> {
   let config = &mut ctx.accounts.config;
   config.admin = ctx.accounts.admin.key();
@@ -48,15 +49,15 @@ pub fn handler(
   config.config_authority = ctx.accounts.config_authority.key();
   config.config_authority_seed = config.key();
   config.config_authority_bump_seed = [bump_config_auth];
-  config.reward_rate = reward_rate;
-  // config.reward_rate_denominator = reward_rate_denominator;
+  config.reward_per_sec = reward_per_sec;
+  config.reward_denominator = reward_denominator;
+  config.staking_lock_duration_in_sec = staking_lock_duration_in_sec;
   config.reward_accrued = 0;
   config.nfts_staked = 0;
   config.initiated_users = 0;
   config.active_stakers = 0;
-  config.min_staking_period_sec = min_staking_period_sec;
   config.creator_whitelist = ctx.accounts.creator_address_to_whitelist.key();
   msg!("instruction handler: InitStakingConfig");
-  msg!("min_staking_period_sec: {}", min_staking_period_sec);
+  msg!("staking_lock_duration_in_sec: {}", staking_lock_duration_in_sec);
   Ok(())
 }

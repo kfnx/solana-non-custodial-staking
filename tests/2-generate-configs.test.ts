@@ -6,23 +6,16 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
-import {
-  getMinimumBalanceForRentExemptMint,
-  MintLayout,
-  TOKEN_PROGRAM_ID,
-  createInitializeMintInstruction,
-} from "@solana/spl-token";
+import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { assert } from "chai";
 import {
   createUser,
   allSynchronously,
   findConfigAuthorityPDA,
   findRewardPotPDA,
-  getTokenBalanceByATA,
 } from "./utils";
-import { NcStaking } from "../app/admin/sdk";
-import { assert } from "chai";
 import { createToken } from "./utils/transaction";
-import { createMintToInstruction } from "@solana/spl-token";
+import { NcStaking } from "../target/types/nc_staking";
 
 /**
  * to make this work change Anchor.toml test = with this file and run anchor test
@@ -69,7 +62,7 @@ const rewardToken = Keypair.fromSecretKey(
  * IGS/day: 1
  * IGS/second estimate: 1/86400 ≈ 0.00001157407
  * Total reward for 1 year: 1*365*10000 = 3650000
- * Base rate: 1157407
+ * Base Rate: 1157407
  * Denominator: 100000000000
  * Locking Duration (day): 0
  * Locking Duration (second): 0
@@ -78,7 +71,7 @@ const rewardToken = Keypair.fromSecretKey(
  * IGS/day: 1.25
  * IGS/second estimate: 1.25/86400 ≈ 0.00001808449
  * Total reward for 1 year: 1.25*365*10000 = 4562500
- * Base rate: 1808449
+ * Base Rate: 1808449
  * Denominator: 100000000000
  * Locking Duration (day): 7
  * Locking Duration (second): 7*86400 = 604800
@@ -121,11 +114,18 @@ const rewardToken = Keypair.fromSecretKey(
  *
  */
 
-const configs: StakingConfigArgs[] = [
+// we reduce the zeros because we want to work with higher number in testing
+// produciton denom will be 100_000_000_000 (4 more zero)
+const denominator = new anchor.BN(10_000_000);
+const configs: StakingConfig[] = [
   {
-    rewardTokenMintId: rewardToken.publicKey,
-    rewardRate: 1,
-    minStakingDurationInSec: 0,
+    // 1 / Day
+    option: {
+      // baseRate: 0.001157407407,
+      rewardPerSec: new anchor.BN(1157407),
+      rewardDenominator: denominator,
+      stakingLockDurationInSec: new anchor.BN(0),
+    },
     keypair: Keypair.fromSecretKey(
       // sc1B2RFctpCyFchTv3tmNAcCNuhNwojQFtx7NgSSUXN;
       Uint8Array.from([
@@ -138,9 +138,13 @@ const configs: StakingConfigArgs[] = [
     ),
   },
   {
-    rewardTokenMintId: rewardToken.publicKey,
-    rewardRate: 1,
-    minStakingDurationInSec: 60,
+    // 1.25 / Day
+    option: {
+      // baseRate: 0.001808449,
+      rewardPerSec: new anchor.BN(1808449),
+      rewardDenominator: denominator,
+      stakingLockDurationInSec: new anchor.BN(60),
+    },
     keypair: Keypair.fromSecretKey(
       // sc2VLzGNJK4QeqfVTp1wkvpfKgK6kWAnSrd4uhFVB5T;
       Uint8Array.from([
@@ -153,9 +157,13 @@ const configs: StakingConfigArgs[] = [
     ),
   },
   {
-    rewardTokenMintId: rewardToken.publicKey,
-    rewardRate: 1,
-    minStakingDurationInSec: 120,
+    // 2
+    option: {
+      // baseRate: 0.002314814,
+      rewardPerSec: new anchor.BN(2314814),
+      rewardDenominator: denominator,
+      stakingLockDurationInSec: new anchor.BN(600),
+    },
     keypair: Keypair.fromSecretKey(
       // sc3j8siipRaBZgAdtC2Virp93L9eQeGXBjpHKRULsKP;
       Uint8Array.from([
@@ -168,9 +176,13 @@ const configs: StakingConfigArgs[] = [
     ),
   },
   {
-    rewardTokenMintId: rewardToken.publicKey,
-    rewardRate: 1,
-    minStakingDurationInSec: 604800,
+    // 2.5
+    option: {
+      // baseRate: 0.002893518,
+      rewardPerSec: new anchor.BN(2893518),
+      rewardDenominator: denominator,
+      stakingLockDurationInSec: new anchor.BN(5184000),
+    },
     keypair: Keypair.fromSecretKey(
       // sc4iq8PqXqjWF8sG6PguMxkGvUWfVnyoGc2YP4LLEaS
       Uint8Array.from([
@@ -183,9 +195,13 @@ const configs: StakingConfigArgs[] = [
     ),
   },
   {
-    rewardTokenMintId: rewardToken.publicKey,
-    rewardRate: 1,
-    minStakingDurationInSec: 7776000,
+    // 3
+    option: {
+      // baseRate: 0.003472222,
+      rewardPerSec: new anchor.BN(3472222),
+      rewardDenominator: denominator,
+      stakingLockDurationInSec: new anchor.BN(7776000),
+    },
     keypair: Keypair.fromSecretKey(
       // sc5yvCo9RovPfgZDxCexfJysnPYKTzMm6cWEcSz7Nco
       Uint8Array.from([
@@ -199,42 +215,44 @@ const configs: StakingConfigArgs[] = [
   },
 ];
 
-interface StakingConfigArgs {
+interface StakingConfig {
   keypair: Keypair;
-  rewardRate: number;
-  minStakingDurationInSec: number;
-  rewardTokenMintId: PublicKey;
+  option: StakingConfigOption;
+}
+
+interface StakingConfigOption {
+  rewardPerSec: anchor.BN;
+  rewardDenominator: anchor.BN;
+  stakingLockDurationInSec: anchor.BN;
 }
 
 const createStakingConfig = async (
   creator: Keypair,
-  config: StakingConfigArgs
+  config: Keypair,
+  rewardMint: PublicKey,
+  option: StakingConfigOption,
+  program: anchor.Program<NcStaking> = anchor.workspace
+    .NcStaking as anchor.Program<NcStaking>
 ) => {
   // console.log("config", config.publicKey.toBase58());
   const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
-    config.keypair.publicKey
+    config.publicKey
   );
   // console.log("configAuth", configAuth.toBase58());
-
-  const [rewardPot] = await findRewardPotPDA(
-    config.keypair.publicKey,
-    config.rewardTokenMintId
-  );
+  const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
   // console.log("reward pot", rewardPot.toBase58());
-
-  // init staking config
-  const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const initStakingTx = await program.methods
     .initStakingConfig(
       configAuthBump,
-      new anchor.BN(config.rewardRate),
-      new anchor.BN(config.minStakingDurationInSec)
+      option.rewardPerSec,
+      option.rewardDenominator,
+      option.stakingLockDurationInSec
     )
     .accounts({
       admin: creator.publicKey,
-      config: config.keypair.publicKey,
+      config: config.publicKey,
       configAuthority: configAuth,
-      rewardMint: config.rewardTokenMintId,
+      rewardMint,
       rewardPot,
       creatorAddressToWhitelist: creator.publicKey,
       // programs
@@ -242,34 +260,33 @@ const createStakingConfig = async (
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([creator, config.keypair])
+    .signers([creator, config])
     .rpc();
   console.log("init config tx", initStakingTx);
 };
 
 const checkConfigResult = async (
   creator: Keypair,
-  config: StakingConfigArgs
+  config: Keypair,
+  rewardMint: PublicKey,
+  option: StakingConfigOption,
+  program: anchor.Program<NcStaking> = anchor.workspace
+    .NcStaking as anchor.Program<NcStaking>
 ) => {
-  const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-
-  const account = await program.account.stakingConfig.fetch(
-    config.keypair.publicKey
-  );
+  const account = await program.account.stakingConfig.fetch(config.publicKey);
 
   assert.ok(account.admin.equals(creator.publicKey));
-  assert.ok(account.rewardMint.equals(config.rewardTokenMintId));
-  assert.ok(account.rewardRate.toNumber() === config.rewardRate);
-  assert.equal(
-    account.creatorWhitelist.toBase58(),
-    creator.publicKey.toBase58(),
-    "config whitelist is the dev address as creator address"
-  );
+  assert.ok(account.rewardMint.equals(rewardMint));
+  const { rewardPerSec, rewardDenominator: denominator } = option;
+  assert.ok(account.rewardPerSec.toNumber() === rewardPerSec.toNumber());
+  assert.ok(account.rewardDenominator.toNumber() === denominator.toNumber());
+  assert.ok(account.creatorWhitelist.equals(creator.publicKey));
 };
 
 describe("Generate staking configs", () => {
   console.log("Dev/admin address", dev.wallet.publicKey.toBase58());
   console.log("rewardToken address", rewardToken.publicKey.toBase58());
+
   it("Create token", async () => {
     await createToken(dev.keypair, rewardToken);
   });
@@ -280,8 +297,21 @@ describe("Generate staking configs", () => {
 
     await allSynchronously(
       configs.map((config) => async () => {
-        await createStakingConfig(dev.keypair, config);
-        await checkConfigResult(dev.keypair, config);
+        const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+        await createStakingConfig(
+          dev.keypair,
+          config.keypair,
+          rewardToken.publicKey,
+          config.option,
+          program
+        );
+        await checkConfigResult(
+          dev.keypair,
+          config.keypair,
+          rewardToken.publicKey,
+          config.option,
+          program
+        );
       })
     );
 
@@ -295,36 +325,31 @@ describe("Generate staking configs", () => {
   });
 
   it("Fund config reward pot so user can claim token rewards", async () => {
-    const configId = configs[0].keypair.publicKey;
-    const rewardMintId = configs[0].rewardTokenMintId;
-    const [rewardPotATA] = await findRewardPotPDA(configId, rewardMintId);
+    await allSynchronously(
+      configs.map((config) => async () => {
+        const configId = config.keypair.publicKey;
+        const [rewardPotATA] = await findRewardPotPDA(
+          configId,
+          rewardToken.publicKey
+        );
+        const mintTx = new Transaction({
+          feePayer: dev.wallet.publicKey,
+        });
+        const mint_amount = 10_000_000;
+        mintTx.add(
+          createMintToInstruction(
+            rewardToken.publicKey, // mint
+            rewardPotATA, // receiver (sholud be a token account)
+            dev.wallet.publicKey, // mint authority
+            mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+            [], // only multisig account will use. leave it empty now.
+            TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
+          )
+        );
 
-    const mint_tokens_to_reward_pot_tx = new Transaction({
-      feePayer: dev.wallet.publicKey,
-    });
-    const mint_amount = 10_000_000;
-    mint_tokens_to_reward_pot_tx.add(
-      createMintToInstruction(
-        rewardMintId, // mint
-        rewardPotATA, // receiver (sholud be a token account)
-        dev.wallet.publicKey, // mint authority
-        mint_amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
-        [], // only multisig account will use. leave it empty now.
-        TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
-      )
+        const tx = await dev.provider.sendAndConfirm(mintTx);
+        // console.log("fund reward token tx", tx);
+      })
     );
-
-    const tx = await dev.provider.sendAndConfirm(mint_tokens_to_reward_pot_tx, [
-      dev.keypair,
-    ]);
-    // console.log("mint tokens to reward pot tx", tx);
-
-    const rewardPotBalance = await getTokenBalanceByATA(
-      dev.provider.connection,
-      rewardPotATA
-    );
-    // console.log("funded reward pot token balance: ", rewardPotBalance);
-
-    assert.equal(mint_amount, rewardPotBalance, "reward pot funded");
   });
 });

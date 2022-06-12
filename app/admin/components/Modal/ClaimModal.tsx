@@ -1,17 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
-import {
-  Dispatch,
-  Fragment,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
-import { findUserATA, getTokenBalanceByATA } from "../../sdk";
-import toast from "react-hot-toast";
 
 const ClaimModal: React.FC<{
   isOpen: boolean;
@@ -20,11 +11,10 @@ const ClaimModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const claim = useGlobalStore((state) => state.claim);
   const wallet = useGlobalStore((state) => state.wallet);
-  const connection = useGlobalStore((state) => state.connection);
   const configs = useGlobalStore((state) => state.configs);
   const config = useGlobalStore((state) => state.config);
+  const fetchBalance = useGlobalStore((state) => state.fetchUserTokenBalance);
   const selectedConfig = configs[config];
-  const rewardMint = selectedConfig?.account.rewardMint;
 
   const closeModal = () => setIsOpen(false);
 
@@ -94,11 +84,11 @@ const ClaimModal: React.FC<{
 
                   <div className="my-2">
                     <p className="block mb-2 text-sm text-gray-500">
-                      My Token Reward Balance:
+                      Accrued Reward Simulation:
                     </p>
                     <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
                       {/* { */}
-                      TODO get userRewardTokenBalance
+                      TODO get calculate this
                       {/* } */}
                     </div>
                   </div>
@@ -111,7 +101,10 @@ const ClaimModal: React.FC<{
                     onClick={() =>
                       claim({
                         onStart: () => setLoading(true),
-                        onSuccess: () => closeModal(),
+                        onSuccess: () => {
+                          fetchBalance();
+                          closeModal();
+                        },
                         onFinish: () => setLoading(false),
                       })
                     }

@@ -21,13 +21,14 @@ export type StakingConfigArgs = {
   configAuthority: web3.PublicKey
   configAuthoritySeed: web3.PublicKey
   configAuthorityBumpSeed: number[] /* size: 1 */
-  rewardRate: beet.bignum
+  rewardPerSec: beet.bignum
+  rewardDenominator: beet.bignum
+  stakingLockDurationInSec: beet.bignum
   rewardAccrued: beet.bignum
   nftsStaked: beet.bignum
   initiatedUsers: beet.bignum
   activeStakers: beet.bignum
-  minStakingPeriodSec: beet.bignum
-  whitelistedCreator: boolean
+  creatorWhitelist: web3.PublicKey
 }
 
 const stakingConfigDiscriminator = [45, 134, 252, 82, 37, 57, 84, 25]
@@ -46,13 +47,14 @@ export class StakingConfig implements StakingConfigArgs {
     readonly configAuthority: web3.PublicKey,
     readonly configAuthoritySeed: web3.PublicKey,
     readonly configAuthorityBumpSeed: number[] /* size: 1 */,
-    readonly rewardRate: beet.bignum,
+    readonly rewardPerSec: beet.bignum,
+    readonly rewardDenominator: beet.bignum,
+    readonly stakingLockDurationInSec: beet.bignum,
     readonly rewardAccrued: beet.bignum,
     readonly nftsStaked: beet.bignum,
     readonly initiatedUsers: beet.bignum,
     readonly activeStakers: beet.bignum,
-    readonly minStakingPeriodSec: beet.bignum,
-    readonly whitelistedCreator: boolean
+    readonly creatorWhitelist: web3.PublicKey
   ) {}
 
   /**
@@ -66,13 +68,14 @@ export class StakingConfig implements StakingConfigArgs {
       args.configAuthority,
       args.configAuthoritySeed,
       args.configAuthorityBumpSeed,
-      args.rewardRate,
+      args.rewardPerSec,
+      args.rewardDenominator,
+      args.stakingLockDurationInSec,
       args.rewardAccrued,
       args.nftsStaked,
       args.initiatedUsers,
       args.activeStakers,
-      args.minStakingPeriodSec,
-      args.whitelistedCreator
+      args.creatorWhitelist
     )
   }
 
@@ -167,8 +170,30 @@ export class StakingConfig implements StakingConfigArgs {
       configAuthority: this.configAuthority.toBase58(),
       configAuthoritySeed: this.configAuthoritySeed.toBase58(),
       configAuthorityBumpSeed: this.configAuthorityBumpSeed,
-      rewardRate: (() => {
-        const x = <{ toNumber: () => number }>this.rewardRate
+      rewardPerSec: (() => {
+        const x = <{ toNumber: () => number }>this.rewardPerSec
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      rewardDenominator: (() => {
+        const x = <{ toNumber: () => number }>this.rewardDenominator
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      stakingLockDurationInSec: (() => {
+        const x = <{ toNumber: () => number }>this.stakingLockDurationInSec
         if (typeof x.toNumber === 'function') {
           try {
             return x.toNumber()
@@ -222,18 +247,7 @@ export class StakingConfig implements StakingConfigArgs {
         }
         return x
       })(),
-      minStakingPeriodSec: (() => {
-        const x = <{ toNumber: () => number }>this.minStakingPeriodSec
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber()
-          } catch (_) {
-            return x
-          }
-        }
-        return x
-      })(),
-      whitelistedCreator: this.whitelistedCreator,
+      creatorWhitelist: this.creatorWhitelist.toBase58(),
     }
   }
 }
@@ -256,13 +270,14 @@ export const stakingConfigBeet = new beet.BeetStruct<
     ['configAuthority', beetSolana.publicKey],
     ['configAuthoritySeed', beetSolana.publicKey],
     ['configAuthorityBumpSeed', beet.uniformFixedSizeArray(beet.u8, 1)],
-    ['rewardRate', beet.u64],
+    ['rewardPerSec', beet.u64],
+    ['rewardDenominator', beet.u64],
+    ['stakingLockDurationInSec', beet.u64],
     ['rewardAccrued', beet.u64],
     ['nftsStaked', beet.u64],
     ['initiatedUsers', beet.u64],
     ['activeStakers', beet.u64],
-    ['minStakingPeriodSec', beet.u64],
-    ['whitelistedCreator', beet.bool],
+    ['creatorWhitelist', beetSolana.publicKey],
   ],
   StakingConfig.fromArgs,
   'StakingConfig'

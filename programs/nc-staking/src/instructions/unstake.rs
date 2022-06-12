@@ -13,7 +13,7 @@ pub struct Unstake<'info> {
         seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
         bump
     )]
-    /// CHECK: PDA
+    #[account(mut)]
     stake_info: Account<'info, StakeInfo>,
     #[account(
         mut,
@@ -40,8 +40,8 @@ fn assert_unstake_allowed<'info>(
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
     msg!(
-        "config.min_staking_period_sec {}",
-        config.min_staking_period_sec
+        "config.staking_lock_duration_in_sec {}",
+        config.staking_lock_duration_in_sec
     );
     msg!(
         "stake_info_acc.staking_start_time {}",
@@ -54,7 +54,7 @@ fn assert_unstake_allowed<'info>(
 
     let time_now = now_ts()?;
     msg!("time_now {}", time_now);
-    let time_before_unlock = stake_info.staking_start_time + config.min_staking_period_sec;
+    let time_before_unlock = stake_info.staking_start_time + config.staking_lock_duration_in_sec;
     msg!("time_before_unlock {}", time_before_unlock);
     if time_before_unlock > time_now {
         msg!("STAKE LOCKED");
@@ -114,6 +114,10 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
+
+    // clear stake info
+    let stake_info = &mut ctx.accounts.stake_info;
+    stake_info.staking_start_time = 0;
 
     msg!("instruction handler: Unstake");
     Ok(())

@@ -16,33 +16,29 @@ import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../LoadingSpinner";
-import {
-  findConfigAuthorityPDA,
-  findRewardPotPDA,
-  IDL,
-  NcStaking,
-  PROGRAM_ID,
-} from "../../sdk";
+import { findConfigAuthorityPDA, findRewardPotPDA } from "../../sdk/pda";
+import { IDL, NcStaking } from "../../sdk/nc_staking";
+import { PROGRAM_ID } from "../../sdk/programId";
 
-interface Args {
+interface CreateStakingConfigArgs {
   rewardMint: PublicKey;
-  rewardRate: anchor.BN;
-  rewardRateDenominator: anchor.BN;
-  minStakingPeriodSec: anchor.BN;
-  whitelistCreator: PublicKey;
+  rewardPerSec: anchor.BN;
+  rewardDenominator: anchor.BN;
+  stakingLockDurationInSec: anchor.BN;
+  creatorWhitelist: PublicKey;
 }
 
 const createNewConfig = async (
   connection: Connection,
   wallet: AnchorWallet,
-  args: Args
+  args: CreateStakingConfigArgs
 ) => {
   const {
-    rewardRate,
-    rewardRateDenominator,
-    minStakingPeriodSec,
+    rewardPerSec,
+    rewardDenominator,
+    stakingLockDurationInSec,
     rewardMint,
-    whitelistCreator,
+    creatorWhitelist,
   } = args;
 
   const provider = new anchor.AnchorProvider(
@@ -65,14 +61,19 @@ const createNewConfig = async (
 
   // init staking config
   const initStakingTx = await program.methods
-    .initStakingConfig(configAuthBump, rewardRate, minStakingPeriodSec)
+    .initStakingConfig(
+      configAuthBump,
+      rewardPerSec,
+      rewardDenominator,
+      stakingLockDurationInSec
+    )
     .accounts({
       admin: wallet.publicKey,
       config: config.publicKey,
       configAuthority: configAuth,
       rewardMint: rewardMint,
       rewardPot,
-      creatorAddressToWhitelist: whitelistCreator,
+      creatorAddressToWhitelist: creatorWhitelist,
       // programs
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -93,10 +94,11 @@ const CreateNewConfigModal: React.FC<{
 }> = ({ isOpen, setIsOpen }) => {
   const [loading, setLoading] = useState(false);
   const [rewardMint, setRewardMint] = useState<string>("");
-  const [rewardRate, setRewardRate] = useState<number>(1);
-  const [rewardRateDenominator, setRewardRateDenominator] = useState<number>(1);
-  const [minStakingPeriodSec, setMinStakingPeriodSec] = useState<number>(0);
-  const [whitelistCreator, setWhitelistCreator] = useState<string>("");
+  const [rewardPerSec, setRewardRate] = useState<number>(1);
+  const [rewardDenominator, setRewardRateDenominator] = useState<number>(1);
+  const [stakingLockDurationInSec, setMinStakingPeriodSec] =
+    useState<number>(0);
+  const [creatorWhitelist, setWhitelistCreator] = useState<string>("");
 
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
@@ -177,7 +179,7 @@ const CreateNewConfigModal: React.FC<{
                       className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                       placeholder="86400"
                       required
-                      value={rewardRate}
+                      value={rewardPerSec}
                       onChange={(event) =>
                         event.target.value
                           ? setRewardRate(parseInt(event.target.value, 10))
@@ -199,7 +201,7 @@ const CreateNewConfigModal: React.FC<{
                       className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                       placeholder="1"
                       required
-                      value={rewardRateDenominator}
+                      value={rewardDenominator}
                       onChange={(event) =>
                         event.target.value
                           ? setRewardRateDenominator(
@@ -223,7 +225,7 @@ const CreateNewConfigModal: React.FC<{
                       className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                       placeholder="86400"
                       required
-                      value={minStakingPeriodSec}
+                      value={stakingLockDurationInSec}
                       onChange={(event) =>
                         event.target.value
                           ? setMinStakingPeriodSec(
@@ -247,7 +249,7 @@ const CreateNewConfigModal: React.FC<{
                       className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                       placeholder="BWWE1mrYNCZ2rapGiWhrURgqq9P2RHVCHnAeVHRoFsZv"
                       required
-                      value={whitelistCreator}
+                      value={creatorWhitelist}
                       onChange={(event) =>
                         setWhitelistCreator(event.target.value)
                       }
@@ -272,22 +274,22 @@ const CreateNewConfigModal: React.FC<{
                           return toast.error("Invalid rewardMint");
                         }
                       }
-                      if (rewardRate < 1) {
-                        return toast.error("Invalid rewardRate");
+                      if (rewardPerSec < 1) {
+                        return toast.error("Invalid rewardPerSec");
                       }
-                      if (rewardRateDenominator < 0) {
-                        return toast.error("Invalid rewardRateDenominator");
+                      if (rewardDenominator < 0) {
+                        return toast.error("Invalid rewardDenominator");
                       }
-                      if (minStakingPeriodSec < 0) {
-                        return toast.error("Invalid minStakingPeriodSec");
+                      if (stakingLockDurationInSec < 0) {
+                        return toast.error("Invalid stakingLockDurationInSec");
                       }
-                      if (!whitelistCreator) {
-                        return toast.error("Invalid whitelistCreator");
+                      if (!creatorWhitelist) {
+                        return toast.error("Invalid creatorWhitelist");
                       } else {
                         try {
-                          new PublicKey(whitelistCreator!);
+                          new PublicKey(creatorWhitelist!);
                         } catch (error) {
-                          return toast.error("Invalid whitelistCreator");
+                          return toast.error("Invalid creatorWhitelist");
                         }
                       }
 
@@ -298,15 +300,15 @@ const CreateNewConfigModal: React.FC<{
                           try {
                             await createNewConfig(connection, wallet!, {
                               rewardMint: new PublicKey(rewardMint!),
-                              rewardRate: new anchor.BN(rewardRate!),
-                              rewardRateDenominator: new anchor.BN(
-                                rewardRateDenominator!
+                              rewardPerSec: new anchor.BN(rewardPerSec!),
+                              rewardDenominator: new anchor.BN(
+                                rewardDenominator!
                               ),
-                              minStakingPeriodSec: new anchor.BN(
-                                minStakingPeriodSec!
+                              stakingLockDurationInSec: new anchor.BN(
+                                stakingLockDurationInSec!
                               ),
-                              whitelistCreator: new PublicKey(
-                                whitelistCreator!
+                              creatorWhitelist: new PublicKey(
+                                creatorWhitelist!
                               ),
                             });
                             closeModal();

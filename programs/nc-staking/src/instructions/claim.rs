@@ -1,9 +1,10 @@
-use crate::{errors, state::*, utils::now_ts};
+use crate::{errors, safe_math::SafeMath, state::*, utils::now_ts};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
+use std::convert::TryFrom;
 
 #[derive(Accounts)]
 #[instruction(bump_config_auth: u8, bump_reward_pot: u8)]
@@ -11,23 +12,23 @@ pub struct ClaimStakingReward<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut, has_one = config_authority)]
-    pub config: Account<'info, StakingConfig>,
+    pub config: Box<Account<'info, StakingConfig>>,
     /// CHECK:
     #[account(seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
     pub config_authority: AccountInfo<'info>,
     #[account(mut)]
-    pub user_state: Account<'info, User>,
+    pub user_state: Box<Account<'info, User>>,
 
     #[account(mut, seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()], bump = bump_reward_pot)]
-    pub reward_pot: Account<'info, TokenAccount>,
-    pub reward_mint: Account<'info, Mint>,
+    pub reward_pot: Box<Account<'info, TokenAccount>>,
+    pub reward_mint: Box<Account<'info, Mint>>,
     #[account(
         init_if_needed,
         associated_token::mint = reward_mint,
         associated_token::authority = user,
         payer = user
     )]
-    pub reward_destination: Account<'info, TokenAccount>,
+    pub reward_destination: Box<Account<'info, TokenAccount>>,
 
     // programs
     pub token_program: Program<'info, Token>,
@@ -58,23 +59,32 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         if user_state.last_stake_time == 0 {
             return Err(error!(errors::ErrorCode::UserNeverStake));
         }
-        now_ts()? - user_state.last_stake_time
+        u32::try_from(now_ts()?.safe_sub(user_state.last_stake_time)?).unwrap()
     };
-    let reward_amount = config.reward_rate * time_accrued;
+    msg!("time_accrued: {}", time_accrued);
+
+    let reward_per_sec = u32::try_from(config.reward_per_sec).unwrap();
+    let reward_denominator = u32::try_from(config.reward_denominator).unwrap();
+    let total_reward = reward_per_sec.safe_mul(time_accrued).unwrap();
+    let total_reward_denominated =
+        u64::try_from(total_reward.safe_div(reward_denominator).unwrap()).unwrap();
+    msg!("total_reward_denominated: {}", total_reward_denominated);
+    // let total_reward_to_pay = total_reward_denominated - user_state.reward_accrued;
+
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
             .with_signer(&[&config.auth_seeds()]),
-        reward_amount,
+        total_reward_denominated,
     )?;
 
     // record changes
     let config = &mut ctx.accounts.config;
-    config.reward_accrued = config.reward_accrued + reward_amount;
+    config.reward_accrued = config.reward_accrued + total_reward_denominated;
     let user_state = &mut ctx.accounts.user_state;
-    user_state.reward_accrued = user_state.reward_accrued + reward_amount;
+    user_state.reward_accrued = user_state.reward_accrued + total_reward_denominated;
     user_state.time_last_claim = now_ts()?;
 
-    msg!("instruction handler: ClaimStakingReward. user");
+    msg!("instruction handler: ClaimStakingReward");
     Ok(())
 }
