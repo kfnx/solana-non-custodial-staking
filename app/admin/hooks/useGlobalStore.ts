@@ -23,14 +23,30 @@ import {
   findStakeInfoPDA,
   findUserStatePDA,
 } from "../sdk/pda";
-import { PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/programId";
+import { TOKEN_METADATA_PROGRAM_ID } from "../sdk/programId";
 import { IDL, NcStaking } from "../sdk/nc_staking";
 import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
+import { PROGRAM_ID } from "../sdk";
+
+export enum Cluster {
+  LOCALHOST = "Localhost",
+  TESTNET = "Testnet",
+  DEVNET = "Devnet",
+  MAINNET = "Mainnet-beta",
+}
 
 type Network = {
   endpoint: string;
-  name: string;
+  name: Cluster;
 };
+
+export const networks: Network[] = [
+  { name: Cluster.LOCALHOST, endpoint: "http://localhost:8899" },
+  { name: Cluster.TESTNET, endpoint: "https://api.testnet.solana.com" },
+  { name: Cluster.DEVNET, endpoint: "https://api.devnet.solana.com" },
+  { name: Cluster.MAINNET, endpoint: "https://api.mainnet-beta.solana.com" },
+  // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
+];
 
 type CallbackOptions = {
   onStart?: () => void;
@@ -54,9 +70,11 @@ async function checkUserInitiated(
 interface GlobalState {
   // setters
   connection: Connection;
-  setConnection: (wallet: Connection) => void;
+  setConnection: (connection: Connection) => void;
   wallet: undefined | AnchorWallet;
   setWallet: (wallet: AnchorWallet) => void;
+  provider: undefined | AnchorProvider;
+  setProvider: (provider: AnchorProvider) => void;
   network: Network;
   setNetwork: (network: Network) => void;
   myNFT: INFT[];
@@ -88,8 +106,10 @@ interface GlobalState {
   claim: (cbOptions: CallbackOptions) => void;
 }
 
+const initialNetwork = networks[2];
+
 const useGlobalStore = create<GlobalState>((set, get) => ({
-  connection: new Connection("http://localhost:8899", {
+  connection: new Connection(initialNetwork.endpoint, {
     commitment: "confirmed",
   }),
   setConnection: (connection: Connection) => {
@@ -99,12 +119,25 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   setWallet: (wallet: AnchorWallet) => {
     set({ wallet });
   },
-  network: {
-    name: "Localhost",
-    endpoint: "http://localhost:8899",
-  },
+  provider: undefined,
+  setProvider: (provider: AnchorProvider) => set({ provider }),
+  network: initialNetwork,
   setNetwork: (network: Network) => {
-    set({ network });
+    const wallet = get().wallet;
+    if (!wallet) {
+      return toast.error("Wallet Not Connected");
+    }
+    console.log(`setNetwork`, network.name, network.endpoint);
+    const connection = new Connection(network.endpoint, {
+      commitment: "confirmed",
+      confirmTransactionInitialTimeout: 90000,
+    });
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    set({ network, provider, connection });
   },
   myNFT: [],
   fetchMyNFT: async () => {
@@ -145,12 +178,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    console.log("fetchStakingAccounts: ~ config", configId.toBase58());
     const [userStatePDA] = await findUserStatePDA(wallet.publicKey, configId);
-    console.log(
-      "fetchStakingAccounts: ~ userStatePDA",
-      userStatePDA.toBase58()
-    );
 
     const isUserInitiated = await checkUserInitiated(userStatePDA, program);
     set({ userInitiated: isUserInitiated });
@@ -216,9 +244,11 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
     try {
       const configs = await program.account.stakingConfig.all();
       set({
+        provider,
         configs,
         fetchConfigsLoading: false,
         fetchConfigsSuccess: true,

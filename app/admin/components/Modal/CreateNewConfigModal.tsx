@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "../LoadingSpinner";
 import { findConfigAuthorityPDA, findRewardPotPDA } from "../../sdk/pda";
 import { IDL, NcStaking } from "../../sdk/nc_staking";
-import { PROGRAM_ID } from "../../sdk/programId";
+import { PROGRAM_ID } from "../../sdk";
 
 interface CreateStakingConfigArgs {
   rewardMint: PublicKey;
@@ -31,7 +31,8 @@ interface CreateStakingConfigArgs {
 const createNewConfig = async (
   connection: Connection,
   wallet: AnchorWallet,
-  args: CreateStakingConfigArgs
+  args: CreateStakingConfigArgs,
+  config: Keypair = Keypair.generate()
 ) => {
   const {
     rewardPerSec,
@@ -49,7 +50,6 @@ const createNewConfig = async (
   // anchor.setProvider(provider);
   const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
-  const config = Keypair.generate();
   console.log("config", config.publicKey.toBase58());
   const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
     config.publicKey

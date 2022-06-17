@@ -5,10 +5,10 @@ import { getNFTsByOwner } from "../utils/getNFT";
 
 const useWalletNfts = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [nfts, setNfts] = useState<INFT[]>([]);
+
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-
-  const [nfts, setNfts] = useState<INFT[]>([]);
 
   useEffect(() => {
     if (!wallet) {

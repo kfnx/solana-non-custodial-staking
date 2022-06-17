@@ -3,7 +3,7 @@ import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import useGlobalStore from "../../hooks/useGlobalStore";
 import ConfigSelector from "../ConfigSelector";
-import UserNFT from "../UserNFT";
+import UserNFTs from "../UserNFTs";
 import { PublicKey } from "@solana/web3.js";
 
 const UnstakeModal: React.FC<{
@@ -89,7 +89,7 @@ const UnstakeModal: React.FC<{
                     <p className="block mb-2 text-sm text-gray-500">
                       Select NFT to unstake:
                     </p>
-                    <UserNFT
+                    <UserNFTs
                       selected={selectedNFT}
                       select={handleSelectNFT}
                       staked

@@ -1,15 +1,7 @@
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, SelectorIcon, GlobeAltIcon } from "@heroicons/react/solid";
-import useGlobalStore from "../hooks/useGlobalStore";
-
-const networks = [
-  { name: "Localhost", endpoint: "http://localhost:8899" },
-  { name: "Testnet", endpoint: "http://localhost:8899" },
-  { name: "Devnet", endpoint: "http://localhost:8899" },
-  { name: "Mainnet-beta", endpoint: "http://localhost:8899" },
-  { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
-];
+import useGlobalStore, { networks } from "../hooks/useGlobalStore";
 
 export default function NetworkSelector() {
   const network = useGlobalStore((state) => state.network);

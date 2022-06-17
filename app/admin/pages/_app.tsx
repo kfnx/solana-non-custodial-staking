@@ -45,7 +45,10 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
       <ErrorBoundary>
         <ConnectionProvider
           endpoint={network.endpoint}
-          config={{ commitment: "confirmed" }}
+          config={{
+            commitment: "confirmed",
+            confirmTransactionInitialTimeout: 60000,
+          }}
         >
           <WalletProvider
             wallets={wallets}

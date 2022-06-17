@@ -4,26 +4,31 @@ import { CheckIcon, LockClosedIcon } from "@heroicons/react/solid";
 import { PublicKey } from "@solana/web3.js";
 import useWalletNFT from "../hooks/useWalletNFT";
 
-const NFTImage: FC<{ src: string; alt: string }> = ({ src, alt }) => {
+const NFTImage: FC<{ src: string; alt: string; size: number }> = ({
+  src,
+  alt,
+  size,
+}) => {
   if (src) {
     return (
-      <Image src={src} alt={alt} width={128} height={128} layout="fixed" />
+      <Image src={src} alt={alt} width={size} height={size} layout="fixed" />
     );
   }
-  return <div className="w-32 h-32 bg-yellow" />;
+  return <div className={`w-[${size}px] h-[${size}px] bg-slate-500`} />;
 };
 
-const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
-  nft,
-  onClick,
-  selected,
-}) => {
+const NFTCard: FC<{
+  nft: INFT;
+  onClick?: any;
+  selected?: boolean;
+  size: number;
+}> = ({ nft, onClick, selected, size }) => {
   // const index = nft.externalMetadata.name.replace(/.*#/, "");
   const isFrozen = nft.state === "frozen";
 
   return (
     <div
-      className="relative flex flex-col items-center border p-4 hover:bg-black/20 cursor-pointer rounded-md"
+      className="relative flex flex-col items-center border p-1.5 hover:bg-black/20 cursor-pointer rounded-md"
       onClick={() => {
         if (typeof onClick === "function") {
           // if (isFrozen) {
@@ -39,10 +44,9 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
       <NFTImage
         src={nft.externalMetadata.image}
         alt={nft.externalMetadata.name}
+        size={size}
       />
-      <div className="flex justify-between mt-3 text-sm">
-        <p>{nft.externalMetadata.name}</p>
-      </div>
+      <small>{nft.externalMetadata.name}</small>
       {isFrozen && (
         <span className="absolute top-2 left-2 flex items-center text-blue-900">
           <LockClosedIcon className="h-8 w-8" aria-hidden="true" />
@@ -57,12 +61,19 @@ const MyNFTCard: FC<{ nft: INFT; onClick?: any; selected?: boolean }> = ({
   );
 };
 
-const UserNFT: React.FC<{
-  selected: undefined | PublicKey;
+const UserNFTs: React.FC<{
+  selected?: undefined | PublicKey;
   select?: Function;
   staked?: boolean;
   unstaked?: boolean;
-}> = ({ select = [], selected, staked = false, unstaked = false }) => {
+  cardSize?: number;
+}> = ({
+  select = [],
+  selected,
+  staked = false,
+  unstaked = false,
+  cardSize = 128,
+}) => {
   const { isLoading, isEmpty, nfts } = useWalletNFT();
 
   if (isLoading) {
@@ -86,8 +97,9 @@ const UserNFT: React.FC<{
           return true;
         })
         .map((nft) => (
-          <MyNFTCard
+          <NFTCard
             key={nft.mint.toString()}
+            size={cardSize}
             nft={nft}
             selected={selected?.toBase58() === nft.mint.toString()}
             onClick={select}
@@ -97,4 +109,4 @@ const UserNFT: React.FC<{
   );
 };
 
-export default UserNFT;
+export default UserNFTs;

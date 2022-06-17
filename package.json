@@ -20,7 +20,8 @@
         "setup:programid": "./scripts/update_program_id.sh",
         "keypair": "echo 📁 your local wallet keypair path: `solana config get | grep \"Keypair Path: \" | sed \"s/Keypair Path: //g\"`",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+        "test": "anchor test --provider.wallet $(solana config get | grep \"Keypair Path: \" | sed \"s/Keypair Path: //g\")"
     },
     "dependencies": {
         "@metaplex/js": "^4.12.0",

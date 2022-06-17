@@ -6,61 +6,16 @@ import {
   RefreshIcon,
   UserAddIcon,
 } from "@heroicons/react/solid";
+import toast from "react-hot-toast";
 import InitStakingModal from "./Modal/InitStakingModal";
 import useGlobalStore from "../hooks/useGlobalStore";
 import ConfigSelector from "./ConfigSelector";
 import StakeModal from "./Modal/StakeModal";
 import UnstakeModal from "./Modal/UnstakeModal";
 import ClaimModal from "./Modal/ClaimModal";
-import { unixTimeConverter } from "../utils/unixTimeConverter";
-
-const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
-  if (stakings.length === 0) {
-    return <span>No initiated staking found</span>;
-  }
-
-  return (
-    <>
-      {stakings.map((item: any, index) => (
-        <div key={item.publicKey} className="text-xs mt-4">
-          <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600 dark:text-gray-200">
-            {index + 1}
-          </span>
-          <div className="flex flex-column flex-wrap mt-2">
-            <div className="flex w-full justify-between my-0.5 bg-slate-200">
-              <span>PDA</span>
-              <span>{item.publicKey.toString()}</span>
-            </div>
-            {Object.keys(item.account).map((v, id) => {
-              const className = `flex w-full justify-between my-0.5${
-                id % 2 ? " bg-slate-200" : ""
-              }`;
-
-              if (v === "lastStakeTime" || v === "timeLastClaim") {
-                const unixTime = item.account[v].toNumber();
-                const time = unixTime ? unixTimeConverter(unixTime) : "Never";
-                return (
-                  <div key={id} className={className}>
-                    <span>{v}</span>
-                    <span>
-                      {unixTime} | {time}
-                    </span>
-                  </div>
-                );
-              }
-              return (
-                <div key={id} className={className}>
-                  <span>{v}</span>
-                  <span>{item.account[v].toString()}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </>
-  );
-};
+import UserNFTs from "./UserNFTs";
+import UserStakings from "./UserStakings";
+import mintWhitelistedNFTs from "../utils/mintWhitelistedNFTs";
 
 export default function User() {
   const [showInitStake, setShowInitStake] = useState(false);
@@ -101,7 +56,36 @@ export default function User() {
 
   return (
     <div className="text-sm">
-      <h2 className="mt-2 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
+      <h2 className="mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
+        User NFTs
+      </h2>
+      <hr className="-mt-3 mb-4" />
+      <UserNFTs cardSize={48} />
+
+      <h2 className="mt-4 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
+        Minting
+      </h2>
+      <hr className="-mt-3 mb-4" />
+      <div className="my-2">
+        <p className="block mb-2 text-sm text-gray-500">Creator Address</p>
+        <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
+          6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+        </div>
+      </div>
+      <button
+        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
+        onClick={() =>
+          toast.promise(mintWhitelistedNFTs(), {
+            loading: "Minting..",
+            success: "Minting Finished",
+            error: "Minting Failed",
+          })
+        }
+      >
+        Mint whitelisted NFTs
+      </button>
+
+      <h2 className="mt-4 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
         Staking
       </h2>
       <hr className="-mt-3 mb-4" />
@@ -176,7 +160,6 @@ export default function User() {
           </button>
         </h2>
         <hr className="-mt-3 mb-4" />
-
         <UserStakings stakings={myInitiatedStakings} />
 
         <h2 className="mt-8 my-4">
@@ -194,7 +177,6 @@ export default function User() {
           </button>
         </h2>
         <hr className="-mt-3 mb-4" />
-
         <UserStakings stakings={users} />
       </div>
       <InitStakingModal isOpen={showInitStake} setIsOpen={setShowInitStake} />
