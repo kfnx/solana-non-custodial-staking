@@ -75,6 +75,9 @@ describe("User journey", () => {
   const NFTmint = Keypair.generate();
 
   describe("Dev create NFT and setup staking config", () => {
+    const rpcEndpoint = anchor.AnchorProvider.env().connection.rpcEndpoint;
+    console.log("rpcEndpoint:", rpcEndpoint);
+
     it("User Dev created", async () => {
       // console.log("Dev address", dev.keypair.publicKey.toBase58());
       await airdropUser(dev.wallet.publicKey);
