@@ -1,6 +1,5 @@
 import * as anchor from "@project-serum/anchor";
 import {
-  clusterApiUrl,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -10,7 +9,6 @@ import {
 import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { assert } from "chai";
 import {
-  createUser,
   allSynchronously,
   findConfigAuthorityPDA,
   findRewardPotPDA,
