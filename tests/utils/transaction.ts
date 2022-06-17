@@ -2,11 +2,11 @@ import * as anchor from "@project-serum/anchor";
 import {
   getMinimumBalanceForRentExemptMint,
   TOKEN_PROGRAM_ID,
+  getOrCreateAssociatedTokenAccount,
+  transfer,
+  createInitializeMintInstruction,
+  MintLayout,
 } from "@solana/spl-token";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
-import { transfer } from "@solana/spl-token";
-import { createInitializeMintInstruction } from "@solana/spl-token";
-import { MintLayout } from "@solana/spl-token";
 import {
   Keypair,
   PublicKey,
@@ -15,8 +15,11 @@ import {
 } from "@solana/web3.js";
 import { createUser } from "./user";
 
-export async function createToken(creator: Keypair, token: Keypair) {
-  const provider = anchor.AnchorProvider.env();
+export async function createToken(
+  creator: Keypair,
+  token: Keypair,
+  provider = anchor.AnchorProvider.env()
+) {
   const connection = provider.connection;
   const create_mint_tx = new Transaction({
     feePayer: creator.publicKey,

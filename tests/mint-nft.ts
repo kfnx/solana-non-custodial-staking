@@ -1,4 +1,7 @@
+import * as anchor from "@project-serum/anchor";
 import {
+  clusterApiUrl,
+  Connection,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -15,31 +18,21 @@ import {
 import {
   getTokenBalanceByATA,
   createMetadata,
-  createUser,
   allSynchronously,
   airdropUser,
   findUserATA,
 } from "./utils";
-import { assert } from "chai";
 import { transferToken } from "./utils/transaction";
 
-/**
- * This script can be used outside test by changing Anchor.toml test to target this file only
- * then run command below with your preferred cluster and wallet:
- * anchor test --provider.cluster localnet --provider.wallet $SOLANA_CONFIG_PATH/id.json --skip-deploy --skip-local-validator --skip-build --skip-lint
- */
-const NFTcreator = createUser(
-  Keypair.fromSecretKey(
-    Uint8Array.from(
-      // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
-      [
-        46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156,
-        176, 71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222,
-        171, 222, 87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127,
-        111, 117, 250, 132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134, 82,
-        70, 103, 165, 27,
-      ]
-    )
+const NFTcreator = Keypair.fromSecretKey(
+  Uint8Array.from(
+    // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+    [
+      46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156, 176,
+      71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222, 171, 222,
+      87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127, 111, 117, 250,
+      132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134, 82, 70, 103, 165, 27,
+    ]
   )
 );
 
@@ -119,21 +112,19 @@ const createNFT = async (
     uri: string;
     sellerFeeBasisPoints: number;
     creators: any[];
-  }
+  },
+  provider: anchor.AnchorProvider
 ) => {
-  const NFTcreator = createUser(creator);
   const create_mint_tx = new Transaction({
-    feePayer: NFTcreator.wallet.publicKey,
+    feePayer: creator.publicKey,
   });
 
   create_mint_tx.add(
     SystemProgram.createAccount({
-      fromPubkey: NFTcreator.wallet.publicKey,
+      fromPubkey: creator.publicKey,
       newAccountPubkey: mint.publicKey,
       space: MintLayout.span,
-      lamports: await getMinimumBalanceForRentExemptMint(
-        NFTcreator.provider.connection
-      ),
+      lamports: await getMinimumBalanceForRentExemptMint(connection),
       programId: TOKEN_PROGRAM_ID,
     })
   );
@@ -141,59 +132,59 @@ const createNFT = async (
     createInitializeMintInstruction(
       mint.publicKey, // mint pubkey
       0, // decimals
-      NFTcreator.wallet.publicKey, // mint authority
-      NFTcreator.wallet.publicKey, // freeze authority (if you don't need it, you can set `null`)
+      creator.publicKey, // mint authority
+      creator.publicKey, // freeze authority (if you don't need it, you can set `null`)
       TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
     )
   );
 
-  const create_mint_tx_sig = await NFTcreator.provider.sendAndConfirm(
-    create_mint_tx,
-    [NFTcreator.keypair, mint]
-  );
+  const create_mint_tx_sig = await provider.sendAndConfirm(create_mint_tx, [
+    creator,
+    mint,
+  ]);
   // console.log("create mint tx", create_mint_tx_sig);
 
   const NFTcreatorATA = await getOrCreateAssociatedTokenAccount(
-    NFTcreator.provider.connection,
-    NFTcreator.wallet.payer,
+    provider.connection,
+    creator,
     mint.publicKey,
-    NFTcreator.wallet.publicKey
+    creator.publicKey
   );
 
   // console.log("create and init ATA", NFTcreatorATA.address.toBase58());
 
   const mint_token_tx = new Transaction({
-    feePayer: NFTcreator.wallet.publicKey,
+    feePayer: creator.publicKey,
   });
 
   mint_token_tx.add(
     createMintToInstruction(
       mint.publicKey, // mint
       NFTcreatorATA.address, // receiver (should be a token account)
-      NFTcreator.wallet.publicKey, // mint authority
+      creator.publicKey, // mint authority
       1, // amount. if your decimals is 8, you mint 10^8 for 1 token.
       [], // only multisig account will use. leave it empty now.
       TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
     )
   );
 
-  const mint_token_tx_sig = await NFTcreator.provider.sendAndConfirm(
-    mint_token_tx,
-    [NFTcreator.keypair]
-  );
-  // console.log("mint tx", mint_token_tx_sig);
+  const mint_token_tx_sig = await provider.sendAndConfirm(mint_token_tx, [
+    creator,
+  ]);
+  console.log("mint tx", mint_token_tx_sig);
 
   // const ataBalance = await getTokenBalanceByATA(
-  //   NFTcreator.provider.connection,
+  //   connection,
   //   NFTcreatorATA.address
   // );
   // console.log("mint", mint.publicKey.toBase58());
   // console.log("ATA", NFTcreatorATA.address.toBase58());
   // console.log("balance", ataBalance);
 
+  const anchorWallet = new anchor.Wallet(creator);
   const metadata = await createMetadata(
-    NFTcreator.provider.connection,
-    NFTcreator.wallet,
+    connection,
+    anchorWallet,
     mint.publicKey,
     {
       totalCreatorsN: 5,
@@ -204,46 +195,51 @@ const createNFT = async (
     meta
   );
 
-  // console.log("metadata", metadata.toBase58());
+  console.log("metadata", metadata.toBase58());
   console.log(
     `🔗 https://explorer.solana.com/address/${mint.publicKey}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`
   );
   console.log(`✅ finish creating NFT`, meta.name);
 };
 
-describe("Generate Meekolony NFTs", () => {
-  it("Create mint and metadata", async () => {
-    console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
-    await airdropUser(userId);
-    console.log("NFT holder address", userId.toBase58());
+// const programId = new PublicKey("stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW");
+const connection = new Connection(clusterApiUrl("devnet"));
+const anchorWallet = new anchor.Wallet(NFTcreator);
+const provider = new anchor.AnchorProvider(
+  connection,
+  anchorWallet,
+  anchor.AnchorProvider.defaultOptions()
+);
 
-    await allSynchronously(
-      allJsonMetadata.map((meta) => async () => {
-        const mint = Keypair.generate();
+(async () => {
+  console.log("Creator address", NFTcreator.publicKey.toBase58());
 
-        await createNFT(NFTcreator.keypair, mint, meta);
+  await airdropUser(userId);
+  console.log("NFT holder address", userId.toBase58());
 
-        // verify
-        const createdATA = await findUserATA(
-          NFTcreator.keypair.publicKey,
-          mint.publicKey
-        );
-        const createdATAbalance = await getTokenBalanceByATA(
-          NFTcreator.provider.connection,
-          createdATA
-        );
-        assert.equal(createdATAbalance, 1, "token amount 1");
+  await allSynchronously(
+    allJsonMetadata.map((meta) => async () => {
+      const mint = Keypair.generate();
 
-        await transferToken(NFTcreator.keypair, userId, mint.publicKey);
+      await createNFT(NFTcreator, mint, meta, provider);
 
-        // verify
-        const userATA = await findUserATA(userId, mint.publicKey);
-        const userATAbalance = await getTokenBalanceByATA(
-          NFTcreator.provider.connection,
-          userATA
-        );
-        assert.equal(userATAbalance, 1, "token amount 1");
-      })
-    );
-  });
-});
+      // verify
+      const createdATA = await findUserATA(
+        NFTcreator.publicKey,
+        mint.publicKey
+      );
+      const createdATAbalance = await getTokenBalanceByATA(
+        connection,
+        createdATA
+      );
+      console.log(createdATAbalance, 1, "token amount 1");
+
+      await transferToken(NFTcreator, userId, mint.publicKey);
+
+      // verify
+      const userATA = await findUserATA(userId, mint.publicKey);
+      const userATAbalance = await getTokenBalanceByATA(connection, userATA);
+      console.log(userATAbalance, 1, "token amount 1");
+    })
+  );
+})();

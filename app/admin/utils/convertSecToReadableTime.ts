@@ -1,5 +1,4 @@
 export function convertSecondsToReadableTime(seconds: number) {
-  console.log(`convertSecondsToReadableTime`, seconds);
   seconds = seconds || 0;
   seconds = Number(seconds);
   seconds = Math.abs(seconds);
@@ -26,7 +25,6 @@ export function convertSecondsToReadableTime(seconds: number) {
     parts.push(s + " Second" + (s > 1 ? "s" : ""));
   }
 
-  console.log(seconds, d, h, m, s);
   return parts.join(", ");
 }
 

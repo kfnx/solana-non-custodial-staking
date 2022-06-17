@@ -15,7 +15,3 @@ export const AUCTION_PROGRAM_ID = new PublicKey(
 export const METAPLEX_PROGRAM_ID = new PublicKey(
   "p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98"
 );
-
-export const PROGRAM_ID = new PublicKey(
-  "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
-);

@@ -4,8 +4,8 @@ import { programs } from "@metaplex/js";
 import { NcStaking } from "../../target/types/nc_staking";
 import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 
-const { programId: PROGRAM_ID } = anchor.workspace
-  .NcStaking as anchor.Program<NcStaking>;
+// const { programId: PROGRAM_ID } = anchor.workspace
+//   .NcStaking as anchor.Program<NcStaking>;
 
 export const findUserStatePDA = async (
   user: PublicKey,
@@ -14,7 +14,7 @@ export const findUserStatePDA = async (
 ) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
-    programId || PROGRAM_ID
+    programId
   );
 };
 
@@ -24,7 +24,7 @@ export const findDelegateAuthPDA = async (
 ) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
-    programId || PROGRAM_ID
+    programId
   );
 };
 
@@ -34,7 +34,7 @@ export const findConfigAuthorityPDA = async (
 ) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("config"), config.toBytes()],
-    programId || PROGRAM_ID
+    programId
   );
 };
 
@@ -45,7 +45,7 @@ export const findRewardPotPDA = (
 ) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
-    programId || PROGRAM_ID
+    programId
   );
 };
 
@@ -72,6 +72,6 @@ export const findStakeInfoPDA = async (
 ) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("stake_info"), user.toBytes(), mint.toBytes()],
-    programId || PROGRAM_ID
+    programId
   );
 };

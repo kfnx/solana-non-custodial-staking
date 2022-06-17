@@ -1,5 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import {
+  clusterApiUrl,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -15,12 +16,13 @@ import {
   findRewardPotPDA,
 } from "./utils";
 import { createToken } from "./utils/transaction";
-import { NcStaking } from "../target/types/nc_staking";
+import { NcStaking, IDL } from "../target/types/nc_staking";
 
 /**
- * to make this work change Anchor.toml test = with this file and run anchor test
- * the command to run for me is `anchor test --provider.wallet $SOLANA_CONFIG_PATH/id.json --skip-deploy --skip-local-validator --skip-build --skip-lint`
- * because i want to run this on top of a running local solana node
+ * This script can be used outside test by changing Anchor.toml test to target this file only
+ * then run command below with your preferred cluster and wallet:
+ * anchor test --provider.cluster localnet --provider.wallet $SOLANA_CONFIG_PATH/id.json --skip-deploy --skip-local-validator --skip-build --skip-lint
+ * ⚠️ change all provider and connection according to cluster if you use non-localhost
  */
 const dev = createUser(
   Keypair.fromSecretKey(
@@ -34,7 +36,8 @@ const dev = createUser(
         70, 103, 165, 27,
       ]
     )
-  )
+  ),
+  new anchor.web3.Connection(clusterApiUrl("devnet"))
 );
 
 const rewardToken = Keypair.fromSecretKey(
@@ -287,17 +290,23 @@ describe("Generate staking configs", () => {
   console.log("Dev/admin address", dev.wallet.publicKey.toBase58());
   console.log("rewardToken address", rewardToken.publicKey.toBase58());
 
-  it("Create token", async () => {
-    await createToken(dev.keypair, rewardToken);
-  });
+  // const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+  const anchorProgram = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+  const program = new anchor.Program(
+    IDL,
+    anchorProgram.programId,
+    dev.provider
+  );
+
+  // it("Create token", async () => {
+  //   await createToken(dev.keypair, rewardToken, dev.provider);
+  // });
 
   it("Create Configs", async () => {
-    const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
     const prevTotalConfigs = (await program.account.stakingConfig.all()).length;
 
     await allSynchronously(
       configs.map((config) => async () => {
-        const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
         await createStakingConfig(
           dev.keypair,
           config.keypair,
