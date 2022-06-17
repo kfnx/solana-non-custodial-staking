@@ -22,93 +22,13 @@ import {
 } from "./utils";
 import { assert } from "chai";
 import { transferToken } from "./utils/transaction";
+import { store } from "./0-constants";
 
 /**
  * This script can be used outside test by changing Anchor.toml test to target this file only
  * then run command below with your preferred cluster and wallet:
  * anchor test --provider.cluster localnet --provider.wallet $SOLANA_CONFIG_PATH/id.json --skip-deploy --skip-local-validator --skip-build --skip-lint
  */
-const NFTcreator = createUser(
-  Keypair.fromSecretKey(
-    Uint8Array.from(
-      // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
-      [
-        46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156,
-        176, 71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222,
-        171, 222, 87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127,
-        111, 117, 250, 132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134, 82,
-        70, 103, 165, 27,
-      ]
-    )
-  )
-);
-
-const userId = new PublicKey("HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL");
-const allJsonMetadata = [
-  {
-    name: "Meekolony #1",
-    symbol: "MKLN",
-    uri: "https://arweave.net/4d1CV1GnALTT2iTyi1UiNc6AOrsL8h-sPAyVyNMlU4k",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #2",
-    symbol: "MKLN",
-    uri: "https://arweave.net/afxkSsnbrtCNAvbkqlCqjURUbBUSBDn_RMl1Dbq9YX8",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #3",
-    symbol: "MKLN",
-    uri: "https://arweave.net/I1Im-DDcnzEuLmB7Wiz1y3FknR0MwIwMVslDILHBr-g",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #4",
-    symbol: "MKLN",
-    uri: "https://arweave.net/RrE0HPbnv1HVVdF_DqQiFPA0YCDPli-_6zW45CBRPGc",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #5",
-    symbol: "MKLN",
-    uri: "https://arweave.net/WmQQC3iUXPuRvt6xsR9dI0ARbB2IJbON_NTB-y9clQw",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #6",
-    symbol: "MKLN",
-    uri: "https://arweave.net/1n6w6-FcZE3VO1HBNRW_T_Cvx9U3C0RVN54sFVlq3sw",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #7",
-    symbol: "MKLN",
-    uri: "https://arweave.net/O_4JMAd92XQ7_jo3CXJFSlR9eHMXvnVmDHhgkPk2nwc",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #8",
-    symbol: "MKLN",
-    uri: "https://arweave.net/2giACek19RaYiEPJcBdOgzyCYC_QHMf9i7qgnT3r8-U",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #9",
-    symbol: "MKLN",
-    uri: "https://arweave.net/xREW2gypD8FlI59fDJtigYSMm01YZTnSXBUTQ7vkY0",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-];
 
 const createNFT = async (
   creator: Keypair,
@@ -212,16 +132,16 @@ const createNFT = async (
 };
 
 describe("Generate Meekolony NFTs", () => {
+  const { justin, NFTcreator, nfts } = store;
+  const userId = justin.keypair.publicKey;
   it("Create mint and metadata", async () => {
     console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
     await airdropUser(userId);
     console.log("NFT holder address", userId.toBase58());
 
     await allSynchronously(
-      allJsonMetadata.map((meta) => async () => {
-        const mint = Keypair.generate();
-
-        await createNFT(NFTcreator.keypair, mint, meta);
+      nfts.map(({ mint, metadata }) => async () => {
+        await createNFT(NFTcreator.keypair, mint, metadata);
 
         // verify
         const createdATA = await findUserATA(
