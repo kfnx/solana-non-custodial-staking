@@ -13,13 +13,13 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
             {index + 1}
           </span>
           <div className="flex flex-column flex-wrap mt-2">
-            <div className="flex w-full justify-between my-0.5 bg-slate-200">
+            <div className="flex w-full justify-between my-0.5 bg-slate-200 dark:bg-slate-500/75">
               <span>PDA</span>
               <span>{item.publicKey.toString()}</span>
             </div>
             {Object.keys(item.account).map((v, id) => {
               const className = `flex w-full justify-between my-0.5${
-                id % 2 ? " bg-slate-200" : ""
+                id % 2 ? " bg-slate-200 dark: bg-slate-500/75" : ""
               }`;
 
               if (v === "lastStakeTime" || v === "timeLastClaim") {
