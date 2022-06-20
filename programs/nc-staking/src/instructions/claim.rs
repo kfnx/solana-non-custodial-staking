@@ -59,12 +59,14 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         if user_state.last_stake_time == 0 {
             return Err(error!(errors::ErrorCode::UserNeverStake));
         }
-        u32::try_from(now_ts()?.safe_sub(user_state.last_stake_time)?).unwrap()
+        u64::try_from(now_ts()?.safe_sub(user_state.last_stake_time)?).unwrap()
     };
     msg!("time_accrued: {}", time_accrued);
 
-    let reward_per_sec = u32::try_from(config.reward_per_sec).unwrap();
-    let reward_denominator = u32::try_from(config.reward_denominator).unwrap();
+    let reward_per_sec = u64::try_from(config.reward_per_sec).unwrap();
+    msg!("reward_per_sec: {}", reward_per_sec);
+    let reward_denominator = u64::try_from(config.reward_denominator).unwrap();
+    msg!("reward_denominator: {}", reward_denominator);
     let total_reward = reward_per_sec.safe_mul(time_accrued).unwrap();
     let total_reward_denominated =
         u64::try_from(total_reward.safe_div(reward_denominator).unwrap()).unwrap();
