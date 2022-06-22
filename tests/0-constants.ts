@@ -169,6 +169,7 @@ export const store = {
         ])
       ),
     },
+    /* commented because more configs means more time to test. uncomment if you need more configs to test
     {
       // 1 / Day
       option: {
@@ -264,6 +265,7 @@ export const store = {
         ])
       ),
     },
+    */
   ] as StakingConfig[],
   nfts: [
     {
@@ -306,6 +308,7 @@ export const store = {
         creators: [],
       },
     },
+    /* commented because more nft means more time to test. uncomment if you need more nft to test
     {
       mint: Keypair.generate(),
       metadata: {
@@ -356,5 +359,6 @@ export const store = {
         creators: [],
       },
     },
+    */
   ],
 };

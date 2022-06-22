@@ -2,6 +2,14 @@ Non custodial staking program
 
 program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 
+<br/>
+<p align="center">
+  <img 
+    src="https://cdn.discordapp.com/attachments/897388963671736340/984288487551422554/Screenshot_2022-06-09_at_09.50.45.png"
+  >
+</p>
+<br/>
+
 ## Getting started
 
 - Install all the toolchain, for quick guide check out [anchor istallation](https://project-serum.github.io/anchor/getting-started/installation.html#install-rust)
@@ -32,14 +40,17 @@ To deploy with original program id, you need the original keypair. If you dont h
 ## Frontend App
 
 Currently we have two web app that interact with this contract:
+
 - [Admin](app/admin/README.md): For Admin or Stake manager to create staking configuration, monitor stakers and other statistics.
 - [Tatsumeeko Staking Page](https://github.com/tatsuworks/mkln/tree/pre-staking/pages/meekolony/stake): Tatsumeeko customer facing staking app
 
 ## Typescript SDK
 
 We use [solita](https://github.com/metaplex-foundation/solita) to generate ts SDK to be consumed by frontend web client
+
 - Run `yarn solita` to and sdk folder will be generated at `app/admin/sdk/` to be used by admin web app.
 - modify `.solitarc` sdk output dir and re-run yarn solita to change generated sdk output for another use case.
 
 ## Misc cli commands
+
 spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs 1 tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr

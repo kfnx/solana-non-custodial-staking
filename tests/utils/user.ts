@@ -16,7 +16,6 @@ export interface User {
   keypair: Keypair;
   wallet: anchor.Wallet;
   provider: anchor.AnchorProvider;
-  state: any;
 }
 
 /**
@@ -38,7 +37,6 @@ export function createUser(
     keypair,
     wallet,
     provider,
-    state: {},
   };
 }
 

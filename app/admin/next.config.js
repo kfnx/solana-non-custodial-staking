@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["c.tenor.com", "www.arweave.net"],
+    domains: ["c.tenor.com", "www.arweave.net", "arweave.net"],
   },
 };
 

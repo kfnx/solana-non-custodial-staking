@@ -59,3 +59,8 @@ export function convertSecondsToReadableTime(seconds: number) {
 
   return parts.join(", ");
 }
+
+export function timeNow() {
+  const time = new Date();
+  return `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+}
