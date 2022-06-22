@@ -9,7 +9,9 @@ import {
 import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { assert } from "chai";
 import {
+  airdropUser,
   allSynchronously,
+  checkBalance,
   findConfigAuthorityPDA,
   findRewardPotPDA,
 } from "./utils";
@@ -81,12 +83,10 @@ const checkConfigResult = async (
   assert.ok(account.creatorWhitelist.equals(creator.publicKey));
 };
 
+console.log(anchor.AnchorProvider.env().connection.rpcEndpoint);
+
 describe("Generate staking configs", () => {
   const { dev, rewardToken, configs } = store;
-  console.log("Dev/admin address", dev.wallet.publicKey.toBase58());
-  console.log("rewardToken address", rewardToken.publicKey.toBase58());
-
-  // const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const anchorProgram = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const program = new anchor.Program(
     IDL,
@@ -95,7 +95,14 @@ describe("Generate staking configs", () => {
   );
 
   it("Create token", async () => {
+    await airdropUser(dev.wallet.publicKey);
+    console.log(
+      "Dev/admin address",
+      dev.wallet.publicKey.toBase58(),
+      await checkBalance(dev.wallet.publicKey)
+    );
     await createToken(dev.keypair, rewardToken, dev.provider);
+    console.log("rewardToken address", rewardToken.publicKey.toBase58());
   });
 
   it("Create Configs", async () => {

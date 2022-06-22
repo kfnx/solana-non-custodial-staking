@@ -276,7 +276,7 @@ const createNFT = async (
 
 const mintWhitelistedNFTs = async () => {
   try {
-    const { config, configs, wallet, provider } = useGlobalStore.getState();
+    const { wallet, provider } = useGlobalStore.getState();
     if (!wallet) {
       return toast.error("Wallet not connected");
     }

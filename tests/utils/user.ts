@@ -51,6 +51,17 @@ export async function airdropUser(
   await connection.confirmTransaction(sig);
 }
 
+export async function checkBalance(
+  publicKey: PublicKey,
+  connection: Connection = anchor.AnchorProvider.env().connection
+): Promise<number> {
+  try {
+    return (await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL;
+  } catch (error) {
+    return 0;
+  }
+}
+
 export function createUsers(connection: Connection, numUsers: number) {
   for (let i = 0; i < numUsers; i++) createUser(undefined, connection);
 }

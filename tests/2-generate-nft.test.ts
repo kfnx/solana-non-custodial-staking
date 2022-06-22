@@ -14,6 +14,7 @@ import {
   allSynchronously,
   airdropUser,
   findUserATA,
+  checkBalance,
 } from "./utils";
 import { assert } from "chai";
 import { transferToken } from "./utils/transaction";
@@ -130,9 +131,17 @@ describe("Generate Meekolony NFTs", () => {
   const { justin, NFTcreator, nfts } = store;
   const userId = justin.keypair.publicKey;
   it("Create mint and metadata", async () => {
-    console.log("Creator address", NFTcreator.wallet.publicKey.toBase58());
+    console.log(
+      "Creator address",
+      NFTcreator.wallet.publicKey.toBase58(),
+      await checkBalance(NFTcreator.wallet.publicKey)
+    );
     await airdropUser(userId);
-    console.log("NFT holder address", userId.toBase58());
+    console.log(
+      "NFT holder address",
+      userId.toBase58(),
+      await checkBalance(userId)
+    );
 
     await allSynchronously(
       nfts.map(({ mint, metadata }) => async () => {
