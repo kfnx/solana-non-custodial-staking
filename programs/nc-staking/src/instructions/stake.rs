@@ -147,6 +147,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     }
 
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
+    msg!("user_state.nfts_staked: {}", user_state.nfts_staked);
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
@@ -157,15 +158,14 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     } else {
         u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
     };
-    msg!("prev stake time_accrued {:?}", time_accrued);
-
     let prev_stake_reward = calc_reward(
         user_state.nfts_staked,
         config.reward_per_sec,
         config.reward_denominator,
         time_accrued,
     );
-    msg!("prev stake reward stored {:?}", prev_stake_reward);
+    msg!("prev stake reward stored {}", prev_stake_reward);
+    // TODO: calc recurring reward store (?)
     user_state.reward_stored = prev_stake_reward;
     user_state.time_last_stake = now_ts()?;
 

@@ -1,4 +1,6 @@
-use crate::{errors::ErrorCode, mpl, state::*, utils::now_ts};
+use crate::{
+    claim::calc_reward, errors::ErrorCode, mpl, safe_math::SafeMath, state::*, utils::now_ts,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -110,8 +112,21 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
     msg!("instruction handler: Thaw");
 
-    // TODO: store reward here for claim later.
-
+    // store prev stake reward
+    let time_accrued = if user_state.time_last_stake == 0 {
+        0
+    } else {
+        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
+    };
+    let prev_stake_reward = calc_reward(
+        user_state.nfts_staked,
+        config.reward_per_sec,
+        config.reward_denominator,
+        time_accrued,
+    );
+    msg!("prev stake reward stored {}", prev_stake_reward);
+    user_state.reward_stored = prev_stake_reward;
+    user_state.time_last_stake = now_ts()?;
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
 
     let config = &mut ctx.accounts.config;

@@ -85,6 +85,14 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         return Err(error!(errors::ErrorCode::UserNeverStake));
     }
 
+    msg!(
+        "user_state.time_last_stake {}",
+        user_state.time_last_stake
+    );
+    msg!(
+        "user_state.time_last_claim {}",
+        user_state.time_last_claim
+    );
     let time_accrued = if user_state.time_last_stake > user_state.time_last_claim {
         u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
     } else {
