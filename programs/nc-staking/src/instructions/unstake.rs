@@ -44,21 +44,21 @@ fn assert_unstake_allowed<'info>(
         config.staking_lock_duration_in_sec
     );
     msg!(
-        "stake_info_acc.staking_start_time {}",
-        stake_info.staking_start_time
+        "stake_info_acc.time_staking_start {}",
+        stake_info.time_staking_start
     );
 
     if stake_info.config != config.key() {
         return Err(error!(ErrorCode::InvalidStakingConfig));
     }
 
-    if stake_info.staking_start_time == 0 {
+    if stake_info.time_staking_start == 0 {
         return Err(error!(ErrorCode::EmptyVault));
     }
 
     let time_now = now_ts()?;
     msg!("time_now {}", time_now);
-    let time_before_unlock = stake_info.staking_start_time + config.staking_lock_duration_in_sec;
+    let time_before_unlock = stake_info.time_staking_start + config.staking_lock_duration_in_sec;
     msg!("time_before_unlock {}", time_before_unlock);
     if time_before_unlock > time_now {
         msg!("STAKE LOCKED");
@@ -121,7 +121,7 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
 
     // clear stake info
     let stake_info = &mut ctx.accounts.stake_info;
-    stake_info.staking_start_time = 0;
+    stake_info.time_staking_start = 0;
 
     msg!("instruction handler: Unstake");
     Ok(())

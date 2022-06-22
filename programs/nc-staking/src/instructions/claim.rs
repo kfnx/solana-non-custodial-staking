@@ -50,28 +50,51 @@ impl<'info> ClaimStakingReward<'info> {
     }
 }
 
+pub fn calc_reward(
+    nfts_staked: u64,
+    reward_per_sec: u64,
+    reward_denominator: u64,
+    time_accrued: u64,
+) -> u64 {
+    msg!("time_accrued: {}", time_accrued);
+    let reward_per_sec = u64::try_from(reward_per_sec).unwrap();
+    msg!("reward_per_sec: {}", reward_per_sec);
+    let reward_denominator = u64::try_from(reward_denominator).unwrap();
+    msg!("reward_denominator: {}", reward_denominator);
+    let nfts_staked = u64::try_from(nfts_staked).unwrap();
+    msg!("nfts_staked: {}", nfts_staked);
+
+    let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
+    msg!("reward * time: {}", reward_multiplied_by_time);
+    let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
+    msg!("reward * time * nft: {}", reward_multiplied_by_all_nft);
+    let total_reward = u64::try_from(
+        reward_multiplied_by_all_nft
+            .safe_div(reward_denominator)
+            .unwrap(),
+    )
+    .unwrap();
+    msg!("total_reward: {}", total_reward);
+    return total_reward;
+}
+
 pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     let config = &ctx.accounts.config;
     let user_state = &ctx.accounts.user_state;
 
-    // transfer
     let time_accrued = {
-        if user_state.last_stake_time == 0 {
+        if user_state.time_last_stake == 0 {
             return Err(error!(errors::ErrorCode::UserNeverStake));
         }
-        u64::try_from(now_ts()?.safe_sub(user_state.last_stake_time)?).unwrap()
+        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
     };
-    msg!("time_accrued: {}", time_accrued);
 
-    let reward_per_sec = u64::try_from(config.reward_per_sec).unwrap();
-    msg!("reward_per_sec: {}", reward_per_sec);
-    let reward_denominator = u64::try_from(config.reward_denominator).unwrap();
-    msg!("reward_denominator: {}", reward_denominator);
-    let total_reward = reward_per_sec.safe_mul(time_accrued).unwrap();
-    let total_reward_denominated =
-        u64::try_from(total_reward.safe_div(reward_denominator).unwrap()).unwrap();
-    msg!("total_reward_denominated: {}", total_reward_denominated);
-    // let total_reward_to_pay = total_reward_denominated - user_state.reward_accrued;
+    let total_reward_denominated = calc_reward(
+        user_state.nfts_staked,
+        config.reward_per_sec,
+        config.reward_denominator,
+        time_accrued,
+    );
 
     token::transfer(
         ctx.accounts

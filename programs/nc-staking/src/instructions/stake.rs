@@ -105,6 +105,10 @@ fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
     Err(error!(ErrorCode::NotWhitelisted))
 }
 
+// fn store_prev_staking_reward(ctx: &Context<Stake>) -> Result<()> {
+//     Ok(())
+// }
+
 pub fn handler(ctx: Context<Stake>) -> Result<()> {
     assert_whitelist(&ctx)?;
 
@@ -146,7 +150,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         return Err(error!(ErrorCode::InvalidUserState));
     }
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
-    user_state.last_stake_time = now_ts()?;
+    user_state.time_last_stake = now_ts()?;
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
@@ -157,10 +161,12 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
 
     msg!("instruction handler: Stake");
 
+    // store_prev_staking_reward();
+
     let stake_info = &mut *ctx.accounts.stake_info;
-    stake_info.staking_start_time = now_ts()?;
+    stake_info.time_staking_start = now_ts()?;
     stake_info.config = ctx.accounts.config.key();
 
-    msg!("stake begin at: {}", stake_info.staking_start_time);
+    msg!("stake begin at: {}", stake_info.time_staking_start);
     Ok(())
 }
