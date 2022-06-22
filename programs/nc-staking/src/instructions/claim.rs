@@ -63,7 +63,6 @@ pub fn calc_reward(
     msg!("reward_denominator: {}", reward_denominator);
     let nfts_staked = u64::try_from(nfts_staked).unwrap();
     msg!("nfts_staked: {}", nfts_staked);
-
     let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
     msg!("reward * time: {}", reward_multiplied_by_time);
     let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
@@ -82,33 +81,40 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     let config = &ctx.accounts.config;
     let user_state = &ctx.accounts.user_state;
 
-    let time_accrued = {
-        if user_state.time_last_stake == 0 {
-            return Err(error!(errors::ErrorCode::UserNeverStake));
-        }
+    if user_state.time_last_stake == 0 {
+        return Err(error!(errors::ErrorCode::UserNeverStake));
+    }
+
+    let time_accrued = if user_state.time_last_stake > user_state.time_last_claim {
         u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
+    } else {
+        u64::try_from(now_ts()?.safe_sub(user_state.time_last_claim)?).unwrap()
     };
 
-    let total_reward_denominated = calc_reward(
+    let reward_stored = u64::try_from(user_state.reward_stored).unwrap();
+    let reward = calc_reward(
         user_state.nfts_staked,
         config.reward_per_sec,
         config.reward_denominator,
         time_accrued,
     );
+    let total_reward = u64::try_from(reward.safe_add(reward_stored).unwrap()).unwrap();
 
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
             .with_signer(&[&config.auth_seeds()]),
-        total_reward_denominated,
+        total_reward,
     )?;
 
-    // record changes
+    // record changes, for statistical use
     let config = &mut ctx.accounts.config;
-    config.reward_accrued = config.reward_accrued + total_reward_denominated;
+    config.reward_accrued = config.reward_accrued + total_reward;
     let user_state = &mut ctx.accounts.user_state;
-    user_state.reward_accrued = user_state.reward_accrued + total_reward_denominated;
+    user_state.reward_accrued = user_state.reward_accrued + total_reward;
     user_state.time_last_claim = now_ts()?;
+    // clear reward stored cos all claimed already
+    user_state.reward_stored = 0;
 
     msg!("instruction handler: ClaimStakingReward");
     Ok(())

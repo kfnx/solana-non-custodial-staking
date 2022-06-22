@@ -1,4 +1,4 @@
-use crate::{errors::ErrorCode, mpl, state::*, utils::*};
+use crate::{claim::calc_reward, errors::ErrorCode, mpl, safe_math::SafeMath, state::*, utils::*};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Approve, Mint, Token, TokenAccount};
 use metaplex_token_metadata::state::Metadata;
@@ -105,10 +105,6 @@ fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
     Err(error!(ErrorCode::NotWhitelisted))
 }
 
-// fn store_prev_staking_reward(ctx: &Context<Stake>) -> Result<()> {
-//     Ok(())
-// }
-
 pub fn handler(ctx: Context<Stake>) -> Result<()> {
     assert_whitelist(&ctx)?;
 
@@ -141,7 +137,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     ];
 
     mpl_helper.freeze_or_thaw(true, &auth_seeds)?;
-    msg!("instruction handler: Freeze");
+    msg!("Freeze OK");
 
     let user_state = &mut ctx.accounts.user_state;
     let user = *ctx.accounts.user.to_account_info().key;
@@ -149,19 +145,36 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     if user_state.user != user {
         return Err(error!(ErrorCode::InvalidUserState));
     }
+
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
-    user_state.time_last_stake = now_ts()?;
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
+
+    // store prev stake reward
+    let time_accrued = if user_state.time_last_stake == 0 {
+        0
+    } else {
+        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
+    };
+    msg!("prev stake time_accrued {:?}", time_accrued);
+
+    let prev_stake_reward = calc_reward(
+        user_state.nfts_staked,
+        config.reward_per_sec,
+        config.reward_denominator,
+        time_accrued,
+    );
+    msg!("prev stake reward stored {:?}", prev_stake_reward);
+    user_state.reward_stored = prev_stake_reward;
+    user_state.time_last_stake = now_ts()?;
+
     // add active stakers when a user initially stake their first NFT
     if user_state.nfts_staked == 1 {
         config.active_stakers = config.active_stakers.checked_add(1).unwrap();
     }
 
-    msg!("instruction handler: Stake");
-
-    // store_prev_staking_reward();
+    msg!("Stake OK");
 
     let stake_info = &mut *ctx.accounts.stake_info;
     stake_info.time_staking_start = now_ts()?;

@@ -110,18 +110,17 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
     msg!("instruction handler: Thaw");
 
+    // TODO: store reward here for claim later.
+
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_sub(1).unwrap();
+
     // subtract active stakers when the user staked NFT reach 0
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
-
-    // clear stake info
-    let stake_info = &mut ctx.accounts.stake_info;
-    stake_info.time_staking_start = 0;
 
     msg!("instruction handler: Unstake");
     Ok(())
