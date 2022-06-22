@@ -59,9 +59,9 @@ fn assert_unstake_allowed<'info>(
     }
 
     let time_now = now_ts()?;
-    msg!("time_now {}", time_now);
+    msg!("time_now: {}", time_now);
     let time_before_unlock = stake_info.time_staking_start + config.staking_lock_duration_in_sec;
-    msg!("time_before_unlock {}", time_before_unlock);
+    msg!("time_before_unlock: {}", time_before_unlock);
     if time_before_unlock > time_now {
         msg!("STAKE LOCKED");
         return Err(error!(ErrorCode::CannotUnstakeYet));
@@ -124,7 +124,7 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
         config.reward_denominator,
         time_accrued,
     );
-    msg!("prev stake reward stored {}", prev_stake_reward);
+    msg!("prev stake reward stored: {}", prev_stake_reward);
     user_state.reward_stored = prev_stake_reward;
     user_state.time_last_stake = now_ts()?;
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();

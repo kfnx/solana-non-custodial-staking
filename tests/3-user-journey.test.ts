@@ -5,7 +5,6 @@ import {
   Keypair,
   ParsedAccountData,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
 import {
@@ -16,7 +15,6 @@ import {
   getOrCreateAssociatedTokenAccount,
   createMintToInstruction,
   transfer,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { NcStaking } from "../target/types/nc_staking";
 import {
@@ -28,7 +26,6 @@ import {
   findDelegateAuthPDA,
   findEditionPDA,
   TOKEN_METADATA_PROGRAM_ID,
-  findConfigAuthorityPDA,
   findRewardPotPDA,
   delay,
   findMetadataPDA,
@@ -36,7 +33,7 @@ import {
   timeNow,
 } from "./utils";
 import { store } from "./0-constants";
-import { claim, stake } from "./utils/transaction";
+import { claim, stake, unstake } from "./utils/transaction";
 
 chai.use(chaiAsPromised);
 
@@ -195,80 +192,40 @@ describe("User journey", () => {
         nfts[0].mint.publicKey
       );
 
-      // first unstake attemp, cannot unstake because haven't reach minimum staking period
+      // first unstake attemp, cannot unstake because it haven't reach minimum staking period
       await expect(
-        program.methods
-          .unstake()
-          .accounts({
-            user: justin.wallet.publicKey,
-            stakeInfo,
-            config: config.publicKey,
-            mint: nfts[0].mint.publicKey,
-            tokenAccount: justinATA,
-            userState: justinState,
-            delegate,
-            edition,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          })
-          .signers([justin.keypair])
-          .rpc()
+        unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
       ).to.be.rejectedWith("CannotUnstakeYet");
-      //   console.log("firstTryTx", firstTryTx);
-      // } catch (error) {
-      //   console.error("ASO", error);
-      // }
-      // ).to.be.rejectedWith("CannotUnstakeYet");
 
       const earlyAtaInfo =
         await justin.provider.connection.getParsedAccountInfo(justinATA);
       const parsedAcc = (<ParsedAccountData>earlyAtaInfo.value.data).parsed;
-      assert.equal(parsedAcc.info.state, "frozen");
+      assert.equal(
+        parsedAcc.info.state,
+        "frozen",
+        "NFT state should be frozen if unstaking fail"
+      );
 
-      // second attenp, after reach minimum staking period
+      // second attempt, after reach minimum staking period
       await delay(configs[0].option.stakingLockDurationInSec.toNumber() * 1000);
-      await program.methods
-        .unstake()
-        .accounts({
-          user: justin.wallet.publicKey,
-          stakeInfo,
-          config: config.publicKey,
-          mint: nfts[0].mint.publicKey,
-          tokenAccount: justinATA,
-          userState: justinState,
-          delegate,
-          edition,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-        })
-        .signers([justin.keypair])
-        .rpc();
+
+      await unstake(program, justin, config.publicKey, nfts[0].mint.publicKey);
 
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
       );
       const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
-      assert.equal(parsed.info.state, "initialized");
+      assert.equal(
+        parsed.info.state,
+        "initialized",
+        "NFT state should be initialized if unstaking success"
+      );
     });
 
     it("Justin cannot unstake same NFT twice", async () => {
-      const justinATA = await findUserATA(
-        justin.wallet.publicKey,
-        nfts[0].mint.publicKey
-      );
-      // console.log("justin ATA", justinATA.toBase58());
-      const [delegate] = await findDelegateAuthPDA(justinATA);
-      // console.log("justin delegate", delegate.toBase58());
-      const [edition] = await findEditionPDA(nfts[0].mint.publicKey);
-      // console.log("edition", edition.toBase58());
       const [justinState] = await findUserStatePDA(
         justin.wallet.publicKey,
         config.publicKey
-      );
-      // console.log("justin state", justinState.toBase58());
-      const [stakeInfo] = await findStakeInfoPDA(
-        justin.wallet.publicKey,
-        nfts[0].mint.publicKey
       );
 
       const prevState = (
@@ -276,22 +233,7 @@ describe("User journey", () => {
       ).nftsStaked.toNumber();
 
       await expect(
-        program.methods
-          .unstake()
-          .accounts({
-            user: justin.wallet.publicKey,
-            stakeInfo,
-            config: config.publicKey,
-            mint: nfts[0].mint.publicKey,
-            tokenAccount: justinATA,
-            userState: justinState,
-            delegate,
-            edition,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          })
-          .signers([justin.keypair])
-          .rpc()
+        unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
       ).to.be.rejectedWith("EmptyVault");
 
       const currentState = (
@@ -496,9 +438,72 @@ describe("User journey", () => {
         "balance after claim: ",
         balance3
       );
+      // TODO: add assert for each claim
+
+      await delay(3000);
 
       // TODO: unstake and claim again should give zero reward
-      // console.log(timeNow(), "Unstaking all NFT...")
+      console.log(timeNow(), "Unstaking all NFT...");
+
+      console.log(
+        timeNow(),
+        "1st unstake tx",
+        await unstake(program, justin, config.publicKey, nfts[1].mint.publicKey)
+      );
+      console.log(
+        timeNow(),
+        "2st unstake tx",
+        await unstake(program, justin, config.publicKey, nfts[2].mint.publicKey)
+      );
+      console.log(
+        timeNow(),
+        "3st unstake tx",
+        await unstake(program, justin, config.publicKey, nfts[3].mint.publicKey)
+      );
+
+      await delay(3000);
+
+      const claimTx4 = await claim(
+        program,
+        justin,
+        config.publicKey,
+        rewardMint.publicKey
+      );
+      console.log(timeNow(), "[4rd] claim tx", claimTx4);
+
+      const balance4 = await getTokenBalanceByATA(
+        justin.provider.connection,
+        userATA
+      );
+      console.log(
+        timeNow(),
+        "[4rd] reward amount:",
+        balance4 - balance3,
+        "balance after claim: ",
+        balance4
+      );
+
+      await delay(3000);
+
+      const claimTx5 = await claim(
+        program,
+        justin,
+        config.publicKey,
+        rewardMint.publicKey
+      );
+      console.log(timeNow(), "[5rd] claim tx", claimTx5);
+
+      const balance5 = await getTokenBalanceByATA(
+        justin.provider.connection,
+        userATA
+      );
+      console.log(
+        timeNow(),
+        "[5rd] reward amount:",
+        balance5 - balance4,
+        "balance after claim: ",
+        balance5
+      );
 
       // assert.ok(
       //   finalUserTokenBalance > earlyUserTokenBalance,

@@ -112,7 +112,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     let cpi_ctx = ctx.accounts.approve_delegate_ctx();
     token::approve(cpi_ctx, 1)?;
     msg!(
-        "Approve token delegate with key {}",
+        "Approve token delegate with key: {}",
         ctx.accounts.delegate.key()
     );
 
@@ -164,7 +164,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         config.reward_denominator,
         time_accrued,
     );
-    msg!("prev stake reward stored {}", prev_stake_reward);
+    msg!("prev stake reward stored: {}", prev_stake_reward);
     // TODO: calc recurring reward store (?)
     user_state.reward_stored = prev_stake_reward;
     user_state.time_last_stake = now_ts()?;

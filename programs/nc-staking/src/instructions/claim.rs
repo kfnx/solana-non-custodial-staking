@@ -85,14 +85,8 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         return Err(error!(errors::ErrorCode::UserNeverStake));
     }
 
-    msg!(
-        "user_state.time_last_stake {}",
-        user_state.time_last_stake
-    );
-    msg!(
-        "user_state.time_last_claim {}",
-        user_state.time_last_claim
-    );
+    msg!("user_state.time_last_stake: {}", user_state.time_last_stake);
+    msg!("user_state.time_last_claim: {}", user_state.time_last_claim);
     let time_accrued = if user_state.time_last_stake > user_state.time_last_claim {
         u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
     } else {
@@ -100,6 +94,7 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     };
 
     let reward_stored = u64::try_from(user_state.reward_stored).unwrap();
+    msg!("reward_stored: {}", reward_stored);
     let reward = calc_reward(
         user_state.nfts_staked,
         config.reward_per_sec,
