@@ -6,7 +6,15 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 <p align="center">
   <img 
     src="https://cdn.discordapp.com/attachments/897388963671736340/984288487551422554/Screenshot_2022-06-09_at_09.50.45.png"
-  >
+  />
+  Program Instructions
+</p>
+<br/>
+<p align="center">
+  <img 
+    src="https://cdn.discordapp.com/attachments/897388963671736340/989452987724357682/Screenshot_2022-06-23_at_15.51.41.png"
+  />
+  Staking reward calculation
 </p>
 <br/>
 

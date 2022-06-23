@@ -11,7 +11,7 @@ import { assert } from "chai";
 import {
   airdropUser,
   allSynchronously,
-  checkBalance,
+  getSolanaBalance,
   findConfigAuthorityPDA,
   findRewardPotPDA,
 } from "./utils";
@@ -99,7 +99,8 @@ describe("Generate staking configs", () => {
     console.log(
       "Dev/admin address",
       dev.wallet.publicKey.toBase58(),
-      await checkBalance(dev.wallet.publicKey)
+      "balance",
+      await getSolanaBalance(dev.wallet.publicKey)
     );
     await createToken(dev.keypair, rewardToken, dev.provider);
     console.log("rewardToken address", rewardToken.publicKey.toBase58());

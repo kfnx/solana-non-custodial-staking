@@ -1,4 +1,4 @@
-use crate::{claim::calc_reward, errors::ErrorCode, mpl, safe_math::SafeMath, state::*, utils::*};
+use crate::{claim::calc_reward, errors::ErrorCode, mpl, state::*, utils::*};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Approve, Mint, Token, TokenAccount};
 use metaplex_token_metadata::state::Metadata;
@@ -152,22 +152,19 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
 
-    // store prev stake reward
-    let time_accrued = if user_state.time_last_stake == 0 {
-        0
-    } else {
-        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
-    };
-    let prev_stake_reward = calc_reward(
+    let time_now = now_ts()?;
+    let total_reward = calc_reward(
+        time_now,
         user_state.nfts_staked,
+        user_state.time_last_stake,
+        user_state.time_last_claim,
+        user_state.reward_stored,
         config.reward_per_sec,
         config.reward_denominator,
-        time_accrued,
     );
-    msg!("prev stake reward stored: {}", prev_stake_reward);
-    // TODO: calc recurring reward store (?)
-    user_state.reward_stored = prev_stake_reward;
-    user_state.time_last_stake = now_ts()?;
+    user_state.reward_stored = total_reward;
+    msg!("reward stored: {}", user_state.reward_stored);
+    user_state.time_last_stake = time_now;
 
     // add active stakers when a user initially stake their first NFT
     if user_state.nfts_staked == 1 {
@@ -177,7 +174,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     msg!("Stake OK");
 
     let stake_info = &mut *ctx.accounts.stake_info;
-    stake_info.time_staking_start = now_ts()?;
+    stake_info.time_staking_start = time_now;
     stake_info.config = ctx.accounts.config.key();
 
     msg!("stake begin at: {}", stake_info.time_staking_start);

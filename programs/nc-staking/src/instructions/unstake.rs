@@ -1,6 +1,4 @@
-use crate::{
-    claim::calc_reward, errors::ErrorCode, mpl, safe_math::SafeMath, state::*, utils::now_ts,
-};
+use crate::{claim::calc_reward, errors::ErrorCode, mpl, state::*, utils::now_ts};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -60,24 +58,20 @@ fn assert_unstake_allowed<'info>(
 
     let time_now = now_ts()?;
     msg!("time_now: {}", time_now);
-    let time_before_unlock = stake_info.time_staking_start + config.staking_lock_duration_in_sec;
-    msg!("time_before_unlock: {}", time_before_unlock);
-    if time_before_unlock > time_now {
-        msg!("STAKE LOCKED");
+    let time_when_unlocked = stake_info.time_staking_start + config.staking_lock_duration_in_sec;
+    msg!("time_when_unlocked: {}", time_when_unlocked);
+    if time_when_unlocked > time_now {
         return Err(error!(ErrorCode::CannotUnstakeYet));
     }
-    msg!("STAKE NOT LOCKED");
 
     Ok(())
 }
 
 pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     // check minimum time to unstake
-    msg!("before assert stake");
     let config = &ctx.accounts.config;
     let stake_info = &ctx.accounts.stake_info;
     assert_unstake_allowed(stake_info, config)?;
-    msg!("after assert stake");
 
     let user_state = &mut ctx.accounts.user_state;
     let user = *ctx.accounts.user.to_account_info().key;
@@ -94,7 +88,6 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
         ctx.accounts.token_account.to_account_info().key.as_ref(),
     ];
     let (_, bump) = Pubkey::find_program_address(&seeds, ctx.program_id);
-
     let auth_seeds = [
         b"delegate",
         ctx.accounts.token_account.to_account_info().key.as_ref(),
@@ -113,20 +106,19 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     msg!("instruction handler: Thaw");
 
     // store prev stake reward
-    let time_accrued = if user_state.time_last_stake == 0 {
-        0
-    } else {
-        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
-    };
-    let prev_stake_reward = calc_reward(
+    let time_now = now_ts()?;
+    let total_reward = calc_reward(
+        time_now,
         user_state.nfts_staked,
+        user_state.time_last_stake,
+        user_state.time_last_claim,
+        user_state.reward_stored,
         config.reward_per_sec,
         config.reward_denominator,
-        time_accrued,
     );
-    msg!("prev stake reward stored: {}", prev_stake_reward);
-    user_state.reward_stored = prev_stake_reward;
-    user_state.time_last_stake = now_ts()?;
+    user_state.reward_stored = total_reward;
+    msg!("reward stored: {}", user_state.reward_stored);
+    user_state.time_last_stake = time_now;
     user_state.nfts_staked = user_state.nfts_staked.checked_sub(1).unwrap();
 
     let config = &mut ctx.accounts.config;

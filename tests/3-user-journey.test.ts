@@ -31,6 +31,7 @@ import {
   findMetadataPDA,
   findStakeInfoPDA,
   timeNow,
+  getSolanaBalance,
 } from "./utils";
 import { store } from "./0-constants";
 import { claim, stake, unstake } from "./utils/transaction";
@@ -59,7 +60,12 @@ describe("User journey", () => {
   describe("NFT owner Justin exist", () => {
     it("User Justin created", async () => {
       await airdropUser(justin.wallet.publicKey);
-      console.log("Justin address", justin.keypair.publicKey.toBase58());
+      console.log(
+        "Justin address",
+        justin.keypair.publicKey.toBase58(),
+        "balance",
+        await getSolanaBalance(justin.wallet.publicKey)
+      );
     });
 
     it("Justin initate staking", async () => {
@@ -173,30 +179,15 @@ describe("User journey", () => {
     });
 
     it("Justin can unstake/thaw his own NFT after lock period finish", async () => {
-      const justinATA = await findUserATA(
-        justin.wallet.publicKey,
-        nfts[0].mint.publicKey
-      );
-      // console.log("justin ATA", justinATA.toBase58());
-      const [delegate] = await findDelegateAuthPDA(justinATA);
-      // console.log("justin delegate", delegate.toBase58());
-      const [edition] = await findEditionPDA(nfts[0].mint.publicKey);
-      // console.log("edition", edition.toBase58());
-      const [justinState] = await findUserStatePDA(
-        justin.wallet.publicKey,
-        config.publicKey
-      );
-      // console.log("justin state", justinState.toBase58());
-      const [stakeInfo] = await findStakeInfoPDA(
-        justin.wallet.publicKey,
-        nfts[0].mint.publicKey
-      );
-
       // first unstake attemp, cannot unstake because it haven't reach minimum staking period
       await expect(
         unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
       ).to.be.rejectedWith("CannotUnstakeYet");
 
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nfts[0].mint.publicKey
+      );
       const earlyAtaInfo =
         await justin.provider.connection.getParsedAccountInfo(justinATA);
       const parsedAcc = (<ParsedAccountData>earlyAtaInfo.value.data).parsed;
@@ -206,10 +197,18 @@ describe("User journey", () => {
         "NFT state should be frozen if unstaking fail"
       );
 
-      // second attempt, after reach minimum staking period
-      await delay(configs[0].option.stakingLockDurationInSec.toNumber() * 1000);
+      // second attempt, after reach minimum staking period, add +1s to ensure its more than duration
+      const delayAmount =
+        configs[0].option.stakingLockDurationInSec.toNumber() * 1000 + 1000;
+      await delay(delayAmount);
 
-      await unstake(program, justin, config.publicKey, nfts[0].mint.publicKey);
+      const unstakeTx = await unstake(
+        program,
+        justin,
+        config.publicKey,
+        nfts[0].mint.publicKey
+      );
+      console.log(timeNow(), "unstake tx", unstakeTx);
 
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
@@ -440,28 +439,29 @@ describe("User journey", () => {
       );
       // TODO: add assert for each claim
 
-      await delay(3000);
-
-      // TODO: unstake and claim again should give zero reward
-      console.log(timeNow(), "Unstaking all NFT...");
+      console.log(
+        timeNow(),
+        "Sequentially unstaking staked NFTs every second..."
+      );
 
       console.log(
         timeNow(),
-        "1st unstake tx",
+        "NFT #1 unstake tx",
         await unstake(program, justin, config.publicKey, nfts[1].mint.publicKey)
       );
+      await delay(1000);
       console.log(
         timeNow(),
-        "2st unstake tx",
+        "NFT #2 unstake tx",
         await unstake(program, justin, config.publicKey, nfts[2].mint.publicKey)
       );
+      await delay(1000);
       console.log(
         timeNow(),
-        "3st unstake tx",
+        "NFT #3 unstake tx",
         await unstake(program, justin, config.publicKey, nfts[3].mint.publicKey)
       );
-
-      await delay(3000);
+      await delay(1000);
 
       const claimTx4 = await claim(
         program,

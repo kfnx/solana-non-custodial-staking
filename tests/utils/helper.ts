@@ -61,6 +61,29 @@ export function convertSecondsToReadableTime(seconds: number) {
 }
 
 export function timeNow() {
+  function trimLeft(string) {
+    const str = String(string);
+    if (str.length === 1) {
+      return "0" + str;
+    }
+    return str;
+  }
+
+  function trimRight(string) {
+    const str = String(string);
+    if (str.length === 1) {
+      return str + "00";
+    }
+    if (str.length === 2) {
+      return str + "0";
+    }
+    return str;
+  }
+
   const time = new Date();
-  return `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+  const h = trimLeft(time.getHours());
+  const m = trimLeft(time.getMinutes());
+  const s = trimLeft(time.getSeconds());
+  const ms = trimRight(time.getMilliseconds());
+  return `${h}:${m}:${s}:${ms}`;
 }

@@ -14,7 +14,7 @@ import {
   allSynchronously,
   airdropUser,
   findUserATA,
-  checkBalance,
+  getSolanaBalance,
 } from "./utils";
 import { assert } from "chai";
 import { transferToken } from "./utils/transaction";
@@ -134,13 +134,15 @@ describe("Generate Meekolony NFTs", () => {
     console.log(
       "Creator address",
       NFTcreator.wallet.publicKey.toBase58(),
-      await checkBalance(NFTcreator.wallet.publicKey)
+      "balance",
+      await getSolanaBalance(NFTcreator.wallet.publicKey)
     );
     await airdropUser(userId);
     console.log(
       "NFT holder address",
       userId.toBase58(),
-      await checkBalance(userId)
+      "balance",
+      await getSolanaBalance(userId)
     );
 
     await allSynchronously(

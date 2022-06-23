@@ -49,7 +49,7 @@ export async function airdropUser(
   await connection.confirmTransaction(sig);
 }
 
-export async function checkBalance(
+export async function getSolanaBalance(
   publicKey: PublicKey,
   connection: Connection = anchor.AnchorProvider.env().connection
 ): Promise<number> {

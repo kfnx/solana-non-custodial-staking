@@ -1,4 +1,4 @@
-import create, { GetState } from "zustand";
+import create from "zustand";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {

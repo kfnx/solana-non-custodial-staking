@@ -4,7 +4,6 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
-use std::convert::TryFrom;
 
 #[derive(Accounts)]
 #[instruction(bump_config_auth: u8, bump_reward_pot: u8)]
@@ -51,30 +50,48 @@ impl<'info> ClaimStakingReward<'info> {
 }
 
 pub fn calc_reward(
+    time_now: u64,
     nfts_staked: u64,
+    time_last_stake: u64,
+    time_last_claim: u64,
+    prev_reward_stored: u64,
     reward_per_sec: u64,
     reward_denominator: u64,
-    time_accrued: u64,
 ) -> u64 {
+    msg!("time_now: {}", time_now);
+    msg!("nfts_staked: {}", nfts_staked);
+    msg!("time_last_stake: {}", time_last_stake);
+    msg!("time_last_claim: {}", time_last_claim);
+    // if you never stake, you should get nothing
+    if time_last_stake == 0 {
+        return 0;
+    };
+    let time_accrued = if time_last_stake > time_last_claim {
+        msg!("using time_last_stake");
+        time_now.safe_sub(time_last_stake).unwrap()
+    } else {
+        msg!("using time_last_claim");
+        time_now.safe_sub(time_last_claim).unwrap()
+    };
     msg!("time_accrued: {}", time_accrued);
-    let reward_per_sec = u64::try_from(reward_per_sec).unwrap();
     msg!("reward_per_sec: {}", reward_per_sec);
-    let reward_denominator = u64::try_from(reward_denominator).unwrap();
     msg!("reward_denominator: {}", reward_denominator);
-    let nfts_staked = u64::try_from(nfts_staked).unwrap();
     msg!("nfts_staked: {}", nfts_staked);
     let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
     msg!("reward * time: {}", reward_multiplied_by_time);
     let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
     msg!("reward * time * nft: {}", reward_multiplied_by_all_nft);
-    let total_reward = u64::try_from(
-        reward_multiplied_by_all_nft
-            .safe_div(reward_denominator)
-            .unwrap(),
-    )
-    .unwrap();
+    let reward_divided_by_denom = reward_multiplied_by_all_nft
+        .safe_div(reward_denominator)
+        .unwrap();
+    msg!("(reward * time * nft) / denom: {}", reward_divided_by_denom);
+    msg!("prev_reward_stored: {}", prev_reward_stored);
+    let total_reward = reward_divided_by_denom
+        .safe_add(prev_reward_stored)
+        .unwrap();
     msg!("total_reward: {}", total_reward);
-    return total_reward;
+
+    total_reward
 }
 
 pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
@@ -85,23 +102,16 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         return Err(error!(errors::ErrorCode::UserNeverStake));
     }
 
-    msg!("user_state.time_last_stake: {}", user_state.time_last_stake);
-    msg!("user_state.time_last_claim: {}", user_state.time_last_claim);
-    let time_accrued = if user_state.time_last_stake > user_state.time_last_claim {
-        u64::try_from(now_ts()?.safe_sub(user_state.time_last_stake)?).unwrap()
-    } else {
-        u64::try_from(now_ts()?.safe_sub(user_state.time_last_claim)?).unwrap()
-    };
-
-    let reward_stored = u64::try_from(user_state.reward_stored).unwrap();
-    msg!("reward_stored: {}", reward_stored);
-    let reward = calc_reward(
+    let time_now = now_ts()?;
+    let total_reward = calc_reward(
+        time_now,
         user_state.nfts_staked,
+        user_state.time_last_stake,
+        user_state.time_last_claim,
+        user_state.reward_stored,
         config.reward_per_sec,
         config.reward_denominator,
-        time_accrued,
     );
-    let total_reward = u64::try_from(reward.safe_add(reward_stored).unwrap()).unwrap();
 
     token::transfer(
         ctx.accounts
@@ -115,7 +125,7 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     config.reward_accrued = config.reward_accrued + total_reward;
     let user_state = &mut ctx.accounts.user_state;
     user_state.reward_accrued = user_state.reward_accrued + total_reward;
-    user_state.time_last_claim = now_ts()?;
+    user_state.time_last_claim = time_now;
     // clear reward stored cos all claimed already
     user_state.reward_stored = 0;
 
