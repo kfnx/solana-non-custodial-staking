@@ -17,7 +17,7 @@ import {
   getSolanaBalance,
 } from "./utils";
 import { assert } from "chai";
-import { transferToken } from "./utils/transaction";
+import { transferToken } from "./utils/transactions";
 import { store } from "./0-constants";
 
 /**

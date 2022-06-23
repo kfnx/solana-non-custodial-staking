@@ -34,7 +34,7 @@ import {
   getSolanaBalance,
 } from "./utils";
 import { store } from "./0-constants";
-import { claim, stake, unstake } from "./utils/transaction";
+import { claim, stake, unstake } from "./utils/transactions";
 
 chai.use(chaiAsPromised);
 

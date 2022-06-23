@@ -15,7 +15,7 @@ import {
   findConfigAuthorityPDA,
   findRewardPotPDA,
 } from "./utils";
-import { createToken } from "./utils/transaction";
+import { createToken } from "./utils/transactions";
 import { NcStaking, IDL } from "../target/types/nc_staking";
 import { StakingConfigOption, store } from "./0-constants";
 
