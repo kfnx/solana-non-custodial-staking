@@ -137,7 +137,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     ];
 
     mpl_helper.freeze_or_thaw(true, &auth_seeds)?;
-    msg!("Freeze OK");
+    msg!("Instruction handler: Freeze");
 
     let user_state = &mut ctx.accounts.user_state;
     let user = *ctx.accounts.user.to_account_info().key;
@@ -145,9 +145,6 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     if user_state.user != user {
         return Err(error!(ErrorCode::InvalidUserState));
     }
-
-    user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
-    msg!("user_state.nfts_staked: {}", user_state.nfts_staked);
 
     let config = &mut ctx.accounts.config;
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
@@ -162,6 +159,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         config.reward_per_sec,
         config.reward_denominator,
     );
+    user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
     user_state.reward_stored = total_reward;
     msg!("reward stored: {}", user_state.reward_stored);
     user_state.time_last_stake = time_now;
@@ -171,12 +169,9 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         config.active_stakers = config.active_stakers.checked_add(1).unwrap();
     }
 
-    msg!("Stake OK");
-
     let stake_info = &mut *ctx.accounts.stake_info;
     stake_info.time_staking_start = time_now;
     stake_info.config = ctx.accounts.config.key();
-
-    msg!("stake begin at: {}", stake_info.time_staking_start);
+    msg!("Instruction handler: Stake");
     Ok(())
 }

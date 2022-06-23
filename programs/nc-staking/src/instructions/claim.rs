@@ -59,7 +59,7 @@ pub fn calc_reward(
     reward_denominator: u64,
 ) -> u64 {
     msg!("time_now: {}", time_now);
-    msg!("nfts_staked: {}", nfts_staked);
+    msg!("prev nfts_staked: {}", nfts_staked);
     msg!("time_last_stake: {}", time_last_stake);
     msg!("time_last_claim: {}", time_last_claim);
     // if you never stake, you should get nothing
@@ -122,9 +122,9 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
 
     // record changes, for statistical use
     let config = &mut ctx.accounts.config;
-    config.reward_accrued = config.reward_accrued + total_reward;
+    config.reward_accrued = config.reward_accrued.checked_add(total_reward).unwrap();
     let user_state = &mut ctx.accounts.user_state;
-    user_state.reward_accrued = user_state.reward_accrued + total_reward;
+    user_state.reward_accrued = user_state.reward_accrued.checked_add(total_reward).unwrap();
     user_state.time_last_claim = time_now;
     // clear reward stored cos all claimed already
     user_state.reward_stored = 0;

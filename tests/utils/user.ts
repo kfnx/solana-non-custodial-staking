@@ -149,3 +149,11 @@ export async function findUserATA(
     ASSOCIATED_TOKEN_PROGRAM_ID
   );
 }
+
+export async function getTokenBalance(
+  connection: Connection,
+  user: PublicKey,
+  mint: PublicKey
+): Promise<number> {
+  return await getTokenBalanceByATA(connection, await findUserATA(user, mint));
+}
