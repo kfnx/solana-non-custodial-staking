@@ -4,6 +4,8 @@ import Head from "next/head";
 import Image from "next/image";
 import NetworkSelector from "../components/NetworkSelector";
 import Tabs from "../components/Tabs";
+import { PROGRAM_ID } from "../sdk";
+import { STAKING_REWARD_ID } from "../sdk/address";
 
 const Home: NextPage = () => {
   return (
@@ -24,6 +26,8 @@ const Home: NextPage = () => {
           <NetworkSelector />
           <WalletMultiButton className="bg-blue-900/20 text-slate-600 dark:text-gray-200 shadow hover:text-white" />
         </div>
+        <p>program: {PROGRAM_ID.toBase58()}</p>
+        <p>reward: {STAKING_REWARD_ID.toBase58()}</p>
         <Tabs />
       </main>
     </div>

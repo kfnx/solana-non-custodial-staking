@@ -18,7 +18,8 @@ export type UserArgs = {
   user: web3.PublicKey
   config: web3.PublicKey
   rewardAccrued: beet.bignum
-  lastStakeTime: beet.bignum
+  rewardStored: beet.bignum
+  timeLastStake: beet.bignum
   timeLastClaim: beet.bignum
   nftsStaked: beet.bignum
 }
@@ -36,7 +37,8 @@ export class User implements UserArgs {
     readonly user: web3.PublicKey,
     readonly config: web3.PublicKey,
     readonly rewardAccrued: beet.bignum,
-    readonly lastStakeTime: beet.bignum,
+    readonly rewardStored: beet.bignum,
+    readonly timeLastStake: beet.bignum,
     readonly timeLastClaim: beet.bignum,
     readonly nftsStaked: beet.bignum
   ) {}
@@ -49,7 +51,8 @@ export class User implements UserArgs {
       args.user,
       args.config,
       args.rewardAccrued,
-      args.lastStakeTime,
+      args.rewardStored,
+      args.timeLastStake,
       args.timeLastClaim,
       args.nftsStaked
     )
@@ -153,8 +156,19 @@ export class User implements UserArgs {
         }
         return x
       })(),
-      lastStakeTime: (() => {
-        const x = <{ toNumber: () => number }>this.lastStakeTime
+      rewardStored: (() => {
+        const x = <{ toNumber: () => number }>this.rewardStored
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      timeLastStake: (() => {
+        const x = <{ toNumber: () => number }>this.timeLastStake
         if (typeof x.toNumber === 'function') {
           try {
             return x.toNumber()
@@ -205,7 +219,8 @@ export const userBeet = new beet.BeetStruct<
     ['user', beetSolana.publicKey],
     ['config', beetSolana.publicKey],
     ['rewardAccrued', beet.u64],
-    ['lastStakeTime', beet.u64],
+    ['rewardStored', beet.u64],
+    ['timeLastStake', beet.u64],
     ['timeLastClaim', beet.u64],
     ['nftsStaked', beet.u64],
   ],

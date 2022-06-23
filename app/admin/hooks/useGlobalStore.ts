@@ -23,7 +23,7 @@ import {
   findStakeInfoPDA,
   findUserStatePDA,
 } from "../sdk/pda";
-import { TOKEN_METADATA_PROGRAM_ID } from "../sdk/programId";
+import { STAKING_REWARD_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
 import { IDL, NcStaking } from "../sdk/nc_staking";
 import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
 import { PROGRAM_ID } from "../sdk";
@@ -270,19 +270,9 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
 
-    // const { program, connection, selectedStakeDuration } = get();
-    // const configId = new PublicKey(selectedStakeDuration.value);
-    // if (!program) {
-    //   toast.error("Program not ready");
-    //   return;
-    // }
-    const rewardMint = new PublicKey(
-      "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
-    );
-    const userATA = await findUserATA(wallet.publicKey, rewardMint);
+    const userATA = await findUserATA(wallet.publicKey, STAKING_REWARD_ID);
     const connection = get().connection;
-    const userTokenBalance =
-      (await getTokenBalanceByATA(connection, userATA)) || 0;
+    const userTokenBalance = await getTokenBalanceByATA(connection, userATA);
 
     return set({
       userTokenBalance,

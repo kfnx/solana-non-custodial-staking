@@ -16,7 +16,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  */
 export type StakeInfoArgs = {
   config: web3.PublicKey
-  stakingStartTime: beet.bignum
+  timeStakingStart: beet.bignum
 }
 
 const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235]
@@ -30,14 +30,14 @@ const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235]
 export class StakeInfo implements StakeInfoArgs {
   private constructor(
     readonly config: web3.PublicKey,
-    readonly stakingStartTime: beet.bignum
+    readonly timeStakingStart: beet.bignum
   ) {}
 
   /**
    * Creates a {@link StakeInfo} instance from the provided args.
    */
   static fromArgs(args: StakeInfoArgs) {
-    return new StakeInfo(args.config, args.stakingStartTime)
+    return new StakeInfo(args.config, args.timeStakingStart)
   }
 
   /**
@@ -126,8 +126,8 @@ export class StakeInfo implements StakeInfoArgs {
   pretty() {
     return {
       config: this.config.toBase58(),
-      stakingStartTime: (() => {
-        const x = <{ toNumber: () => number }>this.stakingStartTime
+      timeStakingStart: (() => {
+        const x = <{ toNumber: () => number }>this.timeStakingStart
         if (typeof x.toNumber === 'function') {
           try {
             return x.toNumber()
@@ -154,7 +154,7 @@ export const stakeInfoBeet = new beet.BeetStruct<
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['config', beetSolana.publicKey],
-    ['stakingStartTime', beet.u64],
+    ['timeStakingStart', beet.u64],
   ],
   StakeInfo.fromArgs,
   'StakeInfo'
