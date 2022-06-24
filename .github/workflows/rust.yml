@@ -18,5 +18,11 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
-    - name: Run format
-      run: cargo fmt --verbose
+    - name: Format
+      run: cargo fmt --check --verbose
+    - name: Lint
+      run: cargo clippy --verbose
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Apply format and lint changes
+
