@@ -48,7 +48,7 @@ impl<'info> FreezeOrThawDelegatedAccount<'info> {
                 self.mint.clone(),
                 self.token_program.clone(),
             ],
-            &[&signer_seeds],
+            &[signer_seeds],
         )
         .map_err(Into::into)
     }
