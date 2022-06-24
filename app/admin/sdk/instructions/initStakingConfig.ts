@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from "@solana/spl-token";
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -15,11 +15,11 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type InitStakingConfigInstructionArgs = {
-  bumpConfigAuth: number
-  rewardPerSec: beet.bignum
-  rewardDenominator: beet.bignum
-  stakingLockDurationInSec: beet.bignum
-}
+  bumpConfigAuth: number;
+  rewardPerSec: beet.bignum;
+  rewardDenominator: beet.bignum;
+  stakingLockDurationInSec: beet.bignum;
+};
 /**
  * @category Instructions
  * @category InitStakingConfig
@@ -27,18 +27,18 @@ export type InitStakingConfigInstructionArgs = {
  */
 export const initStakingConfigStruct = new beet.BeetArgsStruct<
   InitStakingConfigInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['bumpConfigAuth', beet.u8],
-    ['rewardPerSec', beet.u64],
-    ['rewardDenominator', beet.u64],
-    ['stakingLockDurationInSec', beet.u64],
+    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["bumpConfigAuth", beet.u8],
+    ["rewardPerSec", beet.u64],
+    ["rewardDenominator", beet.u64],
+    ["stakingLockDurationInSec", beet.u64],
   ],
-  'InitStakingConfigInstructionArgs'
-)
+  "InitStakingConfigInstructionArgs"
+);
 /**
  * Accounts required by the _initStakingConfig_ instruction
  *
@@ -53,17 +53,17 @@ export const initStakingConfigStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type InitStakingConfigInstructionAccounts = {
-  admin: web3.PublicKey
-  config: web3.PublicKey
-  creatorAddressToWhitelist: web3.PublicKey
-  configAuthority: web3.PublicKey
-  rewardPot: web3.PublicKey
-  rewardMint: web3.PublicKey
-}
+  admin: web3.PublicKey;
+  config: web3.PublicKey;
+  creatorAddressToWhitelist: web3.PublicKey;
+  configAuthority: web3.PublicKey;
+  rewardPot: web3.PublicKey;
+  rewardMint: web3.PublicKey;
+};
 
 export const initStakingConfigInstructionDiscriminator = [
   240, 182, 125, 61, 234, 36, 53, 64,
-]
+];
 
 /**
  * Creates a _InitStakingConfig_ instruction.
@@ -86,12 +86,12 @@ export function createInitStakingConfigInstruction(
     configAuthority,
     rewardPot,
     rewardMint,
-  } = accounts
+  } = accounts;
 
   const [data] = initStakingConfigStruct.serialize({
     instructionDiscriminator: initStakingConfigInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: admin,
@@ -138,14 +138,14 @@ export function createInitStakingConfigInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      'stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E'
+      "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
     ),
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

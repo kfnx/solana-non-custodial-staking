@@ -11,5 +11,5 @@ secrets.sh
 keypair/
 .coderrect
 soteria-linux-develop
-
+yarn-error.log
 .crates/

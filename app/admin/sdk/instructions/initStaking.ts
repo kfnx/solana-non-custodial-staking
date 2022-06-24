@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 
 /**
  * @category Instructions
@@ -14,11 +14,11 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const initStakingStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
+  instructionDiscriminator: number[] /* size: 8 */;
 }>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'InitStakingInstructionArgs'
-)
+  [["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]],
+  "InitStakingInstructionArgs"
+);
 /**
  * Accounts required by the _initStaking_ instruction
  *
@@ -30,14 +30,14 @@ export const initStakingStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type InitStakingInstructionAccounts = {
-  user: web3.PublicKey
-  config: web3.PublicKey
-  userState: web3.PublicKey
-}
+  user: web3.PublicKey;
+  config: web3.PublicKey;
+  userState: web3.PublicKey;
+};
 
 export const initStakingInstructionDiscriminator = [
   42, 18, 242, 224, 66, 32, 122, 8,
-]
+];
 
 /**
  * Creates a _InitStaking_ instruction.
@@ -50,11 +50,11 @@ export const initStakingInstructionDiscriminator = [
 export function createInitStakingInstruction(
   accounts: InitStakingInstructionAccounts
 ) {
-  const { user, config, userState } = accounts
+  const { user, config, userState } = accounts;
 
   const [data] = initStakingStruct.serialize({
     instructionDiscriminator: initStakingInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: user,
@@ -76,14 +76,14 @@ export function createInitStakingInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      'stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E'
+      "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
     ),
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

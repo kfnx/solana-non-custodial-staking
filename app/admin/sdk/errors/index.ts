@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-type ErrorWithCode = Error & { code: number }
-type MaybeErrorWithCode = ErrorWithCode | null | undefined
+type ErrorWithCode = Error & { code: number };
+type MaybeErrorWithCode = ErrorWithCode | null | undefined;
 
-const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map()
-const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map()
+const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map();
+const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map();
 
 /**
  * ArithmeticError: 'Failed to perform math operation safely'
@@ -18,21 +18,21 @@ const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map()
  * @category generated
  */
 export class ArithmeticErrorError extends Error {
-  readonly code: number = 0x1770
-  readonly name: string = 'ArithmeticError'
+  readonly code: number = 0x1770;
+  readonly name: string = "ArithmeticError";
   constructor() {
-    super('Failed to perform math operation safely')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, ArithmeticErrorError)
+    super("Failed to perform math operation safely");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, ArithmeticErrorError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1770, () => new ArithmeticErrorError())
+createErrorFromCodeLookup.set(0x1770, () => new ArithmeticErrorError());
 createErrorFromNameLookup.set(
-  'ArithmeticError',
+  "ArithmeticError",
   () => new ArithmeticErrorError()
-)
+);
 
 /**
  * Overflow: 'Failed to perform math operation, integer overflow'
@@ -41,18 +41,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class OverflowError extends Error {
-  readonly code: number = 0x1771
-  readonly name: string = 'Overflow'
+  readonly code: number = 0x1771;
+  readonly name: string = "Overflow";
   constructor() {
-    super('Failed to perform math operation, integer overflow')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, OverflowError)
+    super("Failed to perform math operation, integer overflow");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, OverflowError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1771, () => new OverflowError())
-createErrorFromNameLookup.set('Overflow', () => new OverflowError())
+createErrorFromCodeLookup.set(0x1771, () => new OverflowError());
+createErrorFromNameLookup.set("Overflow", () => new OverflowError());
 
 /**
  * Underflow: 'Failed to perform math operation, integer underflow'
@@ -61,18 +61,18 @@ createErrorFromNameLookup.set('Overflow', () => new OverflowError())
  * @category generated
  */
 export class UnderflowError extends Error {
-  readonly code: number = 0x1772
-  readonly name: string = 'Underflow'
+  readonly code: number = 0x1772;
+  readonly name: string = "Underflow";
   constructor() {
-    super('Failed to perform math operation, integer underflow')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, UnderflowError)
+    super("Failed to perform math operation, integer underflow");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, UnderflowError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1772, () => new UnderflowError())
-createErrorFromNameLookup.set('Underflow', () => new UnderflowError())
+createErrorFromCodeLookup.set(0x1772, () => new UnderflowError());
+createErrorFromNameLookup.set("Underflow", () => new UnderflowError());
 
 /**
  * DivisionByZero: 'Failed to perform math operation, Division by zero'
@@ -81,18 +81,21 @@ createErrorFromNameLookup.set('Underflow', () => new UnderflowError())
  * @category generated
  */
 export class DivisionByZeroError extends Error {
-  readonly code: number = 0x1773
-  readonly name: string = 'DivisionByZero'
+  readonly code: number = 0x1773;
+  readonly name: string = "DivisionByZero";
   constructor() {
-    super('Failed to perform math operation, Division by zero')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, DivisionByZeroError)
+    super("Failed to perform math operation, Division by zero");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, DivisionByZeroError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1773, () => new DivisionByZeroError())
-createErrorFromNameLookup.set('DivisionByZero', () => new DivisionByZeroError())
+createErrorFromCodeLookup.set(0x1773, () => new DivisionByZeroError());
+createErrorFromNameLookup.set(
+  "DivisionByZero",
+  () => new DivisionByZeroError()
+);
 
 /**
  * AnchorSerializationIssue: 'Anchor serialization issue'
@@ -101,21 +104,24 @@ createErrorFromNameLookup.set('DivisionByZero', () => new DivisionByZeroError())
  * @category generated
  */
 export class AnchorSerializationIssueError extends Error {
-  readonly code: number = 0x1774
-  readonly name: string = 'AnchorSerializationIssue'
+  readonly code: number = 0x1774;
+  readonly name: string = "AnchorSerializationIssue";
   constructor() {
-    super('Anchor serialization issue')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, AnchorSerializationIssueError)
+    super("Anchor serialization issue");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, AnchorSerializationIssueError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1774, () => new AnchorSerializationIssueError())
-createErrorFromNameLookup.set(
-  'AnchorSerializationIssue',
+createErrorFromCodeLookup.set(
+  0x1774,
   () => new AnchorSerializationIssueError()
-)
+);
+createErrorFromNameLookup.set(
+  "AnchorSerializationIssue",
+  () => new AnchorSerializationIssueError()
+);
 
 /**
  * InvalidUserState: 'Unauthorized, invalid user state PDA'
@@ -124,21 +130,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidUserStateError extends Error {
-  readonly code: number = 0x1775
-  readonly name: string = 'InvalidUserState'
+  readonly code: number = 0x1775;
+  readonly name: string = "InvalidUserState";
   constructor() {
-    super('Unauthorized, invalid user state PDA')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidUserStateError)
+    super("Unauthorized, invalid user state PDA");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, InvalidUserStateError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1775, () => new InvalidUserStateError())
+createErrorFromCodeLookup.set(0x1775, () => new InvalidUserStateError());
 createErrorFromNameLookup.set(
-  'InvalidUserState',
+  "InvalidUserState",
   () => new InvalidUserStateError()
-)
+);
 
 /**
  * InvalidStakingConfig: 'Unauthorized, invalid staking config PDA'
@@ -147,21 +153,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidStakingConfigError extends Error {
-  readonly code: number = 0x1776
-  readonly name: string = 'InvalidStakingConfig'
+  readonly code: number = 0x1776;
+  readonly name: string = "InvalidStakingConfig";
   constructor() {
-    super('Unauthorized, invalid staking config PDA')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidStakingConfigError)
+    super("Unauthorized, invalid staking config PDA");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, InvalidStakingConfigError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new InvalidStakingConfigError())
+createErrorFromCodeLookup.set(0x1776, () => new InvalidStakingConfigError());
 createErrorFromNameLookup.set(
-  'InvalidStakingConfig',
+  "InvalidStakingConfig",
   () => new InvalidStakingConfigError()
-)
+);
 
 /**
  * UserNeverStake: 'Cannot claim, user never stake anything'
@@ -170,18 +176,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class UserNeverStakeError extends Error {
-  readonly code: number = 0x1777
-  readonly name: string = 'UserNeverStake'
+  readonly code: number = 0x1777;
+  readonly name: string = "UserNeverStake";
   constructor() {
-    super('Cannot claim, user never stake anything')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, UserNeverStakeError)
+    super("Cannot claim, user never stake anything");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, UserNeverStakeError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1777, () => new UserNeverStakeError())
-createErrorFromNameLookup.set('UserNeverStake', () => new UserNeverStakeError())
+createErrorFromCodeLookup.set(0x1777, () => new UserNeverStakeError());
+createErrorFromNameLookup.set(
+  "UserNeverStake",
+  () => new UserNeverStakeError()
+);
 
 /**
  * EmptyVault: 'Vault empty, nothing to unstake'
@@ -190,18 +199,18 @@ createErrorFromNameLookup.set('UserNeverStake', () => new UserNeverStakeError())
  * @category generated
  */
 export class EmptyVaultError extends Error {
-  readonly code: number = 0x1778
-  readonly name: string = 'EmptyVault'
+  readonly code: number = 0x1778;
+  readonly name: string = "EmptyVault";
   constructor() {
-    super('Vault empty, nothing to unstake')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, EmptyVaultError)
+    super("Vault empty, nothing to unstake");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, EmptyVaultError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1778, () => new EmptyVaultError())
-createErrorFromNameLookup.set('EmptyVault', () => new EmptyVaultError())
+createErrorFromCodeLookup.set(0x1778, () => new EmptyVaultError());
+createErrorFromNameLookup.set("EmptyVault", () => new EmptyVaultError());
 
 /**
  * NotWhitelisted: 'NFT creator address is not present in any of the whitelists'
@@ -210,18 +219,21 @@ createErrorFromNameLookup.set('EmptyVault', () => new EmptyVaultError())
  * @category generated
  */
 export class NotWhitelistedError extends Error {
-  readonly code: number = 0x1779
-  readonly name: string = 'NotWhitelisted'
+  readonly code: number = 0x1779;
+  readonly name: string = "NotWhitelisted";
   constructor() {
-    super('NFT creator address is not present in any of the whitelists')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NotWhitelistedError)
+    super("NFT creator address is not present in any of the whitelists");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, NotWhitelistedError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1779, () => new NotWhitelistedError())
-createErrorFromNameLookup.set('NotWhitelisted', () => new NotWhitelistedError())
+createErrorFromCodeLookup.set(0x1779, () => new NotWhitelistedError());
+createErrorFromNameLookup.set(
+  "NotWhitelisted",
+  () => new NotWhitelistedError()
+);
 
 /**
  * NotStaked: 'NFT is not present in any stake proof'
@@ -230,18 +242,18 @@ createErrorFromNameLookup.set('NotWhitelisted', () => new NotWhitelistedError())
  * @category generated
  */
 export class NotStakedError extends Error {
-  readonly code: number = 0x177a
-  readonly name: string = 'NotStaked'
+  readonly code: number = 0x177a;
+  readonly name: string = "NotStaked";
   constructor() {
-    super('NFT is not present in any stake proof')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NotStakedError)
+    super("NFT is not present in any stake proof");
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, NotStakedError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x177a, () => new NotStakedError())
-createErrorFromNameLookup.set('NotStaked', () => new NotStakedError())
+createErrorFromCodeLookup.set(0x177a, () => new NotStakedError());
+createErrorFromNameLookup.set("NotStaked", () => new NotStakedError());
 
 /**
  * CannotUnstakeYet: 'NFT is in lock period, cannot unstake yet until it reach minimum staking period'
@@ -250,23 +262,23 @@ createErrorFromNameLookup.set('NotStaked', () => new NotStakedError())
  * @category generated
  */
 export class CannotUnstakeYetError extends Error {
-  readonly code: number = 0x177b
-  readonly name: string = 'CannotUnstakeYet'
+  readonly code: number = 0x177b;
+  readonly name: string = "CannotUnstakeYet";
   constructor() {
     super(
-      'NFT is in lock period, cannot unstake yet until it reach minimum staking period'
-    )
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotUnstakeYetError)
+      "NFT is in lock period, cannot unstake yet until it reach minimum staking period"
+    );
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, CannotUnstakeYetError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x177b, () => new CannotUnstakeYetError())
+createErrorFromCodeLookup.set(0x177b, () => new CannotUnstakeYetError());
 createErrorFromNameLookup.set(
-  'CannotUnstakeYet',
+  "CannotUnstakeYet",
   () => new CannotUnstakeYetError()
-)
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
@@ -274,8 +286,8 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export function errorFromCode(code: number): MaybeErrorWithCode {
-  const createError = createErrorFromCodeLookup.get(code)
-  return createError != null ? createError() : null
+  const createError = createErrorFromCodeLookup.get(code);
+  return createError != null ? createError() : null;
 }
 
 /**
@@ -284,6 +296,6 @@ export function errorFromCode(code: number): MaybeErrorWithCode {
  * @category generated
  */
 export function errorFromName(name: string): MaybeErrorWithCode {
-  const createError = createErrorFromNameLookup.get(name)
-  return createError != null ? createError() : null
+  const createError = createErrorFromNameLookup.get(name);
+  return createError != null ? createError() : null;
 }

@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as web3 from "@solana/web3.js";
+import * as beet from "@metaplex-foundation/beet";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
 
 /**
  * Arguments used to create {@link StakeInfo}
@@ -15,11 +15,11 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  * @category generated
  */
 export type StakeInfoArgs = {
-  config: web3.PublicKey
-  timeStakingStart: beet.bignum
-}
+  config: web3.PublicKey;
+  timeStakingStart: beet.bignum;
+};
 
-const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235]
+const stakeInfoDiscriminator = [66, 62, 68, 70, 108, 179, 183, 235];
 /**
  * Holds the data for the {@link StakeInfo} Account and provides de/serialization
  * functionality for that data
@@ -37,7 +37,7 @@ export class StakeInfo implements StakeInfoArgs {
    * Creates a {@link StakeInfo} instance from the provided args.
    */
   static fromArgs(args: StakeInfoArgs) {
-    return new StakeInfo(args.config, args.timeStakingStart)
+    return new StakeInfo(args.config, args.timeStakingStart);
   }
 
   /**
@@ -48,7 +48,7 @@ export class StakeInfo implements StakeInfoArgs {
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
   ): [StakeInfo, number] {
-    return StakeInfo.deserialize(accountInfo.data, offset)
+    return StakeInfo.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -61,11 +61,11 @@ export class StakeInfo implements StakeInfoArgs {
     connection: web3.Connection,
     address: web3.PublicKey
   ): Promise<StakeInfo> {
-    const accountInfo = await connection.getAccountInfo(address)
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
-      throw new Error(`Unable to find StakeInfo account at ${address}`)
+      throw new Error(`Unable to find StakeInfo account at ${address}`);
     }
-    return StakeInfo.fromAccountInfo(accountInfo, 0)[0]
+    return StakeInfo.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -73,7 +73,7 @@ export class StakeInfo implements StakeInfoArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [StakeInfo, number] {
-    return stakeInfoBeet.deserialize(buf, offset)
+    return stakeInfoBeet.deserialize(buf, offset);
   }
 
   /**
@@ -84,7 +84,7 @@ export class StakeInfo implements StakeInfoArgs {
     return stakeInfoBeet.serialize({
       accountDiscriminator: stakeInfoDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -92,7 +92,7 @@ export class StakeInfo implements StakeInfoArgs {
    * {@link StakeInfo}
    */
   static get byteSize() {
-    return stakeInfoBeet.byteSize
+    return stakeInfoBeet.byteSize;
   }
 
   /**
@@ -108,7 +108,7 @@ export class StakeInfo implements StakeInfoArgs {
     return connection.getMinimumBalanceForRentExemption(
       StakeInfo.byteSize,
       commitment
-    )
+    );
   }
 
   /**
@@ -116,7 +116,7 @@ export class StakeInfo implements StakeInfoArgs {
    * hold {@link StakeInfo} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === StakeInfo.byteSize
+    return buf.byteLength - offset === StakeInfo.byteSize;
   }
 
   /**
@@ -127,17 +127,17 @@ export class StakeInfo implements StakeInfoArgs {
     return {
       config: this.config.toBase58(),
       timeStakingStart: (() => {
-        const x = <{ toNumber: () => number }>this.timeStakingStart
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.timeStakingStart;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
-    }
+    };
   }
 }
 
@@ -148,14 +148,14 @@ export class StakeInfo implements StakeInfoArgs {
 export const stakeInfoBeet = new beet.BeetStruct<
   StakeInfo,
   StakeInfoArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
-    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['config', beetSolana.publicKey],
-    ['timeStakingStart', beet.u64],
+    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
+    ["config", beetSolana.publicKey],
+    ["timeStakingStart", beet.u64],
   ],
   StakeInfo.fromArgs,
-  'StakeInfo'
-)
+  "StakeInfo"
+);
