@@ -14,7 +14,7 @@ pub struct FreezeOrThawDelegatedAccount<'info> {
     pub mint: AccountInfo<'info>,
     /// CHECK: for cpi, onus on program to check
     pub token_program: AccountInfo<'info>,
-    pub token_metadata_program: Program<'info,TokenMetadata>,
+    pub token_metadata_program: Program<'info, TokenMetadata>,
 }
 
 impl<'info> FreezeOrThawDelegatedAccount<'info> {

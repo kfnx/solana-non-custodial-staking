@@ -4,9 +4,9 @@ use anchor_lang::prelude::*;
 pub mod errors;
 pub mod instructions;
 pub mod mpl;
+pub mod safe_math;
 pub mod state;
 pub mod utils;
-pub mod safe_math;
 
 declare_id!("stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW");
 

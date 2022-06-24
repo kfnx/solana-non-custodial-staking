@@ -3,11 +3,11 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct InitStaking<'info> {
-  #[account(mut)]
-  pub user: Signer<'info>,
-  #[account(mut)]
-  pub config: Account<'info, StakingConfig>,
-  #[account(
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub config: Account<'info, StakingConfig>,
+    #[account(
         init,
         payer = user,
         seeds = [
@@ -18,23 +18,23 @@ pub struct InitStaking<'info> {
         bump,
         space = 8 + std::mem::size_of::<User>(),
     )]
-  pub user_state: Account<'info, User>,
-  pub system_program: Program<'info, System>,
+    pub user_state: Account<'info, User>,
+    pub system_program: Program<'info, System>,
 }
 
 pub fn handler(ctx: Context<InitStaking>) -> Result<()> {
-  let user = &mut ctx.accounts.user_state;
-  user.user = ctx.accounts.user.key();
-  user.config = ctx.accounts.config.key();
-  user.reward_accrued = 0;
-  user.time_last_stake = 0;
-  user.time_last_claim = 0;
-  user.nfts_staked = 0;
-  user.reward_stored = 0;
+    let user = &mut ctx.accounts.user_state;
+    user.user = ctx.accounts.user.key();
+    user.config = ctx.accounts.config.key();
+    user.reward_accrued = 0;
+    user.time_last_stake = 0;
+    user.time_last_claim = 0;
+    user.nfts_staked = 0;
+    user.reward_stored = 0;
 
-  let config = &mut ctx.accounts.config;
-  config.initiated_users = config.initiated_users.checked_add(1).unwrap();
+    let config = &mut ctx.accounts.config;
+    config.initiated_users = config.initiated_users.checked_add(1).unwrap();
 
-  msg!("instruction handler: InitStaking");
-  Ok(())
+    msg!("instruction handler: InitStaking");
+    Ok(())
 }
