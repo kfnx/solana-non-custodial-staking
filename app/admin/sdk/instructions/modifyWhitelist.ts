@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from "@metaplex-foundation/beet";
-import * as web3 from "@solana/web3.js";
+import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
@@ -14,11 +14,11 @@ import * as web3 from "@solana/web3.js";
  * @category generated
  */
 export const modifyWhitelistStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */;
+  instructionDiscriminator: number[] /* size: 8 */
 }>(
-  [["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)]],
-  "ModifyWhitelistInstructionArgs"
-);
+  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
+  'ModifyWhitelistInstructionArgs'
+)
 /**
  * Accounts required by the _modifyWhitelist_ instruction
  *
@@ -30,14 +30,14 @@ export const modifyWhitelistStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type ModifyWhitelistInstructionAccounts = {
-  admin: web3.PublicKey;
-  config: web3.PublicKey;
-  creatorAddressToWhitelist: web3.PublicKey;
-};
+  admin: web3.PublicKey
+  config: web3.PublicKey
+  creatorAddressToWhitelist: web3.PublicKey
+}
 
 export const modifyWhitelistInstructionDiscriminator = [
   186, 220, 49, 3, 161, 249, 168, 199,
-];
+]
 
 /**
  * Creates a _ModifyWhitelist_ instruction.
@@ -50,11 +50,11 @@ export const modifyWhitelistInstructionDiscriminator = [
 export function createModifyWhitelistInstruction(
   accounts: ModifyWhitelistInstructionAccounts
 ) {
-  const { admin, config, creatorAddressToWhitelist } = accounts;
+  const { admin, config, creatorAddressToWhitelist } = accounts
 
   const [data] = modifyWhitelistStruct.serialize({
     instructionDiscriminator: modifyWhitelistInstructionDiscriminator,
-  });
+  })
   const keys: web3.AccountMeta[] = [
     {
       pubkey: admin,
@@ -76,14 +76,14 @@ export function createModifyWhitelistInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
+  ]
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
+      'stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW'
     ),
     keys,
     data,
-  });
-  return ix;
+  })
+  return ix
 }

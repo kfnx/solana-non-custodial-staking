@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from "@solana/spl-token";
-import * as beet from "@metaplex-foundation/beet";
-import * as web3 from "@solana/web3.js";
+import * as splToken from '@solana/spl-token'
+import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import * as web3 from "@solana/web3.js";
  * @category generated
  */
 export type ClaimInstructionArgs = {
-  bumpConfigAuth: number;
-  bumpRewardPot: number;
-};
+  bumpConfigAuth: number
+  bumpRewardPot: number
+}
 /**
  * @category Instructions
  * @category Claim
@@ -25,16 +25,16 @@ export type ClaimInstructionArgs = {
  */
 export const claimStruct = new beet.BeetArgsStruct<
   ClaimInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */;
+    instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
-    ["instructionDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
-    ["bumpConfigAuth", beet.u8],
-    ["bumpRewardPot", beet.u8],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['bumpConfigAuth', beet.u8],
+    ['bumpRewardPot', beet.u8],
   ],
-  "ClaimInstructionArgs"
-);
+  'ClaimInstructionArgs'
+)
 /**
  * Accounts required by the _claim_ instruction
  *
@@ -51,19 +51,19 @@ export const claimStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type ClaimInstructionAccounts = {
-  user: web3.PublicKey;
-  config: web3.PublicKey;
-  configAuthority: web3.PublicKey;
-  userState: web3.PublicKey;
-  rewardPot: web3.PublicKey;
-  rewardMint: web3.PublicKey;
-  rewardDestination: web3.PublicKey;
-  associatedTokenProgram: web3.PublicKey;
-};
+  user: web3.PublicKey
+  config: web3.PublicKey
+  configAuthority: web3.PublicKey
+  userState: web3.PublicKey
+  rewardPot: web3.PublicKey
+  rewardMint: web3.PublicKey
+  rewardDestination: web3.PublicKey
+  associatedTokenProgram: web3.PublicKey
+}
 
 export const claimInstructionDiscriminator = [
   62, 198, 214, 193, 213, 159, 108, 210,
-];
+]
 
 /**
  * Creates a _Claim_ instruction.
@@ -88,12 +88,12 @@ export function createClaimInstruction(
     rewardMint,
     rewardDestination,
     associatedTokenProgram,
-  } = accounts;
+  } = accounts
 
   const [data] = claimStruct.serialize({
     instructionDiscriminator: claimInstructionDiscriminator,
     ...args,
-  });
+  })
   const keys: web3.AccountMeta[] = [
     {
       pubkey: user,
@@ -150,14 +150,14 @@ export function createClaimInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
+  ]
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
+      'stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW'
     ),
     keys,
     data,
-  });
-  return ix;
+  })
+  return ix
 }

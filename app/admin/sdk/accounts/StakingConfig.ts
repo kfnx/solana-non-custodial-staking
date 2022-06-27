@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from "@solana/web3.js";
-import * as beet from "@metaplex-foundation/beet";
-import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet'
+import * as beetSolana from '@metaplex-foundation/beet-solana'
 
 /**
  * Arguments used to create {@link StakingConfig}
@@ -15,23 +15,23 @@ import * as beetSolana from "@metaplex-foundation/beet-solana";
  * @category generated
  */
 export type StakingConfigArgs = {
-  admin: web3.PublicKey;
-  rewardPot: web3.PublicKey;
-  rewardMint: web3.PublicKey;
-  configAuthority: web3.PublicKey;
-  configAuthoritySeed: web3.PublicKey;
-  configAuthorityBumpSeed: number[] /* size: 1 */;
-  rewardPerSec: beet.bignum;
-  rewardDenominator: beet.bignum;
-  stakingLockDurationInSec: beet.bignum;
-  rewardAccrued: beet.bignum;
-  nftsStaked: beet.bignum;
-  initiatedUsers: beet.bignum;
-  activeStakers: beet.bignum;
-  creatorWhitelist: web3.PublicKey;
-};
+  admin: web3.PublicKey
+  rewardPot: web3.PublicKey
+  rewardMint: web3.PublicKey
+  configAuthority: web3.PublicKey
+  configAuthoritySeed: web3.PublicKey
+  configAuthorityBumpSeed: number[] /* size: 1 */
+  rewardPerSec: beet.bignum
+  rewardDenominator: beet.bignum
+  stakingLockDurationInSec: beet.bignum
+  rewardAccrued: beet.bignum
+  nftsStaked: beet.bignum
+  initiatedUsers: beet.bignum
+  activeStakers: beet.bignum
+  creatorWhitelist: web3.PublicKey
+}
 
-const stakingConfigDiscriminator = [45, 134, 252, 82, 37, 57, 84, 25];
+const stakingConfigDiscriminator = [45, 134, 252, 82, 37, 57, 84, 25]
 /**
  * Holds the data for the {@link StakingConfig} Account and provides de/serialization
  * functionality for that data
@@ -76,7 +76,7 @@ export class StakingConfig implements StakingConfigArgs {
       args.initiatedUsers,
       args.activeStakers,
       args.creatorWhitelist
-    );
+    )
   }
 
   /**
@@ -87,7 +87,7 @@ export class StakingConfig implements StakingConfigArgs {
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
   ): [StakingConfig, number] {
-    return StakingConfig.deserialize(accountInfo.data, offset);
+    return StakingConfig.deserialize(accountInfo.data, offset)
   }
 
   /**
@@ -100,11 +100,11 @@ export class StakingConfig implements StakingConfigArgs {
     connection: web3.Connection,
     address: web3.PublicKey
   ): Promise<StakingConfig> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address)
     if (accountInfo == null) {
-      throw new Error(`Unable to find StakingConfig account at ${address}`);
+      throw new Error(`Unable to find StakingConfig account at ${address}`)
     }
-    return StakingConfig.fromAccountInfo(accountInfo, 0)[0];
+    return StakingConfig.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -112,7 +112,7 @@ export class StakingConfig implements StakingConfigArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [StakingConfig, number] {
-    return stakingConfigBeet.deserialize(buf, offset);
+    return stakingConfigBeet.deserialize(buf, offset)
   }
 
   /**
@@ -123,7 +123,7 @@ export class StakingConfig implements StakingConfigArgs {
     return stakingConfigBeet.serialize({
       accountDiscriminator: stakingConfigDiscriminator,
       ...this,
-    });
+    })
   }
 
   /**
@@ -131,7 +131,7 @@ export class StakingConfig implements StakingConfigArgs {
    * {@link StakingConfig}
    */
   static get byteSize() {
-    return stakingConfigBeet.byteSize;
+    return stakingConfigBeet.byteSize
   }
 
   /**
@@ -147,7 +147,7 @@ export class StakingConfig implements StakingConfigArgs {
     return connection.getMinimumBalanceForRentExemption(
       StakingConfig.byteSize,
       commitment
-    );
+    )
   }
 
   /**
@@ -155,7 +155,7 @@ export class StakingConfig implements StakingConfigArgs {
    * hold {@link StakingConfig} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === StakingConfig.byteSize;
+    return buf.byteLength - offset === StakingConfig.byteSize
   }
 
   /**
@@ -171,84 +171,84 @@ export class StakingConfig implements StakingConfigArgs {
       configAuthoritySeed: this.configAuthoritySeed.toBase58(),
       configAuthorityBumpSeed: this.configAuthorityBumpSeed,
       rewardPerSec: (() => {
-        const x = <{ toNumber: () => number }>this.rewardPerSec;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.rewardPerSec
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       rewardDenominator: (() => {
-        const x = <{ toNumber: () => number }>this.rewardDenominator;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.rewardDenominator
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       stakingLockDurationInSec: (() => {
-        const x = <{ toNumber: () => number }>this.stakingLockDurationInSec;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.stakingLockDurationInSec
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       rewardAccrued: (() => {
-        const x = <{ toNumber: () => number }>this.rewardAccrued;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.rewardAccrued
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       nftsStaked: (() => {
-        const x = <{ toNumber: () => number }>this.nftsStaked;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.nftsStaked
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       initiatedUsers: (() => {
-        const x = <{ toNumber: () => number }>this.initiatedUsers;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.initiatedUsers
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       activeStakers: (() => {
-        const x = <{ toNumber: () => number }>this.activeStakers;
-        if (typeof x.toNumber === "function") {
+        const x = <{ toNumber: () => number }>this.activeStakers
+        if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       creatorWhitelist: this.creatorWhitelist.toBase58(),
-    };
+    }
   }
 }
 
@@ -259,26 +259,26 @@ export class StakingConfig implements StakingConfigArgs {
 export const stakingConfigBeet = new beet.BeetStruct<
   StakingConfig,
   StakingConfigArgs & {
-    accountDiscriminator: number[] /* size: 8 */;
+    accountDiscriminator: number[] /* size: 8 */
   }
 >(
   [
-    ["accountDiscriminator", beet.uniformFixedSizeArray(beet.u8, 8)],
-    ["admin", beetSolana.publicKey],
-    ["rewardPot", beetSolana.publicKey],
-    ["rewardMint", beetSolana.publicKey],
-    ["configAuthority", beetSolana.publicKey],
-    ["configAuthoritySeed", beetSolana.publicKey],
-    ["configAuthorityBumpSeed", beet.uniformFixedSizeArray(beet.u8, 1)],
-    ["rewardPerSec", beet.u64],
-    ["rewardDenominator", beet.u64],
-    ["stakingLockDurationInSec", beet.u64],
-    ["rewardAccrued", beet.u64],
-    ["nftsStaked", beet.u64],
-    ["initiatedUsers", beet.u64],
-    ["activeStakers", beet.u64],
-    ["creatorWhitelist", beetSolana.publicKey],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['admin', beetSolana.publicKey],
+    ['rewardPot', beetSolana.publicKey],
+    ['rewardMint', beetSolana.publicKey],
+    ['configAuthority', beetSolana.publicKey],
+    ['configAuthoritySeed', beetSolana.publicKey],
+    ['configAuthorityBumpSeed', beet.uniformFixedSizeArray(beet.u8, 1)],
+    ['rewardPerSec', beet.u64],
+    ['rewardDenominator', beet.u64],
+    ['stakingLockDurationInSec', beet.u64],
+    ['rewardAccrued', beet.u64],
+    ['nftsStaked', beet.u64],
+    ['initiatedUsers', beet.u64],
+    ['activeStakers', beet.u64],
+    ['creatorWhitelist', beetSolana.publicKey],
   ],
   StakingConfig.fromArgs,
-  "StakingConfig"
-);
+  'StakingConfig'
+)
