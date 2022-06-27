@@ -61,7 +61,7 @@ export function convertSecondsToReadableTime(seconds: number) {
 }
 
 export function timeNow() {
-  function trimLeft(string) {
+  function trimLeft(string: number) {
     const str = String(string);
     if (str.length === 1) {
       return "0" + str;
@@ -69,7 +69,7 @@ export function timeNow() {
     return str;
   }
 
-  function trimRight(string) {
+  function trimRight(string: number) {
     const str = String(string);
     if (str.length === 1) {
       return str + "00";

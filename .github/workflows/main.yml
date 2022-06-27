@@ -1,4 +1,4 @@
-name: CI
+name: main
 on:
   push:
     branches:
@@ -23,14 +23,10 @@ jobs:
         run: cargo fmt --verbose
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Apply format and lint changes
+          commit_message: Commit formatted file
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Lint
-        run: cargo clippy --fix --verbose
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Apply lint changes
-
+        run: cargo clippy -- -D warnings
