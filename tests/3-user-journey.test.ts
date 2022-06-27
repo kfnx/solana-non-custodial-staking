@@ -219,6 +219,13 @@ describe("User journey", () => {
         "initialized",
         "NFT state should be initialized if unstaking success"
       );
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+      const account = await program.account.user.fetch(justinState);
+      assert.ok(account.user.equals(justin.wallet.publicKey));
+      assert.equal(account.nftsStaked.toNumber(), 0);
     });
 
     it("Justin cannot unstake same NFT twice", async () => {
@@ -338,6 +345,16 @@ describe("User journey", () => {
 
       await delay(3000);
 
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+      assert.equal(
+        (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+        1,
+        "1 NFT staked"
+      );
+
       console.log(timeNow(), "NFT #2", nfts[2].mint.publicKey.toBase58());
 
       const secondStakeTx = await stake(
@@ -350,6 +367,12 @@ describe("User journey", () => {
 
       await delay(3000);
 
+      assert.equal(
+        (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+        2,
+        "2 NFT staked"
+      );
+
       console.log(timeNow(), "NFT #3", nfts[3].mint.publicKey.toBase58());
 
       const thirdStakeTx = await stake(
@@ -360,7 +383,14 @@ describe("User journey", () => {
       );
       console.log(timeNow(), "NFT #3 stake tx", thirdStakeTx);
       console.log(timeNow(), "Waiting for 3 seconds to accrue reward..");
+
       await delay(3000);
+
+      assert.equal(
+        (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+        3,
+        "3 NFT staked"
+      );
 
       const userATA = await findUserATA(
         justin.wallet.publicKey,
@@ -394,7 +424,7 @@ describe("User journey", () => {
       );
       assert.isBelow(
         claim1rw,
-        2201,
+        2601,
         "is around 2000, depend on miliseconds on the 3 stakes"
       );
 
@@ -409,8 +439,8 @@ describe("User journey", () => {
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log(timeNow(), "[2nd] claim tx", claimTx2);
-
+      const timeClaim2 = new Date();
+      console.log(timeNow(timeClaim2), "[2nd] claim tx", claimTx2);
       const balance2 = await getTokenBalanceByATA(
         justin.provider.connection,
         userATA
@@ -422,7 +452,8 @@ describe("User journey", () => {
         "900 or 1200 depend on the miliseconds (300/s multiply by 3-4s)"
       );
 
-      await delay(1000);
+      console.log("Waiting for 750 miliseconds to accrue..");
+      await delay(750);
 
       const claimTx3 = await claim(
         program,
@@ -430,7 +461,8 @@ describe("User journey", () => {
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log(timeNow(), "[3rd] claim tx", claimTx3);
+      const timeClaim3 = new Date();
+      console.log(timeNow(timeClaim3), "[3nd] claim tx", claimTx3);
 
       const balance3 = await getTokenBalanceByATA(
         justin.provider.connection,
@@ -438,16 +470,19 @@ describe("User journey", () => {
       );
       const claim3rw = balance3 - balance2;
       console.log(timeNow(), "[3rd] claim reward amount:", claim3rw);
-      assert.equal(
-        claim3rw,
-        300,
-        "should be 300 since its 300/s and only 1 seconds"
-      );
 
-      console.log(
-        timeNow(),
-        "Sequentially unstaking staked NFTs every 2 second..."
+      const intervalInSeconds = Number(
+        ((timeClaim3.getTime() - timeClaim2.getTime()) / 1000).toFixed(0)
       );
+      const rewardPerSeconds = 300; // 100 * 3 staked
+      const claimExpected = intervalInSeconds * rewardPerSeconds;
+      console.log(
+        "interval between 2nd to 3rd claim (seoncds):",
+        intervalInSeconds
+      );
+      assert.equal(claim3rw, claimExpected, "Expected 300/s");
+
+      console.log("Sequentially unstaking staked NFTs every 2 second...");
 
       console.log(
         timeNow(),
@@ -469,7 +504,14 @@ describe("User journey", () => {
       console.log(
         "Waiting for 5 seconds.. Making sure all tx confirmed on blockchain.."
       );
+
       await delay(5000);
+
+      assert.equal(
+        (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+        0,
+        "should be 0 because all NFT was unstaked previously"
+      );
 
       const claimTx4 = await claim(
         program,
@@ -487,8 +529,8 @@ describe("User journey", () => {
       console.log(timeNow(), "[4th] claim reward amount:", claim4rw);
       assert.isAbove(
         claim4rw,
-        699,
-        "700 - 1000 depend on miliseconds on the 3 unstakes"
+        599,
+        "600 - 1000 depend on miliseconds on the 3 unstakes"
       );
       assert.isBelow(
         claim4rw,
@@ -522,17 +564,6 @@ describe("User journey", () => {
         0,
         "final claim should be 0 since all NFT are unstaked"
       );
-
-      // assert.ok(
-      //   finalUserTokenBalance > earlyUserTokenBalance,
-      //   "justin got the reward"
-      // );
-      // const rewardClaimed = finalUserTokenBalance - earlyUserTokenBalance;
-      // assert.equal(
-      //   finalRewardPotBalance,
-      //   earlyRewardPotBalance - rewardClaimed,
-      //   "final reward pot should be equal to early pot balance reduced by claimed reward"
-      // );
     });
   });
 

@@ -60,7 +60,7 @@ export function convertSecondsToReadableTime(seconds: number) {
   return parts.join(", ");
 }
 
-export function timeNow() {
+export function timeNow(date?: Date) {
   function trimLeft(string: number) {
     const str = String(string);
     if (str.length === 1) {
@@ -80,7 +80,7 @@ export function timeNow() {
     return str;
   }
 
-  const time = new Date();
+  const time = date || new Date();
   const h = trimLeft(time.getHours());
   const m = trimLeft(time.getMinutes());
   const s = trimLeft(time.getSeconds());
