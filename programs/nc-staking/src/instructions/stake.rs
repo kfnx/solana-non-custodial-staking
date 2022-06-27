@@ -172,6 +172,8 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     let stake_info = &mut *ctx.accounts.stake_info;
     stake_info.time_staking_start = time_now;
     stake_info.config = ctx.accounts.config.key();
+    stake_info.mint = ctx.accounts.mint.key();
+    stake_info.user = ctx.accounts.user.key();
     msg!("Instruction handler: Stake");
     Ok(())
 }

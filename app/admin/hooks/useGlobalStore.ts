@@ -96,6 +96,10 @@ interface GlobalState {
   fetchConfigsLoading: boolean;
   fetchConfigsSuccess: boolean;
   fetchConfigs: () => void;
+  stakeInfo: any[];
+  fetchStakeInfoLoading: boolean;
+  fetchStakeInfoSuccess: boolean;
+  fetchStakeInfo: () => void;
   userTokenBalance: undefined | number;
   fetchUserTokenBalance: () => void;
 
@@ -259,6 +263,50 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       set({
         fetchConfigsLoading: false,
         fetchConfigsSuccess: false,
+      });
+    }
+  },
+  stakeInfo: [],
+  fetchStakeInfoLoading: false,
+  fetchStakeInfoSuccess: false,
+  fetchStakeInfo: async () => {
+    set({
+      fetchStakeInfoLoading: true,
+      fetchStakeInfoSuccess: false,
+    });
+    const connection = get().connection;
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return set({
+        fetchStakeInfoLoading: false,
+        fetchStakeInfoSuccess: false,
+      });
+    }
+
+    toast("Fetching staking config PDAs..");
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
+    try {
+      const stakeInfo = await program.account.stakeInfo.all();
+      console.log("🚀 fetchStakeInfo: ~ stakeInfo", stakeInfo)
+      set({
+        provider,
+        stakeInfo,
+        fetchStakeInfoLoading: false,
+        fetchStakeInfoSuccess: true,
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Request failed");
+      set({
+        fetchStakeInfoLoading: false,
+        fetchStakeInfoSuccess: false,
       });
     }
   },

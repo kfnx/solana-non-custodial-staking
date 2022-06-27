@@ -4,15 +4,16 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import useGlobalStore from "../hooks/useGlobalStore";
 import Admin from "./Admin";
 import User from "./User";
+import StakeInfo from "./StakeInfo";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 const categories = {
-  "as Admin": <Admin />,
-  "as User": <User />,
-  // "Utility": <Utility />, // example: create NFT, create mint token, etc
+  "Configs": <Admin />,
+  "Users": <User />,
+  "Stake Info": <StakeInfo />,
 };
 
 export default function Tabs() {

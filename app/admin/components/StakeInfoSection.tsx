@@ -1,13 +1,13 @@
 import { unixTimeConverter } from "../utils/unixTimeConverter";
 
-const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
-  if (stakings.length === 0) {
-    return <span>No initiated staking found</span>;
+const StakeInfoSection: React.FC<{ stakes: any[] }> = ({ stakes }) => {
+  if (stakes.length === 0) {
+    return <span>No stake info found</span>;
   }
 
   return (
     <>
-      {stakings.map((item: any, index) => (
+      {stakes.map((item: any, index) => (
         <div key={item.publicKey.toString()} className="text-xs mt-4">
           <span className="py-0.5 px-2 mr-2 border rounded-md text-slate-600 dark:text-gray-200">
             {index + 1}
@@ -22,11 +22,7 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
                 id % 2 ? " bg-slate-200 dark: bg-slate-500/75" : ""
               }`;
 
-              if (
-                v === "lastStakeTime" ||
-                v === "timeLastClaim" ||
-                v === "timeLastStake"
-              ) {
+              if (v === "timeStakingStart" || v === "stakingStartTime") {
                 const unixTime = item.account[v].toNumber();
                 const time = unixTime ? unixTimeConverter(unixTime) : "Never";
                 return (
@@ -52,4 +48,4 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
   );
 };
 
-export default UserStakings;
+export default StakeInfoSection;
