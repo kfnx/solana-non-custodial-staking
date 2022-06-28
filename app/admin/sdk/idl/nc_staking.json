@@ -326,6 +326,14 @@
             "type": "publicKey"
           },
           {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
             "name": "timeStakingStart",
             "type": "u64"
           }
@@ -501,7 +509,7 @@
     }
   ],
   "metadata": {
-    "address": "stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW",
+    "address": "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ",
     "origin": "anchor",
     "binaryVersion": "0.24.2",
     "libVersion": "0.24.2"

@@ -8,7 +8,7 @@ pub mod safe_math;
 pub mod state;
 pub mod utils;
 
-declare_id!("stkMasspWTzjjNfRNb8v2QW8Hza73baxMqJ3mEi7LUW");
+declare_id!("stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ");
 
 #[program]
 pub mod nc_staking {
