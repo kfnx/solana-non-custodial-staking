@@ -18,7 +18,6 @@ async function checkStakeInfo(
   mint: string,
   successCallback: any // function
 ) {
-  try {
     const userPK = new PublicKey(user);
     const mintPK = new PublicKey(mint);
     const [stakeInfoPDA] = await findStakeInfoPDA(userPK, mintPK);
@@ -30,9 +29,6 @@ async function checkStakeInfo(
     const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
     successCallback(stakeInfo);
-  } catch (error) {
-    console.error(error);
-  }
 }
 
 export default function StakeInfo() {

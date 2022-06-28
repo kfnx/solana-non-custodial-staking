@@ -326,7 +326,15 @@ export type NcStaking = {
             type: "publicKey";
           },
           {
-            name: "stakingStartTime";
+            name: "user";
+            type: "publicKey";
+          },
+          {
+            name: "mint";
+            type: "publicKey";
+          },
+          {
+            name: "timeStakingStart";
             type: "u64";
           }
         ];
@@ -416,7 +424,11 @@ export type NcStaking = {
             type: "u64";
           },
           {
-            name: "lastStakeTime";
+            name: "rewardStored";
+            type: "u64";
+          },
+          {
+            name: "timeLastStake";
             type: "u64";
           },
           {
@@ -823,7 +835,15 @@ export const IDL: NcStaking = {
             type: "publicKey",
           },
           {
-            name: "stakingStartTime",
+            name: "user",
+            type: "publicKey",
+          },
+          {
+            name: "mint",
+            type: "publicKey",
+          },
+          {
+            name: "timeStakingStart",
             type: "u64",
           },
         ],
@@ -913,7 +933,11 @@ export const IDL: NcStaking = {
             type: "u64",
           },
           {
-            name: "lastStakeTime",
+            name: "rewardStored",
+            type: "u64",
+          },
+          {
+            name: "timeLastStake",
             type: "u64",
           },
           {

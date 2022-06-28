@@ -22,11 +22,7 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
                 id % 2 ? " bg-slate-200 dark: bg-slate-500/75" : ""
               }`;
 
-              if (
-                v === "lastStakeTime" ||
-                v === "timeLastClaim" ||
-                v === "timeLastStake"
-              ) {
+              if (v === "timeLastClaim" || v === "timeLastStake") {
                 const unixTime = item.account[v].toNumber();
                 const time = unixTime ? unixTimeConverter(unixTime) : "Never";
                 return (

@@ -44,7 +44,7 @@ async function getNFT(
     const onchainMetadata = (await Metadata.load(conn, metadataPDA)).data;
     const creators = onchainMetadata.data.creators || [];
     const filter = filterByCreatorAddress
-      ? creators.find((c) => c.address === filterByCreatorAddress.toBase58())
+      ? creators.find((c) => c.address === NFT_CREATOR_ID.toBase58())
       : true;
     if (filter) {
       const externalMetadata = (await axios.get(onchainMetadata.data.uri)).data;
@@ -66,7 +66,7 @@ export async function getNFTMetadataForMany(
   conn: Connection
 ): Promise<INFT[]> {
   const promises: Promise<INFT | undefined>[] = [];
-  tokens.forEach((t) => promises.push(getNFT(conn, t)));
+  tokens.forEach((t) => promises.push(getNFT(conn, t, NFT_CREATOR_ID)));
   const nfts = (await Promise.all(promises)).filter((n) => !!n);
 
   return nfts as INFT[];

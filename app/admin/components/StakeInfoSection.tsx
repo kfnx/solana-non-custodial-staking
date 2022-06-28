@@ -22,7 +22,7 @@ const StakeInfoSection: React.FC<{ stakes: any[] }> = ({ stakes }) => {
                 id % 2 ? " bg-slate-200 dark: bg-slate-500/75" : ""
               }`;
 
-              if (v === "timeStakingStart" || v === "stakingStartTime") {
+              if (v === "timeStakingStart") {
                 const unixTime = item.account[v].toNumber();
                 const time = unixTime ? unixTimeConverter(unixTime) : "Never";
                 return (

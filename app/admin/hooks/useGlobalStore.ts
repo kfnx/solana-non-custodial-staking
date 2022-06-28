@@ -284,7 +284,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       });
     }
 
-    toast("Fetching staking config PDAs..");
+    toast("Fetching stake info PDAs..");
     const provider = new AnchorProvider(
       connection,
       wallet,

@@ -90,7 +90,7 @@ export const store = {
    * 🌾 Staking Config 0 (Testing)
    * IGS/second estimate: 1
    * Base Rate: 1157407
-   * Denominator: 10000000000 (less 0 from production)
+   * Denominator: 10000000000 (less 1 zero from production)
    * Locking Duration: 0 seconds or Flexible
    *
    * IGS/day: 1.25
