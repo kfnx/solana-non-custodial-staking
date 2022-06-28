@@ -5,7 +5,7 @@ import Image from "next/image";
 import NetworkSelector from "../components/NetworkSelector";
 import Tabs from "../components/Tabs";
 import { PROGRAM_ID } from "../sdk";
-import { STAKING_REWARD_ID } from "../sdk/address";
+import { NFT_CREATOR_ID, STAKING_REWARD_ID } from "../sdk/address";
 
 const Home: NextPage = () => {
   return (
@@ -28,6 +28,7 @@ const Home: NextPage = () => {
         </div>
         <p>program: {PROGRAM_ID.toBase58()}</p>
         <p>reward: {STAKING_REWARD_ID.toBase58()}</p>
+        <p>nft creator: {NFT_CREATOR_ID.toBase58()}</p>
         <Tabs />
       </main>
     </div>

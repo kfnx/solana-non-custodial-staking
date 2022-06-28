@@ -1,7 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import axios from "axios";
-import { MetadataJson, programs } from "@metaplex/js";
+import { programs } from "@metaplex/js";
+import { NFT_CREATOR_ID } from "../sdk/address";
 
 const {
   metadata: { Metadata },
@@ -33,42 +34,30 @@ interface MetadataCreators {
   verified: 0 | 1;
 }
 
-// const WHITELISTED_CREATOR_ADDRESS = CANDY_MACHINE_ID.toString();
-
 async function getNFT(
   conn: Connection,
-  t?: any,
-  filterByCreatorAddress?: string
+  tokenInfo: any,
+  filterByCreatorAddress?: PublicKey
 ): Promise<INFT | undefined> {
   try {
-    const metadataPDA = await Metadata.getPDA(t.mint);
+    const metadataPDA = await Metadata.getPDA(tokenInfo.mint);
     const onchainMetadata = (await Metadata.load(conn, metadataPDA)).data;
     const creators = onchainMetadata.data.creators || [];
-
-    if (
-      filterByCreatorAddress &&
-      creators.find((c) => c.address === filterByCreatorAddress)
-    ) {
+    const filter = filterByCreatorAddress
+      ? creators.find((c) => c.address === filterByCreatorAddress.toBase58())
+      : true;
+    if (filter) {
       const externalMetadata = (await axios.get(onchainMetadata.data.uri)).data;
       return {
-        pubkey: t.pubkey ? new PublicKey(t.pubkey) : undefined,
-        mint: new PublicKey(t.mint),
-        state: t.state,
-        onchainMetadata,
-        externalMetadata,
-      };
-    } else {
-      const externalMetadata = (await axios.get(onchainMetadata.data.uri)).data;
-      return {
-        pubkey: t.pubkey ? new PublicKey(t.pubkey) : undefined,
-        mint: new PublicKey(t.mint),
-        state: t.state,
+        pubkey: tokenInfo.pubkey ? new PublicKey(tokenInfo.pubkey) : undefined,
+        mint: new PublicKey(tokenInfo.mint),
+        state: tokenInfo.state,
         onchainMetadata,
         externalMetadata,
       };
     }
   } catch (e) {
-    console.warn(`failed to pull metadata for token ${t.mint}`);
+    console.warn(`failed to pull metadata for token ${tokenInfo.mint}`);
   }
 }
 

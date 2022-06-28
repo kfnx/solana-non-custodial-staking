@@ -19,3 +19,7 @@ export const METAPLEX_PROGRAM_ID = new PublicKey(
 export const STAKING_REWARD_ID = new PublicKey(
   "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
 );
+
+export const NFT_CREATOR_ID = new PublicKey(
+  "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
+);

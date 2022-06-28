@@ -86,12 +86,12 @@ export async function allSynchronously<T>(
 
 const NFTcreator = Keypair.fromSecretKey(
   Uint8Array.from(
-    // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+    // cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU
     [
-      46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156, 176,
-      71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222, 171, 222,
-      87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127, 111, 117, 250,
-      132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134, 82, 70, 103, 165, 27,
+      238, 138, 236, 130, 250, 209, 147, 210, 134, 105, 215, 196, 0, 151, 177,
+      169, 208, 115, 238, 204, 146, 68, 167, 6, 83, 64, 72, 10, 83, 13, 67, 39,
+      9, 47, 120, 173, 108, 96, 173, 245, 129, 154, 169, 179, 168, 238, 210,
+      173, 38, 63, 95, 127, 158, 26, 20, 158, 8, 13, 53, 56, 2, 88, 126, 55,
     ]
   )
 );
@@ -156,7 +156,7 @@ const allJsonMetadata = [
   {
     name: "Meekolony #9",
     symbol: "MKLN",
-    uri: "https://arweave.net/xREW2gypD8FlI59fDJtigYSMm01YZTnSXBUTQ7vkY0",
+    uri: "https://arweave.net/xREW2gypD8FlI59fDJtigYSMm01YZTnSXBUTQ7vkY0c",
     sellerFeeBasisPoints: 700,
     creators: [],
   },
@@ -275,60 +275,37 @@ const createNFT = async (
 };
 
 const mintWhitelistedNFTs = async () => {
-  try {
-    const { wallet, provider } = useGlobalStore.getState();
-    if (!wallet) {
-      return toast.error("Wallet not connected");
-    }
-    console.log("mintWhitelistedNFTs ~ provider", provider);
-    if (!provider) {
-      return toast.error("Provider not ready");
-    }
-
-    // const selectedConfig = configs[config];
-    // console.log("Creator address", NFTcreator.publicKey.toBase58());
-
-    await airdropUser(wallet.publicKey, provider.connection);
-    console.log("Minting NFT to", wallet.publicKey.toBase58());
-
-    await allSynchronously(
-      allJsonMetadata.map((meta) => async () => {
-        const mint = Keypair.generate();
-
-        console.log("creating nft");
-        await createNFT(NFTcreator, wallet.publicKey, mint, meta, provider);
-
-        // verify
-        // const createdATA = await findUserATA(
-        //   NFTcreator.publicKey,
-        //   mint.publicKey
-        // );
-        // const createdATAbalance = await getTokenBalanceByATA(
-        //   provider.connection,
-        //   createdATA
-        // );
-        // console.log("verify created NFT should be 1", createdATAbalance);
-
-        // console.log("transferring nft to you");
-        // await transferToken(
-        //   NFTcreator,
-        //   wallet.publicKey,
-        //   mint.publicKey,
-        //   provider
-        // );
-
-        // verify
-        const userATA = await findUserATA(wallet.publicKey, mint.publicKey);
-        const userATAbalance = await getTokenBalanceByATA(
-          provider.connection,
-          userATA
-        );
-        console.log("verify your NFT should be 1", userATAbalance);
-      })
-    );
-  } catch (error) {
-    console.error(error);
+  const { wallet, provider } = useGlobalStore.getState();
+  if (!wallet) {
+    return toast.error("Wallet not connected");
   }
+  console.log("mintWhitelistedNFTs ~ provider", provider);
+  if (!provider) {
+    return toast.error("Provider not ready");
+  }
+
+  // const selectedConfig = configs[config];
+  // console.log("Creator address", NFTcreator.publicKey.toBase58());
+
+  await airdropUser(wallet.publicKey, provider.connection);
+  console.log("Minting NFT to", wallet.publicKey.toBase58());
+
+  await allSynchronously(
+    allJsonMetadata.map((meta) => async () => {
+      const mint = Keypair.generate();
+
+      console.log("creating nft");
+      await createNFT(NFTcreator, wallet.publicKey, mint, meta, provider);
+
+      // verify
+      const userATA = await findUserATA(wallet.publicKey, mint.publicKey);
+      const userATAbalance = await getTokenBalanceByATA(
+        provider.connection,
+        userATA
+      );
+      console.log("verify your NFT should be 1", userATAbalance);
+    })
+  );
 };
 
 export default mintWhitelistedNFTs;

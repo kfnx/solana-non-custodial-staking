@@ -29,10 +29,6 @@ async function checkStakeInfo(
     );
     const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
     const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
-    console.log(
-      "🚀 ~ file: StakeInfo.tsx ~ line 24 ~ checkStakeInfo ~ stakeInfo",
-      stakeInfo
-    );
     successCallback(stakeInfo);
   } catch (error) {
     console.error(error);
@@ -50,10 +46,6 @@ export default function StakeInfo() {
   console.log("stakeInfo", stakeInfo);
 
   const [checkedStakeInfo, setStakeInfo] = useState<any>();
-  console.log(
-    "🚀 ~ file: StakeInfo.tsx ~ line 46 ~ StakeInfo ~ checkedStakeInfo",
-    checkedStakeInfo
-  );
   const [user, setUser] = useState<string>(wallet?.publicKey.toBase58() || "");
   const [mint, setMint] = useState<string>(
     "4iWniuvrXmPvaoufVngsQWceV72cK8AkZTKiXN1x3s2p"

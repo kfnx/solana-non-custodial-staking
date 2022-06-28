@@ -2,11 +2,22 @@ import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, SelectorIcon, TerminalIcon } from "@heroicons/react/solid";
 import useGlobalStore from "../hooks/useGlobalStore";
+import { convertSecondsToReadableTime } from "../utils/convertSecToReadableTime";
+
+function readableConfig(config: any) {
+  return `${config.publicKey.toBase58().substr(0, 6) + ".."} -
+${
+  convertSecondsToReadableTime(
+    Number(config.account.stakingLockDurationInSec.toString())
+  ) || " Flexible"
+}`;
+}
 
 export default function ConfigSelector() {
   const configs = useGlobalStore((state) => state.configs);
   const config = useGlobalStore((state) => state.config);
   const setConfig = useGlobalStore((state) => state.setConfig);
+  console.log("active config", configs[config]);
 
   return (
     <Listbox value={config} onChange={setConfig}>
@@ -17,7 +28,7 @@ export default function ConfigSelector() {
           </span>
           <span className="block truncate ml-7">
             {configs.length > 0
-              ? configs[config].publicKey.toBase58()
+              ? readableConfig(configs[config])
               : "No config found"}
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -48,7 +59,7 @@ export default function ConfigSelector() {
                         selected ? "font-medium" : "font-normal"
                       }`}
                     >
-                      {item.publicKey.toBase58()}
+                      {readableConfig(item)}
                     </span>
                     {selected ? (
                       <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-violet-300">

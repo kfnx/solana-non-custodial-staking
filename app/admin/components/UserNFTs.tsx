@@ -81,7 +81,9 @@ const UserNFTs: React.FC<{
   }
 
   if (isEmpty) {
-    return <p className="py-4 text-lg">Empty</p>;
+    return (
+      <p className="py-4 text-lg">Empty (NFT filtered by creator addres)</p>
+    );
   }
 
   return (

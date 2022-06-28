@@ -16,6 +16,7 @@ import ClaimModal from "./Modal/ClaimModal";
 import UserNFTs from "./UserNFTs";
 import UserStakings from "./UserStakings";
 import mintWhitelistedNFTs from "../utils/mintWhitelistedNFTs";
+import { NFT_CREATOR_ID } from "../sdk/address";
 
 export default function User() {
   const [showInitStake, setShowInitStake] = useState(false);
@@ -69,7 +70,7 @@ export default function User() {
       <div className="my-2">
         <p className="block mb-2 text-sm text-gray-500">Creator Address</p>
         <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-          6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+          {NFT_CREATOR_ID.toBase58()}
         </div>
       </div>
       <button

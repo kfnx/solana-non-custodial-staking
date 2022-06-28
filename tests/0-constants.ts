@@ -55,13 +55,13 @@ export const store = {
   NFTcreator: createUser(
     Keypair.fromSecretKey(
       Uint8Array.from(
-        // 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+        // cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU
         [
-          46, 153, 255, 163, 58, 223, 86, 187, 209, 167, 46, 176, 18, 225, 156,
-          176, 71, 14, 67, 109, 146, 108, 110, 61, 230, 47, 140, 147, 96, 222,
-          171, 222, 87, 30, 67, 166, 139, 42, 111, 149, 250, 38, 72, 195, 127,
-          111, 117, 250, 132, 207, 86, 106, 250, 33, 178, 119, 200, 158, 134,
-          82, 70, 103, 165, 27,
+          238, 138, 236, 130, 250, 209, 147, 210, 134, 105, 215, 196, 0, 151,
+          177, 169, 208, 115, 238, 204, 146, 68, 167, 6, 83, 64, 72, 10, 83, 13,
+          67, 39, 9, 47, 120, 173, 108, 96, 173, 245, 129, 154, 169, 179, 168,
+          238, 210, 173, 38, 63, 95, 127, 158, 26, 20, 158, 8, 13, 53, 56, 2,
+          88, 126, 55,
         ]
       )
     )
@@ -89,7 +89,24 @@ export const store = {
    *
    * 🌾 Staking Config 0 (Testing)
    * IGS/second estimate: 1
-   * Locking Duration (second): 5
+   * Base Rate: 1157407
+   * Denominator: 10000000000 (less 0 from production)
+   * Locking Duration: 0 seconds or Flexible
+   *
+   * IGS/day: 1.25
+   * Locking Duration: 1200 seconds or 20 Minutes
+   *
+   * IGS/day: 2
+   * Locking Duration: 7200 seconds or 2 Hour
+   *
+   * IGS/day: 1.25
+   * Locking Duration: 604800 seconds or 7 Days
+   * IGS/day: 2
+   * Locking Duration: 2592000 seconds or 30 Days
+   * IGS/day: 2.5
+   * Locking Duration: 5184000 seconds or 60 Days
+   * IGS/day: 3
+   * Locking Duration: 7776000 seconds or 90 Days
    *
    * 🌾 Staking Config 1
    * IGS/day: 1
