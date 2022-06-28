@@ -32,6 +32,7 @@ import {
   findStakeInfoPDA,
   timeNow,
   getSolanaBalance,
+  NFT_CREATOR_ID,
 } from "./utils";
 import { store } from "./0-constants";
 import { claim, stake, unstake } from "./utils/transactions";
@@ -150,21 +151,23 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         nfts[0].mint.publicKey
       );
-      const devATA = await findUserATA(
-        dev.wallet.publicKey,
+      const receiverATA = await findUserATA(
+        NFT_CREATOR_ID,
         nfts[0].mint.publicKey
       );
 
       try {
-        await transfer(
+        const tx = await transfer(
           justin.provider.connection,
           justin.wallet.payer,
           justinATA,
-          devATA,
+          receiverATA,
           justin.wallet.publicKey,
           1
         );
+        console.log("transfer tx", tx);
       } catch (error) {
+        console.log(error);
         const balance = await getTokenBalanceByATA(
           justin.provider.connection,
           justinATA
@@ -253,21 +256,20 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         nfts[0].mint.publicKey
       );
-      const devATA = await findUserATA(
-        dev.wallet.publicKey,
+      const receiverATA = await findUserATA(
+        NFT_CREATOR_ID,
         nfts[0].mint.publicKey
       );
 
-      const tfx = await transfer(
+      const tx = await transfer(
         justin.provider.connection,
         justin.wallet.payer,
         justinATA,
-        devATA,
+        receiverATA,
         justin.wallet.publicKey,
         1
       );
-
-      // console.log("NFT transfer tx", tfx);
+      console.log("transfer tx", tx);
 
       const justinAtaBalance = await getTokenBalanceByATA(
         justin.provider.connection,
