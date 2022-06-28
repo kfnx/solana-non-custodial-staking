@@ -138,6 +138,7 @@ describe("Generate Meekolony NFTs", () => {
       await getSolanaBalance(NFTcreator.wallet.publicKey)
     );
     await airdropUser(userId);
+    await airdropUser(NFTcreator.wallet.publicKey);
     console.log(
       "NFT holder address",
       userId.toBase58(),
