@@ -30,6 +30,7 @@ const createStakingConfig = async (
   creator: Keypair,
   config: Keypair,
   rewardMint: PublicKey,
+  creatorAddressToWhitelist: PublicKey,
   option: StakingConfigOption,
   program: anchor.Program<NcStaking> = anchor.workspace
     .NcStaking as anchor.Program<NcStaking>
@@ -54,7 +55,7 @@ const createStakingConfig = async (
       configAuthority: configAuth,
       rewardMint,
       rewardPot,
-      creatorAddressToWhitelist: creator.publicKey,
+      creatorAddressToWhitelist,
       // programs
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -66,27 +67,28 @@ const createStakingConfig = async (
 };
 
 const checkConfigResult = async (
-  creator: Keypair,
+  admin: Keypair,
   config: Keypair,
   rewardMint: PublicKey,
+  creatorWhitelist: PublicKey,
   option: StakingConfigOption,
   program: anchor.Program<NcStaking> = anchor.workspace
     .NcStaking as anchor.Program<NcStaking>
 ) => {
   const account = await program.account.stakingConfig.fetch(config.publicKey);
 
-  assert.ok(account.admin.equals(creator.publicKey));
+  assert.ok(account.admin.equals(admin.publicKey));
   assert.ok(account.rewardMint.equals(rewardMint));
   const { rewardPerSec, rewardDenominator: denominator } = option;
   assert.ok(account.rewardPerSec.toNumber() === rewardPerSec.toNumber());
   assert.ok(account.rewardDenominator.toNumber() === denominator.toNumber());
-  assert.ok(account.creatorWhitelist.equals(creator.publicKey));
+  assert.ok(account.creatorWhitelist.equals(creatorWhitelist));
 };
 
 console.log(anchor.AnchorProvider.env().connection.rpcEndpoint);
 
 describe("Generate staking configs", () => {
-  const { dev, rewardToken, configs } = store;
+  const { dev, rewardToken, configs, NFTcreator } = store;
   const anchorProgram = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const program = new anchor.Program(
     IDL,
@@ -115,6 +117,7 @@ describe("Generate staking configs", () => {
           dev.keypair,
           config.keypair,
           rewardToken.publicKey,
+          NFTcreator.wallet.publicKey,
           config.option,
           program
         );
@@ -122,6 +125,7 @@ describe("Generate staking configs", () => {
           dev.keypair,
           config.keypair,
           rewardToken.publicKey,
+          NFTcreator.wallet.publicKey,
           config.option,
           program
         );
