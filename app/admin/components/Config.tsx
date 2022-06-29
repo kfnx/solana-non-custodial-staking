@@ -65,14 +65,15 @@ const Config: React.FC<{
           <span>{config.account.configAuthorityBumpSeed.toString()}</span>
         </div>
         <div className="flex w-full justify-between my-0.5">
-          <span>reward config</span>
-          <span>
-            base: {config.account.rewardPerSec.toString()} | denominator:{" "}
-            {config.account.rewardDenominator.toString()}
-          </span>
+          <span>rewardPerSec</span>
+          <span>{config.account.rewardPerSec.toString()}</span>
         </div>
         <div className="flex w-full justify-between my-0.5 bg-slate-200 dark:bg-slate-500/75">
-          <span>reward</span>
+          <span>rewardDenominator</span>
+          <span>{config.account.rewardDenominator.toString()}</span>
+        </div>
+        <div className="flex w-full justify-between my-0.5">
+          <span>reward (simulated)</span>
           <span>
             per sec:{" "}
             {Number(config.account.rewardPerSec.toString()) /
@@ -81,6 +82,13 @@ const Config: React.FC<{
             {(Number(config.account.rewardPerSec.toString()) /
               Number(config.account.rewardDenominator.toString())) *
               86_400}
+          </span>
+        </div>
+        <div className="flex w-full justify-between my-0.5 bg-slate-200 dark:bg-slate-500/75">
+          <span>reward config</span>
+          <span>
+            base: {config.account.rewardPerSec.toString()} | denominator:{" "}
+            {config.account.rewardDenominator.toString()}
           </span>
         </div>
         <div className="flex w-full justify-between my-0.5">
