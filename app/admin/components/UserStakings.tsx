@@ -1,6 +1,22 @@
+import { PublicKey } from "@solana/web3.js";
+import useGlobalStore from "../hooks/useGlobalStore";
+import { convertSecondsToReadableTime } from "../utils/convertSecToReadableTime";
 import { unixTimeConverter } from "../utils/unixTimeConverter";
 
+function readLockTime(configs: any[], configId: PublicKey) {
+  const config = configs.find(
+    (config) => config.publicKey.toString() === configId
+  );
+  return (
+    convertSecondsToReadableTime(
+      Number(config.account.stakingLockDurationInSec.toString())
+    ) || " Flexible"
+  );
+}
+
 const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
+  const configs = useGlobalStore((state) => state.configs);
+
   if (stakings.length === 0) {
     return <span>No initiated staking found</span>;
   }
@@ -13,6 +29,12 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
             {index + 1}
           </span>
           <div className="flex flex-column flex-wrap mt-2">
+            <div className="flex w-full justify-between my-0.5">
+              <span>Lock Duration</span>
+              <span>
+                {readLockTime(configs, item.account["config"].toString())}
+              </span>
+            </div>
             <div className="flex w-full justify-between my-0.5 bg-slate-200 dark:bg-slate-500/75">
               <span>PDA</span>
               <span>{item.publicKey.toString()}</span>

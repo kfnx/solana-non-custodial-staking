@@ -74,52 +74,6 @@ export async function stake(
   return tx;
 }
 
-export async function stakeLite(
-  program: anchor.Program<NcStaking>,
-  user: User,
-  config: PublicKey,
-  mint: PublicKey
-) {
-  const userId = user.wallet.publicKey;
-  const tokenAccount = await findUserATA(userId, mint);
-  // console.log("user ATA", userATA.toBase58());
-  const [delegate] = await findDelegateAuthPDA(tokenAccount);
-  // console.log("user delegate", delegate.toBase58());
-  const [edition] = await findEditionPDA(mint);
-  // console.log("edition", edition.toBase58());
-  const [userState] = await findUserStatePDA(userId, config);
-  // console.log("user state", userState.toBase58());
-  const [stakeInfo] = await findStakeInfoPDA(userId, mint);
-  // console.log("stakeInfo", stakeInfo.toBase58());
-  const metadata = await findMetadataPDA(mint);
-  // console.log("metadata", metadata.toBase58());
-
-  const tx = await program.methods
-    .stake()
-    .accounts({
-      user: userId,
-      stakeInfo,
-      config,
-      mint,
-      tokenAccount,
-      userState,
-      delegate,
-      edition,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-    })
-    .remainingAccounts([
-      {
-        pubkey: metadata,
-        isWritable: false,
-        isSigner: false,
-      },
-    ])
-    .signers([user.keypair])
-    .rpc();
-  return tx;
-}
-
 export async function unstake(
   program: anchor.Program<NcStaking>,
   user: User,
