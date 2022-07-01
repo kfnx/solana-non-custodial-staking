@@ -10,7 +10,7 @@ import {
   LedgerWalletAdapter,
   PhantomWalletAdapter,
   SlopeWalletAdapter,
-  // SolflareWalletAdapter,
+  SolflareWalletAdapter,
   SolletExtensionWalletAdapter,
   SolletWalletAdapter,
   TorusWalletAdapter,
@@ -18,7 +18,10 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import useGlobalStore from "../hooks/useGlobalStore";
 import ErrorBoundary from "../components/ErrorBoundary";
-import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
+import {
+  WalletAdapterNetwork,
+  WalletSignTransactionError,
+} from "@solana/wallet-adapter-base";
 
 // Use require instead of import since order matters
 require("@solana/wallet-adapter-react-ui/styles.css");
@@ -32,7 +35,7 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
       new LedgerWalletAdapter(),
       new PhantomWalletAdapter(),
       new SlopeWalletAdapter(),
-      // new SolflareWalletAdapter({ network }),
+      new SolflareWalletAdapter({ network: WalletAdapterNetwork.Devnet }),
       new SolletExtensionWalletAdapter(),
       new SolletWalletAdapter(),
       new TorusWalletAdapter(),

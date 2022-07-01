@@ -96,7 +96,15 @@ const NFTcreator = Keypair.fromSecretKey(
   )
 );
 
-const allJsonMetadata = [
+type Metadata = {
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: number;
+  creators: any[];
+};
+
+const allJsonMetadata: Metadata[] = [
   {
     name: "Meekolony #1",
     symbol: "MKLN",
@@ -165,17 +173,10 @@ const allJsonMetadata = [
 const createNFT = async (
   creator: Keypair,
   receiver: PublicKey,
-  mint: Keypair,
-  meta: {
-    name: string;
-    symbol: string;
-    uri: string;
-    sellerFeeBasisPoints: number;
-    creators: any[];
-  },
+  meta: Metadata,
   provider: anchor.AnchorProvider
 ) => {
-  // anchor.setProvider(provider);
+  const mint = Keypair.generate();
   const create_mint_tx = new Transaction({
     feePayer: creator.publicKey,
   });
@@ -292,18 +293,7 @@ const mintWhitelistedNFTs = async () => {
 
   await allSynchronously(
     allJsonMetadata.map((meta) => async () => {
-      const mint = Keypair.generate();
-
-      console.log("creating nft");
-      await createNFT(NFTcreator, wallet.publicKey, mint, meta, provider);
-
-      // verify
-      const userATA = await findUserATA(wallet.publicKey, mint.publicKey);
-      const userATAbalance = await getTokenBalanceByATA(
-        provider.connection,
-        userATA
-      );
-      console.log("verify your NFT should be 1", userATAbalance);
+      await createNFT(NFTcreator, wallet.publicKey, meta, provider);
     })
   );
 };
