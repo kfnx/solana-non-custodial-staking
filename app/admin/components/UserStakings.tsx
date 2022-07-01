@@ -41,7 +41,7 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
             </div>
             {Object.keys(item.account).map((v, id) => {
               const className = `flex w-full justify-between my-0.5${
-                id % 2 ? " bg-slate-200 dark: bg-slate-500/75" : ""
+                id % 2 ? " bg-slate-200 dark:bg-slate-500/75" : ""
               }`;
 
               if (v === "timeLastClaim" || v === "timeLastStake") {
