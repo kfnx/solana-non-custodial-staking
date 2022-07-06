@@ -28,18 +28,6 @@ import { IDL, NcStaking } from "../sdk/nc_staking";
 import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
 import { PROGRAM_ID } from "../sdk";
 
-export enum Cluster {
-  LOCALHOST = "Localhost",
-  TESTNET = "Testnet",
-  DEVNET = "Devnet",
-  MAINNET = "Mainnet-beta",
-}
-
-type Network = {
-  endpoint: string;
-  name: Cluster;
-};
-
 export const networks: Network[] = [
   { name: Cluster.LOCALHOST, endpoint: "http://localhost:8899" },
   { name: Cluster.TESTNET, endpoint: "https://api.testnet.solana.com" },
@@ -47,12 +35,6 @@ export const networks: Network[] = [
   { name: Cluster.MAINNET, endpoint: "https://api.mainnet-beta.solana.com" },
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
-
-type CallbackOptions = {
-  onStart?: () => void;
-  onSuccess?: () => void;
-  onFinish?: () => void;
-};
 
 async function checkUserInitiated(
   userStatePDA: PublicKey,

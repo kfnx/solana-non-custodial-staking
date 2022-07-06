@@ -22,57 +22,8 @@ import {
 } from "@solana/spl-token";
 import useGlobalStore from "../hooks/useGlobalStore";
 import { createMetadata } from "../sdk/metaplex";
-import { airdropUser, findUserATA, getTokenBalanceByATA } from "../sdk/user";
+import { airdropUser } from "../sdk/user";
 import toast from "react-hot-toast";
-
-// export function transfer(
-//   connection: Connection,
-//   payer: Signer,
-//   source: PublicKey,
-//   destination: PublicKey,
-//   owner: Signer | PublicKey,
-//   amount: number | bigint,
-//   multiSigners?: Signer[],
-//   confirmOptions?: ConfirmOptions,
-//   programId?: PublicKey
-// ): Promise<TransactionSignature>;
-
-export async function transferToken(
-  from: Keypair,
-  to: PublicKey,
-  mintId: PublicKey,
-  provider: anchor.AnchorProvider
-) {
-  const fromATA = await findUserATA(from.publicKey, mintId);
-  console.log("fromATA", fromATA.toBase58());
-  // const fromATA = await getOrCreateAssociatedTokenAccount(
-  //   provider.connection,
-  //   from,
-  //   mintId,
-  //   from.publicKey
-  // );
-
-  // console.log("fromATA.address", fromUserATA.address.toBase58());
-  const toATA = await findUserATA(to, mintId);
-  console.log("toATA", fromATA.toBase58());
-  // const toATA = await getOrCreateAssociatedTokenAccount(
-  //   provider.connection,
-  //   to,
-  //   mintId,
-  //   to
-  // );
-  // console.log("toATA.address", toATA.address.toBase58());
-
-  const transfer_token_tx = await transfer(
-    provider.connection,
-    from,
-    fromATA,
-    toATA,
-    from.publicKey,
-    1
-  );
-  console.log("transfer NFT to userId tx", transfer_token_tx);
-}
 
 export async function allSynchronously<T>(
   resolvables: (() => Promise<T>)[]
@@ -105,55 +56,6 @@ type Metadata = {
 };
 
 const allJsonMetadata: Metadata[] = [
-  {
-    name: "Meekolony #1",
-    symbol: "MKLN",
-    uri: "https://arweave.net/4d1CV1GnALTT2iTyi1UiNc6AOrsL8h-sPAyVyNMlU4k",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #2",
-    symbol: "MKLN",
-    uri: "https://arweave.net/afxkSsnbrtCNAvbkqlCqjURUbBUSBDn_RMl1Dbq9YX8",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #3",
-    symbol: "MKLN",
-    uri: "https://arweave.net/I1Im-DDcnzEuLmB7Wiz1y3FknR0MwIwMVslDILHBr-g",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #4",
-    symbol: "MKLN",
-    uri: "https://arweave.net/RrE0HPbnv1HVVdF_DqQiFPA0YCDPli-_6zW45CBRPGc",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #5",
-    symbol: "MKLN",
-    uri: "https://arweave.net/WmQQC3iUXPuRvt6xsR9dI0ARbB2IJbON_NTB-y9clQw",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #6",
-    symbol: "MKLN",
-    uri: "https://arweave.net/1n6w6-FcZE3VO1HBNRW_T_Cvx9U3C0RVN54sFVlq3sw",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
-  {
-    name: "Meekolony #7",
-    symbol: "MKLN",
-    uri: "https://arweave.net/O_4JMAd92XQ7_jo3CXJFSlR9eHMXvnVmDHhgkPk2nwc",
-    sellerFeeBasisPoints: 700,
-    creators: [],
-  },
   {
     name: "Meekolony #8",
     symbol: "MKLN",
