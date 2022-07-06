@@ -6,12 +6,7 @@ interface INFT {
   externalMetadata: MetadataJson;
 }
 
-enum Cluster {
-  LOCALHOST = "Localhost",
-  TESTNET = "Testnet",
-  DEVNET = "Devnet",
-  MAINNET = "Mainnet-beta",
-}
+type Cluster = "Localhost" | "Testnet" | "Devnet" | "Mainnet-beta";
 
 type Network = {
   endpoint: string;

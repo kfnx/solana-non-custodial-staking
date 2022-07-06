@@ -29,10 +29,10 @@ import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
 import { PROGRAM_ID } from "../sdk";
 
 export const networks: Network[] = [
-  { name: Cluster.LOCALHOST, endpoint: "http://localhost:8899" },
-  { name: Cluster.TESTNET, endpoint: "https://api.testnet.solana.com" },
-  { name: Cluster.DEVNET, endpoint: "https://api.devnet.solana.com" },
-  { name: Cluster.MAINNET, endpoint: "https://api.mainnet-beta.solana.com" },
+  { name: "Localhost", endpoint: "http://localhost:8899" },
+  { name: "Testnet", endpoint: "https://api.testnet.solana.com" },
+  { name: "Devnet", endpoint: "https://api.devnet.solana.com" },
+  { name: "Mainnet-beta", endpoint: "https://api.mainnet-beta.solana.com" },
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
@@ -276,7 +276,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
     try {
       const stakeInfo = await program.account.stakeInfo.all();
-      console.log("🚀 fetchStakeInfo: ~ stakeInfo", stakeInfo)
+      console.log("🚀 fetchStakeInfo: ~ stakeInfo", stakeInfo);
       set({
         provider,
         stakeInfo,
