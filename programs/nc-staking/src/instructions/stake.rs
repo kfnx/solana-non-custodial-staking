@@ -111,10 +111,6 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     // assign delegate to PDA
     let cpi_ctx = ctx.accounts.approve_delegate_ctx();
     token::approve(cpi_ctx, 1)?;
-    msg!(
-        "Approve token delegate with key: {}",
-        ctx.accounts.delegate.key()
-    );
 
     // use pda to freeze
     let mpl_helper = mpl::FreezeOrThawDelegatedAccount {
@@ -137,7 +133,6 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     ];
 
     mpl_helper.freeze_or_thaw(true, &auth_seeds)?;
-    msg!("Instruction handler: Freeze");
 
     let user_state = &mut ctx.accounts.user_state;
     let user = *ctx.accounts.user.to_account_info().key;
@@ -174,6 +169,5 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     stake_info.config = ctx.accounts.config.key();
     stake_info.mint = ctx.accounts.mint.key();
     stake_info.user = ctx.accounts.user.key();
-    msg!("Instruction handler: Stake");
     Ok(())
 }

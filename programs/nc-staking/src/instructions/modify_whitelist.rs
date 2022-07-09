@@ -15,9 +15,5 @@ pub struct ModifyWhitelist<'info> {
 pub fn handler(ctx: Context<ModifyWhitelist>) -> Result<()> {
     let config = &mut ctx.accounts.config;
     config.creator_whitelist = ctx.accounts.creator_address_to_whitelist.key();
-    msg!(
-        "{} updated config whitelist",
-        &ctx.accounts.creator_address_to_whitelist.key()
-    );
     Ok(())
 }

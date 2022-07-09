@@ -39,30 +39,18 @@ fn assert_unstake_allowed<'info>(
     stake_info: &Account<'info, StakeInfo>,
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
-    msg!(
-        "config.staking_lock_duration_in_sec {}",
-        config.staking_lock_duration_in_sec
-    );
-    msg!(
-        "stake_info_acc.time_staking_start {}",
-        stake_info.time_staking_start
-    );
-
     if stake_info.config != config.key() {
         return Err(error!(ErrorCode::InvalidStakingConfig));
     }
-
     if stake_info.time_staking_start == 0 {
         return Err(error!(ErrorCode::EmptyVault));
     }
 
     let time_now = now_ts()?;
-    msg!("time_now: {}", time_now);
     let time_when_unlocked = stake_info
         .time_staking_start
         .checked_add(config.staking_lock_duration_in_sec)
         .unwrap();
-    msg!("time_when_unlocked: {}", time_when_unlocked);
     if time_when_unlocked > time_now {
         return Err(error!(ErrorCode::CannotUnstakeYet));
     }
@@ -106,7 +94,6 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     };
 
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
-    msg!("Instruction handler: Thaw");
 
     // store prev stake reward
     let time_now = now_ts()?;
@@ -131,7 +118,5 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
-
-    msg!("Instruction handler: Unstake");
     Ok(())
 }

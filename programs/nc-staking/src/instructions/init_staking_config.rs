@@ -57,10 +57,5 @@ pub fn handler(
     config.initiated_users = 0;
     config.active_stakers = 0;
     config.creator_whitelist = ctx.accounts.creator_address_to_whitelist.key();
-    msg!("instruction handler: InitStakingConfig");
-    msg!(
-        "staking_lock_duration_in_sec: {}",
-        staking_lock_duration_in_sec
-    );
     Ok(())
 }
