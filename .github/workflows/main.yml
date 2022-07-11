@@ -1,33 +1,43 @@
-name: main
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
-env:
-  CARGO_TERM_COLOR: always
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build
-        run: cargo build --verbose
-  format:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Format
-        run: cargo fmt --verbose
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Commit formatted file
-  lint:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Lint
-        run: cargo clippy -- -D warnings
+# name: main
+# on:
+#   push:
+#     branches:
+#       - master
+#   pull_request:
+#     types: [opened, reopened, synchronize, ready_for_review]
+# env:
+#   CARGO_TERM_COLOR: always
+# jobs:
+#   build:
+#     if: ${{ github.event_name == 'push' || (!(contains(github.event.head_commit.message, 'ci skip') || github.event.pull_request.draft)) }}
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/cache@v3
+#     with:
+#       path: |
+#         ~/.cargo/bin/
+#         ~/.cargo/registry/index/
+#         ~/.cargo/registry/cache/
+#         ~/.cargo/git/db/
+#         target/
+#       key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#       - name: Build
+#         run: cargo build --verbose
+#   format:
+#     needs: [build]
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Format
+#         run: cargo fmt --verbose
+#       - uses: stefanzweifel/git-auto-commit-action@v4
+#         with:
+#           commit_message: Commit formatted file
+#   lint:
+#     needs: [build]
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Lint
+#         run: cargo clippy -- -D warnings
