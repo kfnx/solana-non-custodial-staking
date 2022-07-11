@@ -4,8 +4,7 @@ on:
     branches:
       - master
   pull_request:
-    branches:
-      - master
+    types: [opened, reopened, synchronize, ready_for_review]
 env:
   CARGO_TERM_COLOR: always
 jobs:
@@ -16,6 +15,7 @@ jobs:
       - name: Build
         run: cargo build --verbose
   format:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -25,6 +25,7 @@ jobs:
         with:
           commit_message: Commit formatted file
   lint:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

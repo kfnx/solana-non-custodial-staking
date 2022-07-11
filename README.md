@@ -42,7 +42,6 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 To deploy with original program id, you need the original keypair. If you dont have it you can generate new keypair and deploy the program with the new keypair. Follow steps below
 
 - Run `yarn setup:programid`. it will build the program with new keypair.
-- Run `yarn programid` to print the new program address after setup.
 - Run `anchor test` to test the built program
 
 ## Frontend App
@@ -50,7 +49,7 @@ To deploy with original program id, you need the original keypair. If you dont h
 Currently we have two web app that interact with this contract:
 
 - [Admin](app/admin/README.md): For Admin or Stake manager to create staking configuration, monitor stakers and other statistics.
-- [Tatsumeeko Staking Page](https://github.com/tatsuworks/mkln/tree/pre-staking/pages/meekolony/stake): Tatsumeeko customer facing staking app
+- [Tatsumeeko Staking Page](https://github.com/tatsuworks/tm-web/blob/dev/pages/meekolony/stake/index.tsx): Tatsumeeko customer facing staking app
 
 ## Typescript SDK
 
@@ -58,7 +57,13 @@ We use [solita](https://github.com/metaplex-foundation/solita) to generate ts SD
 
 - Run `yarn solita` to and sdk folder will be generated at `app/admin/sdk/` to be used by admin web app.
 - modify `.solitarc` sdk output dir and re-run yarn solita to change generated sdk output for another use case.
+*the generated files is not really useful, but lets see.
 
 ## Misc cli commands
 
 spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEgkoi3vud1BN1SjgrfsEe8DMQr5Hs 1 tSTW5PWzjDYCjeYEqpZg92PyRv7R733YPx9Diz6BUWr
+
+### Github Actions
+
+- Github action will check for build, lint and format.
+- If making changes on an open Pull Request, convert it to draft so that the CI does not continuously run for each commit
