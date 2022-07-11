@@ -92,7 +92,7 @@ fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
         }
 
         // check if creator is whitelisted, returns an error if not
-        let attempted_proof = &config.creator_whitelist.key() == &creator.address;
+        let attempted_proof = config.creator_whitelist.key() == creator.address;
 
         if attempted_proof {
             return Ok(());
