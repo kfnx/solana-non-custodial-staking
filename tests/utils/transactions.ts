@@ -154,43 +154,35 @@ export async function claim(
   config: PublicKey,
   rewardMint: PublicKey
 ) {
-  try {
-    const userId = user.wallet.publicKey;
-    const [configAuth, configAuthBump] = await findConfigAuthorityPDA(config);
-    // console.log("configAuth", configAuth.toBase58());
-    const [rewardPot, rewardPotBump] = await findRewardPotPDA(
-      config,
-      rewardMint
-    );
-    // console.log("reward pot", rewardPot.toBase58());
-    const userATA = await findUserATA(userId, rewardMint);
-    // console.log("userATA", userATA.toBase58());
-    const [userState] = await findUserStatePDA(userId, config);
-    // console.log("userState", userState.toBase58());
+  const userId = user.wallet.publicKey;
+  const [configAuth, configAuthBump] = await findConfigAuthorityPDA(config);
+  // console.log("configAuth", configAuth.toBase58());
+  const [rewardPot, rewardPotBump] = await findRewardPotPDA(config, rewardMint);
+  // console.log("reward pot", rewardPot.toBase58());
+  const userATA = await findUserATA(userId, rewardMint);
+  // console.log("userATA", userATA.toBase58());
+  const [userState] = await findUserStatePDA(userId, config);
+  // console.log("userState", userState.toBase58());
 
-    const tx = await program.methods
-      .claim(configAuthBump, rewardPotBump)
-      .accounts({
-        user: userId,
-        userState,
-        config: config,
-        configAuthority: configAuth,
-        rewardDestination: userATA,
-        rewardMint: rewardMint,
-        rewardPot: rewardPot,
+  return program.methods
+    .claim(configAuthBump, rewardPotBump)
+    .accounts({
+      user: userId,
+      userState,
+      config: config,
+      configAuthority: configAuth,
+      rewardDestination: userATA,
+      rewardMint: rewardMint,
+      rewardPot: rewardPot,
 
-        // programs
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .signers([user.keypair])
-      .rpc();
-    return tx;
-  } catch (error) {
-    console.error(error);
-  }
+      // programs
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair])
+    .rpc();
 }
 
 export async function createToken(

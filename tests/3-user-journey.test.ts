@@ -863,23 +863,24 @@ describe("User journey", () => {
       // ensure markers have NFT
       const markersId = markers.wallet.publicKey;
       const markersNFT = nfts[0].mint.publicKey;
-      const markersATA = await findUserATA(markersId, markersNFT);
+      const markersNftATA = await findUserATA(markersId, markersNFT);
       const balance = await getTokenBalanceByATA(
         markers.provider.connection,
-        markersATA
+        markersNftATA
       );
       assert.equal(balance, 1);
 
       // stake on dev config
       const tx2 = await stake(program, markers, config.publicKey, markersNFT);
-      console.log("markers stake tx", tx2);
+      // console.log("markers stake tx", tx2);
 
       // markers create his own config
-      const markersConfig = Keypair.generate();
+      const markersConfigKeypair = Keypair.generate();
+      const markersConfig = markersConfigKeypair.publicKey;
       const tx3 = await createStakingConfig(
         program,
         markers,
-        markersConfig,
+        markersConfigKeypair,
         rewardMint.publicKey,
         NFTcreator.keypair.publicKey,
         {
@@ -888,43 +889,38 @@ describe("User journey", () => {
           stakingLockDurationInSec: new anchor.BN(0),
         }
       );
-      console.log("markers create his own config", tx3);
+      // console.log("markers create his own config", tx3);
 
-      const [markersState] = await findUserStatePDA(
-        markersId,
-        markersConfig.publicKey
-      );
+      const [markersState] = await findUserStatePDA(markersId, markersConfig);
       const tx4 = await program.methods
         .initStaking()
         .accounts({
           userState: markersState,
-          config: markersConfig.publicKey,
+          config: markersConfig,
           user: markersId,
         })
         .signers([markers.keypair])
         .rpc();
-      console.log("markers init on his own config", tx4);
+      // console.log("markers init on his own config", tx4);
 
       // unstake using markers config
-      console.log("#4 unstake using markers config");
-      const tokenAccount = await findUserATA(markersId, markersNFT);
-      // console.log("user ATA", userATA.toBase58());
-      const [delegate] = await findDelegateAuthPDA(tokenAccount);
+      const [delegate] = await findDelegateAuthPDA(markersNftATA);
       // console.log("user delegate", delegate.toBase58());
       const [edition] = await findEditionPDA(markersNFT);
       // console.log("edition", edition.toBase58());
       const [markersStakeInfo] = await findStakeInfoPDA(markersId, markersNFT);
       // console.log("stakeInfo", stakeInfo.toBase58());
 
+      // stake info should not match, resulting in InvalidStakingConfig Error
       await expect(
         program.methods
           .unstake()
           .accounts({
             user: markersId,
             stakeInfo: markersStakeInfo,
-            config: markersConfig.publicKey,
+            config: markersConfig,
             mint: markersNFT,
-            tokenAccount,
+            tokenAccount: markersNftATA,
             userState: markersState,
             delegate,
             edition,
@@ -935,13 +931,10 @@ describe("User journey", () => {
           .rpc()
       ).to.be.rejectedWith("InvalidStakingConfig");
 
-      // const claimTx = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // console.log(timeNow(), "claim tx", claimTx);
+      // claiming using different config from registered one, no stake recorded, resulting in UserNeverStake Error
+      await expect(
+        claim(program, markers, markersConfig, rewardMint.publicKey)
+      ).to.be.rejectedWith("UserNeverStake");
     });
   });
 
