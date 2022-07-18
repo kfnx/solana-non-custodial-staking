@@ -15,11 +15,3 @@ export const AUCTION_PROGRAM_ID = new PublicKey(
 export const METAPLEX_PROGRAM_ID = new PublicKey(
   "p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98"
 );
-
-export const REWARD_TOKEN_ID = new PublicKey(
-  "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
-);
-
-export const NFT_CREATOR_ID = new PublicKey(
-  "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
-);

@@ -12,9 +12,3 @@ pub struct User {
     pub time_last_claim: u64,
     pub nfts_staked: u64,
 }
-
-// impl User {
-//     pub fn seeds(&self) -> [&[u8]; 2] {
-//         [self.user.as_ref(), &self.user_authority_bump_seed]
-//     }
-// }

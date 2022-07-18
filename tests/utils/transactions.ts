@@ -28,6 +28,45 @@ import {
 import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 import { createUser, findUserATA, User } from "./user";
 
+export async function createStakingConfig(
+  program: anchor.Program<NcStaking>,
+  user: User,
+  config: Keypair,
+  rewardMint: PublicKey,
+  creatorAddressToWhitelist: PublicKey,
+  stakingConfig: StakingConfigOption
+) {
+  // console.log("config", config.publicKey.toBase58());
+  const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
+    config.publicKey
+  );
+  // console.log("configAuth", configAuth.toBase58());
+  const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
+  // console.log("reward pot", rewardPot.toBase58());
+  const tx = await program.methods
+    .initStakingConfig(
+      configAuthBump,
+      stakingConfig.rewardPerSec,
+      stakingConfig.rewardDenominator,
+      stakingConfig.stakingLockDurationInSec
+    )
+    .accounts({
+      admin: user.keypair.publicKey,
+      config: config.publicKey,
+      configAuthority: configAuth,
+      rewardMint,
+      rewardPot,
+      creatorAddressToWhitelist,
+      // programs
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair, config])
+    .rpc();
+  return tx;
+}
+
 export async function stake(
   program: anchor.Program<NcStaking>,
   user: User,
@@ -48,7 +87,7 @@ export async function stake(
   const metadata = await findMetadataPDA(mint);
   // console.log("metadata", metadata.toBase58());
 
-  const tx = await program.methods
+  return program.methods
     .stake()
     .accounts({
       user: userId,
@@ -71,7 +110,6 @@ export async function stake(
     ])
     .signers([user.keypair])
     .rpc();
-  return tx;
 }
 
 export async function unstake(
@@ -92,7 +130,7 @@ export async function unstake(
   const [stakeInfo] = await findStakeInfoPDA(userId, mint);
   // console.log("stakeInfo", stakeInfo.toBase58());
 
-  const tx = await program.methods
+  return program.methods
     .unstake()
     .accounts({
       user: userId,
@@ -108,7 +146,6 @@ export async function unstake(
     })
     .signers([user.keypair])
     .rpc();
-  return tx;
 }
 
 export async function claim(

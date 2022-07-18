@@ -32,10 +32,15 @@ import {
   findStakeInfoPDA,
   timeNow,
   getSolanaBalance,
-  NFT_CREATOR_ID,
 } from "./utils";
 import { store } from "./0-constants";
-import { claim, stake, unstake } from "./utils/transactions";
+import {
+  claim,
+  createStakingConfig,
+  stake,
+  unstake,
+} from "./utils/transactions";
+import { createAssociatedTokenAccount } from "@solana/spl-token";
 
 chai.use(chaiAsPromised);
 
@@ -54,6 +59,7 @@ describe("User journey", () => {
     rewardToken: rewardMint,
     nfts,
     configs,
+    NFTcreator,
   } = store;
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const config = configs[0].keypair;
@@ -152,7 +158,7 @@ describe("User journey", () => {
         nfts[0].mint.publicKey
       );
       const receiverATA = await findUserATA(
-        NFT_CREATOR_ID,
+        NFTcreator.wallet.publicKey,
         nfts[0].mint.publicKey
       );
 
@@ -256,9 +262,13 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         nfts[0].mint.publicKey
       );
-      const receiverATA = await findUserATA(
-        NFT_CREATOR_ID,
-        nfts[0].mint.publicKey
+      // transfered to marcus to be used on another test
+      await airdropUser(markers.wallet.publicKey);
+      const receiverATA = await createAssociatedTokenAccount(
+        markers.provider.connection,
+        markers.wallet.payer,
+        nfts[0].mint.publicKey,
+        markers.wallet.publicKey
       );
 
       const tx = await transfer(
@@ -531,13 +541,13 @@ describe("User journey", () => {
       console.log(timeNow(), "[4th] claim reward amount:", claim4rw);
       assert.isAbove(
         claim4rw,
-        599,
-        "600 - 1000 depend on miliseconds on the 3 unstakes"
+        499,
+        "reward should be above 500 depend on miliseconds at the 3 unstakes"
       );
       assert.isBelow(
         claim4rw,
         1101,
-        "700 - 1000 depend on miliseconds on the 3 unstakes"
+        "reward should be below 1000 depend on miliseconds at the 3 unstakes"
       );
 
       await delay(2000);
@@ -849,22 +859,107 @@ describe("User journey", () => {
       assert.equal(parsed.info.state, "initialized");
     });
 
-    // TODO: verify this
-    // it("Markers cannot unstake from with his own staking config if he previously stake on different config", async () => {
-    // });
+    it("Markers cannot claim or unstake using his non-original staking config", async () => {
+      // ensure markers have NFT
+      const markersId = markers.wallet.publicKey;
+      const markersNFT = nfts[0].mint.publicKey;
+      const markersATA = await findUserATA(markersId, markersNFT);
+      const balance = await getTokenBalanceByATA(
+        markers.provider.connection,
+        markersATA
+      );
+      assert.equal(balance, 1);
 
-    // TODO: verify this
-    // it("Markers cannot abuse claim reward token by creating his own staking config", async () => {
-    // });
+      // stake on dev config
+      const tx2 = await stake(program, markers, config.publicKey, markersNFT);
+      console.log("markers stake tx", tx2);
+
+      // markers create his own config
+      const markersConfig = Keypair.generate();
+      const tx3 = await createStakingConfig(
+        program,
+        markers,
+        markersConfig,
+        rewardMint.publicKey,
+        NFTcreator.keypair.publicKey,
+        {
+          rewardDenominator: new anchor.BN(1),
+          rewardPerSec: new anchor.BN(1000),
+          stakingLockDurationInSec: new anchor.BN(0),
+        }
+      );
+      console.log("markers create his own config", tx3);
+
+      const [markersState] = await findUserStatePDA(
+        markersId,
+        markersConfig.publicKey
+      );
+      const tx4 = await program.methods
+        .initStaking()
+        .accounts({
+          userState: markersState,
+          config: markersConfig.publicKey,
+          user: markersId,
+        })
+        .signers([markers.keypair])
+        .rpc();
+      console.log("markers init on his own config", tx4);
+
+      // unstake using markers config
+      console.log("#4 unstake using markers config");
+      const tokenAccount = await findUserATA(markersId, markersNFT);
+      // console.log("user ATA", userATA.toBase58());
+      const [delegate] = await findDelegateAuthPDA(tokenAccount);
+      // console.log("user delegate", delegate.toBase58());
+      const [edition] = await findEditionPDA(markersNFT);
+      // console.log("edition", edition.toBase58());
+      const [markersStakeInfo] = await findStakeInfoPDA(markersId, markersNFT);
+      // console.log("stakeInfo", stakeInfo.toBase58());
+
+      await expect(
+        program.methods
+          .unstake()
+          .accounts({
+            user: markersId,
+            stakeInfo: markersStakeInfo,
+            config: markersConfig.publicKey,
+            mint: markersNFT,
+            tokenAccount,
+            userState: markersState,
+            delegate,
+            edition,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          })
+          .signers([markers.keypair])
+          .rpc()
+      ).to.be.rejectedWith("InvalidStakingConfig");
+
+      // const claimTx = await claim(
+      //   program,
+      //   justin,
+      //   config.publicKey,
+      //   rewardMint.publicKey
+      // );
+      // console.log(timeNow(), "claim tx", claimTx);
+    });
   });
 
   describe("Final program state", () => {
     it("Check program accounts", async () => {
       const allStakingAccounts = await program.account.user.all();
-      assert.equal(allStakingAccounts.length, 2);
+      assert.equal(
+        allStakingAccounts.length,
+        2 + 1, // 2 Justin + 1 Markers account
+        "total staking accounts created"
+      );
 
       const allStakingConfig = await program.account.stakingConfig.all();
-      assert.equal(allStakingConfig.length, configs.length);
+      assert.equal(
+        allStakingConfig.length,
+        configs.length + 1, // +1 markers config
+        "total staking configs created"
+      );
     });
 
     it("Check overall state", async () => {
@@ -875,7 +970,8 @@ describe("User journey", () => {
       const justinStateAcc = await program.account.user.fetch(justinState);
       assert.equal(
         justinStateAcc.config.toBase58(),
-        config.publicKey.toBase58()
+        config.publicKey.toBase58(),
+        "Justin user state account stored the config its created from"
       );
       // console.log("justinStateAcc", justinStateAcc);
 
@@ -886,16 +982,19 @@ describe("User journey", () => {
       const markersStateAcc = await program.account.user.fetch(markersState);
       assert.equal(
         markersStateAcc.config.toBase58(),
-        config.publicKey.toBase58()
+        config.publicKey.toBase58(),
+        "Markers user state account stored the config its created from"
       );
       // console.log("markersStateAcc", markersStateAcc);
 
       const stakingConfig = await program.account.stakingConfig.fetch(
         config.publicKey
       );
-      assert.equal(stakingConfig.initiatedUsers.toNumber(), 2); // justin + markers
-
-      // console.log("config", stakingConfig);
+      assert.equal(
+        stakingConfig.initiatedUsers.toNumber(),
+        2,
+        "Initiated users in main config"
+      ); // justin + markers
     });
   });
 });

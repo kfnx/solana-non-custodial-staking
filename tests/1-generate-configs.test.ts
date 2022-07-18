@@ -2,8 +2,6 @@ import * as anchor from "@project-serum/anchor";
 import {
   Keypair,
   PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
 import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -12,12 +10,11 @@ import {
   airdropUser,
   allSynchronously,
   getSolanaBalance,
-  findConfigAuthorityPDA,
   findRewardPotPDA,
 } from "./utils";
-import { createToken } from "./utils/transactions";
+import { createStakingConfig, createToken } from "./utils/transactions";
 import { NcStaking, IDL } from "../target/types/nc_staking";
-import { StakingConfigOption, store } from "./0-constants";
+import { store } from "./0-constants";
 
 /**
  * This script can be used outside test by changing Anchor.toml test to target this file only
@@ -26,54 +23,13 @@ import { StakingConfigOption, store } from "./0-constants";
  * ⚠️ change all provider and connection according to cluster if you use non-localhost
  */
 
-const createStakingConfig = async (
-  creator: Keypair,
-  config: Keypair,
-  rewardMint: PublicKey,
-  creatorAddressToWhitelist: PublicKey,
-  option: StakingConfigOption,
-  program: anchor.Program<NcStaking> = anchor.workspace
-    .NcStaking as anchor.Program<NcStaking>
-) => {
-  // console.log("config", config.publicKey.toBase58());
-  const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
-    config.publicKey
-  );
-  // console.log("configAuth", configAuth.toBase58());
-  const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
-  // console.log("reward pot", rewardPot.toBase58());
-  const initStakingTx = await program.methods
-    .initStakingConfig(
-      configAuthBump,
-      option.rewardPerSec,
-      option.rewardDenominator,
-      option.stakingLockDurationInSec
-    )
-    .accounts({
-      admin: creator.publicKey,
-      config: config.publicKey,
-      configAuthority: configAuth,
-      rewardMint,
-      rewardPot,
-      creatorAddressToWhitelist,
-      // programs
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      rent: SYSVAR_RENT_PUBKEY,
-    })
-    .signers([creator, config])
-    .rpc();
-  console.log("init config tx", initStakingTx);
-};
-
 const checkConfigResult = async (
+  program: anchor.Program<NcStaking>,
   admin: Keypair,
   config: Keypair,
   rewardMint: PublicKey,
   creatorWhitelist: PublicKey,
-  option: StakingConfigOption,
-  program: anchor.Program<NcStaking> = anchor.workspace
-    .NcStaking as anchor.Program<NcStaking>
+  option: StakingConfigOption
 ) => {
   const account = await program.account.stakingConfig.fetch(config.publicKey);
 
@@ -114,20 +70,20 @@ describe("Generate staking configs", () => {
     await allSynchronously(
       configs.map((config) => async () => {
         await createStakingConfig(
-          dev.keypair,
+          program,
+          dev,
           config.keypair,
           rewardToken.publicKey,
           NFTcreator.wallet.publicKey,
-          config.option,
-          program
+          config.option
         );
         await checkConfigResult(
+          program,
           dev.keypair,
           config.keypair,
           rewardToken.publicKey,
           NFTcreator.wallet.publicKey,
-          config.option,
-          program
+          config.option
         );
       })
     );

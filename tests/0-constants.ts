@@ -2,17 +2,6 @@ import * as anchor from "@project-serum/anchor";
 import { Keypair } from "@solana/web3.js";
 import { createUser } from "./utils";
 
-export interface StakingConfig {
-  keypair: Keypair;
-  option: StakingConfigOption;
-}
-
-export interface StakingConfigOption {
-  rewardPerSec: anchor.BN;
-  rewardDenominator: anchor.BN;
-  stakingLockDurationInSec: anchor.BN;
-}
-
 const denominator = new anchor.BN(10_000_000);
 
 export const store = {
@@ -66,7 +55,18 @@ export const store = {
       )
     )
   ),
-  markers: createUser(),
+  markers: createUser(
+    Keypair.fromSecretKey(
+      // mar1nrVs4KCvigLCRFEuX9RsfJieDxFMBErBCNmiRCY
+      Uint8Array.from([
+        122, 210, 2, 101, 246, 207, 210, 129, 1, 212, 17, 31, 114, 249, 37, 25,
+        64, 124, 33, 5, 28, 39, 240, 244, 158, 138, 202, 187, 253, 186, 36, 75,
+        11, 107, 211, 7, 134, 147, 81, 61, 247, 39, 115, 162, 158, 130, 209,
+        156, 31, 205, 87, 174, 184, 198, 254, 72, 28, 59, 25, 167, 222, 20, 12,
+        5,
+      ])
+    )
+  ),
   rewardToken: Keypair.fromSecretKey(
     // rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq
     Uint8Array.from([
