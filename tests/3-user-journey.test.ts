@@ -505,7 +505,7 @@ describe("User journey", () => {
       const rewardPerSeconds = 300; // 100 * 3 staked
       const claimExpected = intervalInSeconds * rewardPerSeconds;
       console.log(
-        "interval between 2nd to 3rd claim (seoncds):",
+        "interval between 2nd to 3rd claim (seconds):",
         intervalInSeconds
       );
       assert.equal(claim3rw, claimExpected, "Expected 300/s");
