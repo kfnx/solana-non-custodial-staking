@@ -48,9 +48,6 @@ fn assert_unstake_allowed<'info>(
     if stake_info.config != config.key() {
         return Err(error!(ErrorCode::InvalidStakingConfig));
     }
-    if stake_info.time_staking_start == 0 {
-        return Err(error!(ErrorCode::EmptyVault));
-    }
 
     let time_now = now_ts()?;
     let time_when_unlocked = stake_info
