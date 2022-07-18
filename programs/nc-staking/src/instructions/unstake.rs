@@ -1,4 +1,10 @@
-use crate::{claim::calc_reward, errors::ErrorCode, mpl, state::*, utils::now_ts};
+use crate::{
+    claim::calc_reward,
+    errors::ErrorCode,
+    mpl,
+    state::*,
+    utils::{close_account, now_ts},
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -10,10 +16,10 @@ pub struct Unstake<'info> {
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
     #[account(
+        mut,
         seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
         bump
     )]
-    #[account(mut)]
     stake_info: Account<'info, StakeInfo>,
     #[account(
         mut,
@@ -118,5 +124,9 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
+    close_account(
+        &mut ctx.accounts.stake_info.to_account_info(),
+        &mut ctx.accounts.user.to_account_info(),
+    )?;
     Ok(())
 }

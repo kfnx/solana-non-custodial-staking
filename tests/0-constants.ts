@@ -371,7 +371,7 @@ export const store = {
       metadata: {
         name: "Meekolony #9",
         symbol: "MKLN",
-        uri: "https://arweave.net/xREW2gypD8FlI59fDJtigYSMm01YZTnSXBUTQ7vkY0",
+        uri: "https://arweave.net/xREW2gypD8FlI59fDJtigYSMm01YZTnSXBUTQ7vkY0c",
         sellerFeeBasisPoints: 700,
         creators: [],
       },

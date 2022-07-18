@@ -211,6 +211,7 @@ describe("User journey", () => {
         configs[0].option.stakingLockDurationInSec.toNumber() * 1000 + 1000;
       await delay(delayAmount);
 
+      const balanceBefore = await getSolanaBalance(justin.wallet.publicKey);
       const unstakeTx = await unstake(
         program,
         justin,
@@ -218,6 +219,21 @@ describe("User journey", () => {
         nfts[0].mint.publicKey
       );
       console.log(timeNow(), "unstake tx", unstakeTx);
+      const balanceAfter = await getSolanaBalance(justin.wallet.publicKey);
+      assert.isAbove(
+        balanceAfter,
+        balanceBefore,
+        "user solana balance after unstake should be higher"
+      );
+
+      const [stakeInfo] = await findStakeInfoPDA(
+        justin.wallet.publicKey,
+        nfts[0].mint.publicKey
+      );
+      // account should be closed and user reclaim rent fee
+      await expect(
+        program.account.stakeInfo.fetch(stakeInfo)
+      ).to.be.rejectedWith("Account does not exist");
 
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
@@ -249,7 +265,7 @@ describe("User journey", () => {
 
       await expect(
         unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
-      ).to.be.rejectedWith("EmptyVault");
+      ).to.be.rejectedWith("AccountNotInitialized");
 
       const currentState = (
         await program.account.user.fetch(justinState)
