@@ -10,6 +10,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct Unstake<'info> {
+    #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut, has_one = user)]
     pub user_state: Account<'info, User>,
@@ -18,7 +19,8 @@ pub struct Unstake<'info> {
     #[account(
         mut,
         seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
-        bump
+        bump,
+        has_one=config @ ErrorCode::InvalidStakingConfig
     )]
     stake_info: Account<'info, StakeInfo>,
     #[account(
@@ -45,10 +47,6 @@ fn assert_unstake_allowed<'info>(
     stake_info: &Account<'info, StakeInfo>,
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
-    if stake_info.config != config.key() {
-        return Err(error!(ErrorCode::InvalidStakingConfig));
-    }
-
     let time_now = now_ts()?;
     let time_when_unlocked = stake_info
         .time_staking_start
