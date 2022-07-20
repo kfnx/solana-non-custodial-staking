@@ -187,12 +187,12 @@ describe("User journey", () => {
       }
     });
 
-    it("Justin can unstake/thaw his own NFT after lock period finish", async () => {
-      // first unstake attemp, cannot unstake because it haven't reach minimum staking period
+    it("Justin cannot unstake/thaw his own NFT before lock period finish", async () => {
+      // first unstake attempt, cannot unstake because it haven't reach minimum staking period
       await expect(
         unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
       ).to.be.rejectedWith("CannotUnstakeYet");
-
+      
       const justinATA = await findUserATA(
         justin.wallet.publicKey,
         nfts[0].mint.publicKey
@@ -205,7 +205,9 @@ describe("User journey", () => {
         "frozen",
         "NFT state should be frozen if unstaking fail"
       );
+    });
 
+    it("Justin can unstake/thaw his own NFT after lock period finish", async () => {
       // second attempt, after reach minimum staking period, add +1s to ensure its more than duration
       const delayAmount =
         configs[0].option.stakingLockDurationInSec.toNumber() * 1000 + 1000;
@@ -235,6 +237,10 @@ describe("User journey", () => {
         program.account.stakeInfo.fetch(stakeInfo)
       ).to.be.rejectedWith("Account does not exist");
 
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nfts[0].mint.publicKey
+      );
       const ataInfo = await justin.provider.connection.getParsedAccountInfo(
         justinATA
       );
