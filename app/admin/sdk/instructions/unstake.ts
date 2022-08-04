@@ -23,7 +23,7 @@ export const unstakeStruct = new beet.BeetArgsStruct<{
 /**
  * Accounts required by the _unstake_ instruction
  *
- * @property [**signer**] user
+ * @property [_writable_, **signer**] user
  * @property [_writable_] userState
  * @property [_writable_] config
  * @property [_writable_] stakeInfo
@@ -79,7 +79,7 @@ export function createUnstakeInstruction(accounts: UnstakeInstructionAccounts) {
   const keys: web3.AccountMeta[] = [
     {
       pubkey: user,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
@@ -136,7 +136,7 @@ export function createUnstakeInstruction(accounts: UnstakeInstructionAccounts) {
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      'stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ'
+      'stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E'
     ),
     keys,
     data,

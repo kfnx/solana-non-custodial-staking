@@ -17,9 +17,11 @@ export const METAPLEX_PROGRAM_ID = new PublicKey(
 );
 
 export const STAKING_REWARD_ID = new PublicKey(
-  "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
+  // "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
+  "igsvRjB6uyVMGcM9nbWwESxN1eTfVTPiQ1ThoCc8f2g"
 );
 
 export const NFT_CREATOR_ID = new PublicKey(
-  "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
+  // "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
+  "crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9"
 );

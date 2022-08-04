@@ -80,7 +80,7 @@ export function createModifyWhitelistInstruction(
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(
-      'stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ'
+      'stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E'
     ),
     keys,
     data,

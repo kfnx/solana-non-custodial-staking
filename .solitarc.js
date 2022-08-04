@@ -12,7 +12,7 @@ const binaryInstallDir = __dirname + "/.crates";
 
 const solitarc = {
   idlGenerator: "anchor",
-  programId: "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ",
+  programId: "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E",
   programName: "nc_staking",
   idlDir,
   sdkDir,

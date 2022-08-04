@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { NodeWallet, Wallet } from "@metaplex/js";
+import { NodeWallet } from "@metaplex/js";
 import {
   Keypair,
   PublicKey,
@@ -17,8 +17,6 @@ import {
   getOrCreateAssociatedTokenAccount,
   // @ts-ignore
   createMintToInstruction,
-  // @ts-ignore
-  transfer,
 } from "@solana/spl-token";
 import useGlobalStore from "../hooks/useGlobalStore";
 import { createMetadata } from "../sdk/metaplex";
@@ -37,12 +35,12 @@ export async function allSynchronously<T>(
 
 const NFTcreator = Keypair.fromSecretKey(
   Uint8Array.from(
-    // cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU
+    // crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9.json
     [
-      238, 138, 236, 130, 250, 209, 147, 210, 134, 105, 215, 196, 0, 151, 177,
-      169, 208, 115, 238, 204, 146, 68, 167, 6, 83, 64, 72, 10, 83, 13, 67, 39,
-      9, 47, 120, 173, 108, 96, 173, 245, 129, 154, 169, 179, 168, 238, 210,
-      173, 38, 63, 95, 127, 158, 26, 20, 158, 8, 13, 53, 56, 2, 88, 126, 55,
+      117, 249, 235, 60, 101, 74, 235, 198, 251, 134, 91, 142, 94, 77, 70, 73,
+      138, 70, 133, 78, 161, 179, 127, 112, 114, 112, 221, 94, 219, 202, 81, 8,
+      9, 47, 121, 56, 248, 53, 253, 239, 77, 212, 36, 197, 43, 117, 80, 51, 93,
+      45, 46, 218, 59, 57, 127, 107, 119, 90, 145, 158, 182, 4, 65, 124,
     ]
   )
 );
@@ -56,6 +54,55 @@ type Metadata = {
 };
 
 const allJsonMetadata: Metadata[] = [
+  {
+    name: "Meekolony #1",
+    symbol: "MKLN",
+    uri: "https://arweave.net/4d1CV1GnALTT2iTyi1UiNc6AOrsL8h-sPAyVyNMlU4k",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #2",
+    symbol: "MKLN",
+    uri: "https://arweave.net/afxkSsnbrtCNAvbkqlCqjURUbBUSBDn_RMl1Dbq9YX8",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #3",
+    symbol: "MKLN",
+    uri: "https://arweave.net/I1Im-DDcnzEuLmB7Wiz1y3FknR0MwIwMVslDILHBr-g",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #4",
+    symbol: "MKLN",
+    uri: "https://arweave.net/RrE0HPbnv1HVVdF_DqQiFPA0YCDPli-_6zW45CBRPGc",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #5",
+    symbol: "MKLN",
+    uri: "https://arweave.net/WmQQC3iUXPuRvt6xsR9dI0ARbB2IJbON_NTB-y9clQw",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #6",
+    symbol: "MKLN",
+    uri: "https://arweave.net/1n6w6-FcZE3VO1HBNRW_T_Cvx9U3C0RVN54sFVlq3sw",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
+  {
+    name: "Meekolony #7",
+    symbol: "MKLN",
+    uri: "https://arweave.net/O_4JMAd92XQ7_jo3CXJFSlR9eHMXvnVmDHhgkPk2nwc",
+    sellerFeeBasisPoints: 700,
+    creators: [],
+  },
   {
     name: "Meekolony #8",
     symbol: "MKLN",
@@ -186,9 +233,6 @@ const mintWhitelistedNFTs = async () => {
   if (!provider) {
     return toast.error("Provider not ready");
   }
-
-  // const selectedConfig = configs[config];
-  // console.log("Creator address", NFTcreator.publicKey.toBase58());
 
   await airdropUser(wallet.publicKey, provider.connection);
   console.log("Minting NFT to", wallet.publicKey.toBase58());

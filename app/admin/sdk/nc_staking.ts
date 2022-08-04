@@ -162,7 +162,7 @@ export type NcStaking = {
       accounts: [
         {
           name: "user";
-          isMut: false;
+          isMut: true;
           isSigner: true;
         },
         {
@@ -671,7 +671,7 @@ export const IDL: NcStaking = {
       accounts: [
         {
           name: "user",
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {

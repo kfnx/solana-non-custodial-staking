@@ -119,9 +119,9 @@ export const store = {
    *
    * 🌾 Staking Config 2
    * IGS/day: 1.25
-   * IGS/second estimate: 1.25/86400 ≈ 0.00001808449
+   * IGS/second estimate: 1.25/86400 ≈ 0.00001446759
    * Total reward for 1 year: 1.25*365*10000 = 4562500
-   * Base Rate: 1808449
+   * Base Rate: 1446759
    * Denominator: 100000000000
    * Locking Duration (day): 7
    * Locking Duration (second): 7*86400 = 604800
@@ -152,15 +152,6 @@ export const store = {
    * Denominator: 100000000000
    * Locking Duration (day): 90
    * Locking Duration (second): 90*86400 = 7776000
-   *
-   *
-   * 🏦 Reserved token needed to be pre-minted and fund all farms for 365 days
-   * Staking Config 1 = 3650000
-   * Staking Config 2 = 4562500
-   * Staking Config 3 = 7300000
-   * Staking Config 4 = 9125000
-   * Staking Config 5 = 10950000
-   * Total  = 35_587_500
    *
    */
 
