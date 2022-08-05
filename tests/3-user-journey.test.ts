@@ -192,7 +192,7 @@ describe("User journey", () => {
       await expect(
         unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
       ).to.be.rejectedWith("CannotUnstakeYet");
-      
+
       const justinATA = await findUserATA(
         justin.wallet.publicKey,
         nfts[0].mint.publicKey
@@ -257,6 +257,76 @@ describe("User journey", () => {
       const account = await program.account.user.fetch(justinState);
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.equal(account.nftsStaked.toNumber(), 0);
+    });
+
+    it("Justin lock time is reset when he stake another NFT on same config, thus cannot unstake", async () => {
+      // fresh new stake NFT1
+      const tx = await stake(
+        program,
+        justin,
+        config.publicKey,
+        nfts[0].mint.publicKey
+      );
+      console.log(timeNow(), "stake NFT1 tx", tx);
+
+      const delayAmount =
+        configs[0].option.stakingLockDurationInSec.toNumber() * 1000;
+      await delay(delayAmount / 2);
+
+      // second stake on same config, after half of the lock time
+      const tx2 = await stake(
+        program,
+        justin,
+        config.publicKey,
+        nfts[1].mint.publicKey
+      );
+      console.log(timeNow(), "stake NFT2 tx", tx2);
+
+      // finish the locktime of NFT 1 to unstake later
+      await delay(delayAmount / 2 + 500);
+
+      // unstake NFTs, should be failed cos the locktime has been reset when NFT2 staked
+      console.log(timeNow(), "attempt to unstake NFT1 while time lock");
+      await expect(
+        unstake(program, justin, config.publicKey, nfts[0].mint.publicKey)
+      ).to.be.rejectedWith("CannotUnstakeYet");
+      console.log(timeNow(), "attempt to unstake NFT2 while time lock");
+      await expect(
+        unstake(program, justin, config.publicKey, nfts[1].mint.publicKey)
+      ).to.be.rejectedWith("CannotUnstakeYet");
+
+      // and it should be still frozen cos the unstake fail
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nfts[0].mint.publicKey
+      );
+      assert.equal(
+        (<ParsedAccountData>(
+          (await justin.provider.connection.getParsedAccountInfo(justinATA))
+            .value.data
+        )).parsed.info.state,
+        "frozen"
+      );
+
+      // finish the locktime of NFT 1 to be successfully unstaked
+      await delay(delayAmount / 2 + 500);
+
+      // unstake after the lock time finished
+      const tx3 = await unstake(
+        program,
+        justin,
+        config.publicKey,
+        nfts[0].mint.publicKey
+      );
+      console.log(timeNow(), "unstake NFT after locktime finish", tx3);
+
+      assert.equal(
+        (<ParsedAccountData>(
+          (await justin.provider.connection.getParsedAccountInfo(justinATA))
+            .value.data
+        )).parsed.info.state,
+        "initialized"
+      );
     });
 
     it("Justin cannot unstake same NFT twice", async () => {
