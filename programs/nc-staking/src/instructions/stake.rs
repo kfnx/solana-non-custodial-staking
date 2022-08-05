@@ -151,8 +151,10 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
         user_state.time_last_stake,
         user_state.time_last_claim,
         user_state.reward_stored,
+        user_state.time_staking_start,
         config.reward_per_sec,
         config.reward_denominator,
+        config.staking_lock_duration_in_sec,
     );
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
     user_state.reward_stored = total_reward;

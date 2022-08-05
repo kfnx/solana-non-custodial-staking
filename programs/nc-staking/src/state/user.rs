@@ -11,4 +11,5 @@ pub struct User {
     pub time_last_stake: u64, // used for both stake & unstake
     pub time_last_claim: u64,
     pub nfts_staked: u64,
+    pub time_staking_start: u64,
 }

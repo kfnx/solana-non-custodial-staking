@@ -55,8 +55,10 @@ pub fn calc_reward(
     time_last_stake: u64,
     time_last_claim: u64,
     prev_reward_stored: u64,
+    time_staking_start: u64,
     reward_per_sec: u64,
     reward_denominator: u64,
+    staking_lock_duration_in_sec: u64,
 ) -> u64 {
     msg!("time_now: {}", time_now);
     msg!("time_last_stake: {}", time_last_stake);
@@ -65,32 +67,83 @@ pub fn calc_reward(
     if time_last_stake == 0 {
         return 0;
     };
-    let time_accrued = if time_last_stake > time_last_claim {
-        time_now.safe_sub(time_last_stake).unwrap()
+    let time_lock_end = time_staking_start + staking_lock_duration_in_sec;
+    let time_last_interact = if time_last_stake > time_last_claim {
+        time_last_stake
     } else {
-        time_now.safe_sub(time_last_claim).unwrap()
+        time_last_claim
     };
-    msg!("time_accrued: {}", time_accrued);
-    msg!("reward_per_sec: {}", reward_per_sec);
-    msg!("reward_denominator: {}", reward_denominator);
-    msg!("nfts_staked: {}", nfts_staked);
-    let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
-    // msg!("reward * time: {}", reward_multiplied_by_time);
-    let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
-    // msg!("reward * time * nft: {}", reward_multiplied_by_all_nft);
-    let reward_divided_by_denom = reward_multiplied_by_all_nft
-        .safe_div(reward_denominator)
-        .unwrap();
-    // msg!("(reward * time * nft) / denom: {}", reward_divided_by_denom);
+    let mut new_reward: u64 = 0;
+    // check current ts vs time last interact.
+    // case 1: current ts && last interact are both before lock end
+    // case 2: both are after lock end
+    // case 3: last interact before lock end. current ts after lock end
+    if time_last_interact < time_lock_end {
+        if time_now < time_lock_end {
+            // case 1
+            let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
+            new_reward = new_reward
+                .safe_add(calc_reward_internal(
+                    reward_per_sec,
+                    reward_denominator,
+                    time_accrued,
+                    nfts_staked,
+                ))
+                .unwrap();
+        } else {
+            // case 3
+            let time_accrued_bef = time_lock_end.safe_sub(time_last_interact).unwrap();
+            new_reward = new_reward
+                .safe_add(calc_reward_internal(
+                    reward_per_sec,
+                    reward_denominator,
+                    time_accrued_bef,
+                    nfts_staked,
+                ))
+                .unwrap();
+
+            let time_accrued_aft = time_now.safe_sub(time_lock_end).unwrap();
+            new_reward = new_reward
+                .safe_add(calc_reward_internal_1_igs(time_accrued_aft, nfts_staked))
+                .unwrap();
+        }
+    } else {
+        if time_now > time_lock_end {
+            // case 2
+            let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
+            new_reward = new_reward
+                .safe_add(calc_reward_internal_1_igs(time_accrued, nfts_staked))
+                .unwrap();
+        } else {
+            return 0;
+        }
+    }
     msg!("prev_reward_stored: {}", prev_reward_stored);
-    let total_reward = reward_divided_by_denom
-        .safe_add(prev_reward_stored)
-        .unwrap();
+    let total_reward = new_reward.safe_add(prev_reward_stored).unwrap();
     msg!("total_reward: {}", total_reward);
 
     total_reward
 }
 
+fn calc_reward_internal(
+    reward_per_sec: u64,
+    reward_denominator: u64,
+    time_accrued: u64,
+    nfts_staked: u64,
+) -> u64 {
+    let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
+    let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
+    let reward = reward_multiplied_by_all_nft
+        .safe_div(reward_denominator)
+        .unwrap();
+
+    reward
+}
+
+// 1 igs rate is 1157407/100000000000
+fn calc_reward_internal_1_igs(time_accrued: u64, nfts_staked: u64) -> u64 {
+    calc_reward_internal(1157407, 100000000000, time_accrued, nfts_staked)
+}
 pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     let config = &ctx.accounts.config;
     let user_state = &ctx.accounts.user_state;
@@ -106,8 +159,10 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
         user_state.time_last_stake,
         user_state.time_last_claim,
         user_state.reward_stored,
+        user_state.time_staking_start,
         config.reward_per_sec,
         config.reward_denominator,
+        config.staking_lock_duration_in_sec,
     );
 
     token::transfer(
