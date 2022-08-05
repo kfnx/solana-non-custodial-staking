@@ -160,6 +160,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     user_state.reward_stored = total_reward;
     msg!("reward stored: {}", user_state.reward_stored);
     user_state.time_last_stake = time_now;
+    user_state.time_staking_start = time_now;
 
     // add active stakers when a user initially stake their first NFT
     if user_state.nfts_staked == 1 {
@@ -171,5 +172,6 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     stake_info.config = ctx.accounts.config.key();
     stake_info.mint = ctx.accounts.mint.key();
     stake_info.user = ctx.accounts.user.key();
+
     Ok(())
 }

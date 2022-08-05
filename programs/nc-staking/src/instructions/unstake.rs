@@ -44,11 +44,11 @@ pub struct Unstake<'info> {
 }
 
 fn assert_unstake_allowed<'info>(
-    stake_info: &Account<'info, StakeInfo>,
+    user_state: &Account<'info, User>,
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
     let time_now = now_ts()?;
-    let time_when_unlocked = stake_info
+    let time_when_unlocked = user_state
         .time_staking_start
         .checked_add(config.staking_lock_duration_in_sec)
         .unwrap();
@@ -62,10 +62,10 @@ fn assert_unstake_allowed<'info>(
 pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     // check minimum time to unstake
     let config = &ctx.accounts.config;
-    let stake_info = &ctx.accounts.stake_info;
-    assert_unstake_allowed(stake_info, config)?;
-
     let user_state = &mut ctx.accounts.user_state;
+
+    assert_unstake_allowed(user_state, config)?;
+
     let user = *ctx.accounts.user.to_account_info().key;
 
     if user_state.user != user {
