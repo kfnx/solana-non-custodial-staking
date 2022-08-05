@@ -60,9 +60,9 @@ pub fn calc_reward(
     reward_denominator: u64,
     staking_lock_duration_in_sec: u64,
 ) -> u64 {
-    msg!("time_now: {}", time_now);
-    msg!("time_last_stake: {}", time_last_stake);
-    msg!("time_last_claim: {}", time_last_claim);
+    // msg!("time_now: {}", time_now);
+    // msg!("time_last_stake: {}", time_last_stake);
+    // msg!("time_last_claim: {}", time_last_claim);
     // if you never stake, you should get nothing
     if time_last_stake == 0 {
         return 0;
@@ -81,6 +81,7 @@ pub fn calc_reward(
     if time_last_interact < time_lock_end {
         if time_now < time_lock_end {
             // case 1
+            msg!("calc reward w/ case 1");
             let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
             new_reward = new_reward
                 .safe_add(calc_reward_internal(
@@ -92,24 +93,26 @@ pub fn calc_reward(
                 .unwrap();
         } else {
             // case 3
+            msg!("calc reward w/ case 3");
             let time_accrued_bef = time_lock_end.safe_sub(time_last_interact).unwrap();
-            new_reward = new_reward
-                .safe_add(calc_reward_internal(
-                    reward_per_sec,
-                    reward_denominator,
-                    time_accrued_bef,
-                    nfts_staked,
-                ))
-                .unwrap();
+            let reward_before = calc_reward_internal(
+                reward_per_sec,
+                reward_denominator,
+                time_accrued_bef,
+                nfts_staked,
+            );
+            msg!("reward_before: {}", reward_before);
+            new_reward = new_reward.safe_add(reward_before).unwrap();
 
             let time_accrued_aft = time_now.safe_sub(time_lock_end).unwrap();
-            new_reward = new_reward
-                .safe_add(calc_reward_internal_1_igs(time_accrued_aft, nfts_staked))
-                .unwrap();
+            let reward_after = calc_reward_internal_1_igs(time_accrued_aft, nfts_staked);
+            msg!("reward_after: {}", reward_after);
+            new_reward = new_reward.safe_add(reward_after).unwrap();
         }
     } else {
         if time_now > time_lock_end {
             // case 2
+            msg!("calc reward w/ case 3");
             let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
             new_reward = new_reward
                 .safe_add(calc_reward_internal_1_igs(time_accrued, nfts_staked))
@@ -118,6 +121,7 @@ pub fn calc_reward(
             return 0;
         }
     }
+    msg!("new_reward: {}", new_reward);
     msg!("prev_reward_stored: {}", prev_reward_stored);
     let total_reward = new_reward.safe_add(prev_reward_stored).unwrap();
     msg!("total_reward: {}", total_reward);
@@ -133,6 +137,14 @@ fn calc_reward_internal(
 ) -> u64 {
     let reward_multiplied_by_time = reward_per_sec.safe_mul(time_accrued).unwrap();
     let reward_multiplied_by_all_nft = nfts_staked.safe_mul(reward_multiplied_by_time).unwrap();
+    msg!(
+        "reward cal (reward_per_sec * time_accrued * nfts_staked): {}*{}*{}={}",
+        reward_per_sec,
+        time_accrued,
+        nfts_staked,
+        reward_multiplied_by_all_nft
+    );
+    msg!("reward denominator: {}", reward_denominator);
     let reward = reward_multiplied_by_all_nft
         .safe_div(reward_denominator)
         .unwrap();
