@@ -17,12 +17,14 @@ import UserNFTs from "./UserNFTs";
 import UserStakings from "./UserStakings";
 import mintWhitelistedNFTs from "../utils/mintWhitelistedNFTs";
 import { NFT_CREATOR_ID } from "../sdk/address";
+import useWalletNfts from "../hooks/useWalletNFT";
 
 export default function User() {
   const [showInitStake, setShowInitStake] = useState(false);
   const [showStake, setShowStake] = useState(false);
   const [showUnstake, setShowUnstake] = useState(false);
   const [showClaim, setShowClaim] = useState(false);
+  const [mintAmount, setMintAmount] = useState(1);
   const users = useGlobalStore((state) => state.users);
   const loading = useGlobalStore((state) => state.fetchUsersLoading);
   const success = useGlobalStore((state) => state.fetchUsersSuccess);
@@ -34,6 +36,8 @@ export default function User() {
   const balance = useGlobalStore((state) => state.userTokenBalance);
   const fetchBalance = useGlobalStore((state) => state.fetchUserTokenBalance);
   const wallet = useGlobalStore((state) => state.wallet);
+
+  const { refetchNFT, isLoading } = useWalletNfts();
 
   const myInitiatedStakings =
     users.length > 0
@@ -58,7 +62,18 @@ export default function User() {
   return (
     <div className="text-sm">
       <h2 className="mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
-        User NFTs
+        <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
+          User NFTs
+        </span>
+        <button
+          className="rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 hover:opacity-90 p-1 ml-2"
+          onClick={refetchNFT}
+        >
+          <RefreshIcon
+            height={14}
+            className={isLoading ? "animate-spin" : ""}
+          />
+        </button>
       </h2>
       <hr className="-mt-3 mb-4" />
       <UserNFTs cardSize={48} />
@@ -73,18 +88,42 @@ export default function User() {
           {NFT_CREATOR_ID.toBase58()}
         </div>
       </div>
-      <button
-        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
-        onClick={() =>
-          toast.promise(mintWhitelistedNFTs(), {
-            loading: "Minting..",
-            success: "Minting Finished",
-            error: "Minting Failed",
-          })
-        }
-      >
-        Mint whitelisted NFTs
-      </button>
+      <div className="flex w-full space-x-2">
+        <button
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-9/12"
+          onClick={() =>
+            toast.promise(mintWhitelistedNFTs(mintAmount), {
+              loading: "Minting..",
+              success: "Minting Finished",
+              error: "Minting Failed",
+            })
+          }
+        >
+          Mint whitelisted NFTs
+        </button>
+        <div className="flex h-10 w-3/12 rounded-lg relative bg-transparent">
+          <button
+            className=" bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-l cursor-pointer outline-none"
+            onClick={() => setMintAmount((amount) => amount - 1)}
+            disabled={mintAmount === 1}
+          >
+            <span className="m-auto text-2xl font-thin">−</span>
+          </button>
+          <input
+            type="number"
+            className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black  md:text-basecursor-default flex items-center text-gray-700"
+            name="custom-input-number"
+            value={mintAmount}
+          ></input>
+          <button
+            className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-r cursor-pointer"
+            onClick={() => setMintAmount((amount) => amount + 1)}
+            disabled={mintAmount === 10}
+          >
+            <span className="m-auto text-2xl font-thin">+</span>
+          </button>
+        </div>
+      </div>
 
       <h2 className="mt-4 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
         Staking
