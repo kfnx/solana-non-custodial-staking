@@ -31,6 +31,7 @@ pub fn handler(ctx: Context<InitStaking>) -> Result<()> {
     user.time_last_claim = 0;
     user.nfts_staked = 0;
     user.reward_stored = 0;
+    user.time_staking_start = 0;
     let config = &mut ctx.accounts.config;
     config.initiated_users = config.initiated_users.checked_add(1).unwrap();
     Ok(())
