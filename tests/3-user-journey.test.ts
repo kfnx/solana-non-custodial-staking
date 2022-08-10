@@ -783,7 +783,7 @@ describe("User journey", () => {
           ])
           .signers([markers.keypair])
           .rpc()
-      ).to.be.rejectedWith("-AnchorError caused by account: user_state. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.");
+      ).to.be.rejectedWith("ConstraintSeeds");
     });
 
     it("Markers cannot stake other user NFT (owned by Justin)", async () => {
