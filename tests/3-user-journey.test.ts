@@ -720,6 +720,24 @@ describe("User journey", () => {
       console.log("Markers address", markers.keypair.publicKey.toBase58());
     });
 
+    it("Markers cannot initate staking with justin state", async () => {
+      const [userState, _vaultBump] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+
+      await expect(program.methods
+        .initStaking()
+        .accounts({
+          userState,
+          config: config.publicKey,
+          user: markers.wallet.publicKey,
+        })
+        .signers([markers.keypair])
+        .rpc()
+      ).to.be.rejectedWith("unauthorized signer or writable account");
+    });
+
     it("Markers initate staking", async () => {
       const [userState, _vaultBump] = await findUserStatePDA(
         markers.wallet.publicKey,
