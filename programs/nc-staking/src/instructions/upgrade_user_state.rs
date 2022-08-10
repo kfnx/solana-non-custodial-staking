@@ -6,9 +6,10 @@ use anchor_lang::prelude::*;
 pub struct UpgradeUserState<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut)]
+    /// CHECK: read only. state are per config
     pub config: Account<'info, StakingConfig>,
     #[account(
+        mut,
         has_one = user,
         seeds = [
             b"user_state",

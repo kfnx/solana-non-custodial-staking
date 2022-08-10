@@ -109,32 +109,32 @@ pub fn calc_reward(
                 time_accrued_bef,
                 nfts_staked,
             );
-            msg!("reward_before: {}", reward_before);
             new_reward = new_reward.safe_add(reward_before).unwrap();
-
             let time_accrued_aft = time_now.safe_sub(time_lock_end).unwrap();
             let reward_after = calc_reward_internal_1_igs(time_accrued_aft, nfts_staked);
-            msg!("reward_after: {}", reward_after);
+            msg!(
+                "reward_before: {} reward_after: {}",
+                reward_before,
+                reward_after
+            );
             new_reward = new_reward.safe_add(reward_after).unwrap();
         }
+    } else if time_now > time_lock_end {
+        // case 2
+        msg!("calc reward w/ case 2");
+        let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
+        new_reward = new_reward
+            .safe_add(calc_reward_internal_1_igs(time_accrued, nfts_staked))
+            .unwrap();
     } else {
-        if time_now > time_lock_end {
-            // case 2
-            msg!("calc reward w/ case 3");
-            let time_accrued = time_now.safe_sub(time_last_stake).unwrap();
-            new_reward = new_reward
-                .safe_add(calc_reward_internal_1_igs(time_accrued, nfts_staked))
-                .unwrap();
-        } else {
-            return 0;
-        }
+        return 0;
     }
-    msg!("new_reward: {}", new_reward);
-    msg!("prev_reward_stored: {}", prev_reward_stored);
-    let total_reward = new_reward.safe_add(prev_reward_stored).unwrap();
-    msg!("total_reward: {}", total_reward);
-
-    total_reward
+    msg!(
+        "prev_reward: {} new_reward: {}",
+        prev_reward_stored,
+        new_reward
+    );
+    new_reward.safe_add(prev_reward_stored).unwrap()
 }
 
 fn calc_reward_internal(
@@ -153,11 +153,9 @@ fn calc_reward_internal(
         reward_multiplied_by_all_nft
     );
     msg!("reward denominator: {}", reward_denominator);
-    let reward = reward_multiplied_by_all_nft
+    reward_multiplied_by_all_nft
         .safe_div(reward_denominator)
-        .unwrap();
-
-    reward
+        .unwrap()
 }
 
 // 1 igs rate is 1157407/100000000000
