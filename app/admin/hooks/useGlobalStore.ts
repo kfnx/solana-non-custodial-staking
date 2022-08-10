@@ -42,7 +42,7 @@ async function checkUserInitiated(
 ) {
   try {
     // will throw error if not found
-    await program.account.user.fetch(userStatePDA);
+    await program.account.userV2.fetch(userStatePDA);
     return true;
   } catch (error) {
     return false;
@@ -197,7 +197,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const users = await program.account.user.all();
+    const users = await program.account.userV2.all();
 
     set({
       users,

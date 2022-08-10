@@ -313,6 +313,37 @@ export type NcStaking = {
         }
       ];
       args: [];
+    },
+    {
+      name: "upgradeUserState";
+      accounts: [
+        {
+          name: "user";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oldUserState";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "newUserState";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -402,6 +433,46 @@ export type NcStaking = {
           {
             name: "creatorWhitelist";
             type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "userV2";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "user";
+            type: "publicKey";
+          },
+          {
+            name: "config";
+            type: "publicKey";
+          },
+          {
+            name: "rewardAccrued";
+            type: "u64";
+          },
+          {
+            name: "rewardStored";
+            type: "u64";
+          },
+          {
+            name: "timeLastStake";
+            type: "u64";
+          },
+          {
+            name: "timeLastClaim";
+            type: "u64";
+          },
+          {
+            name: "nftsStaked";
+            type: "u64";
+          },
+          {
+            name: "timeStakingStart";
+            type: "u64";
           }
         ];
       };
@@ -823,6 +894,37 @@ export const IDL: NcStaking = {
       ],
       args: [],
     },
+    {
+      name: "upgradeUserState",
+      accounts: [
+        {
+          name: "user",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oldUserState",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "newUserState",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -911,6 +1013,46 @@ export const IDL: NcStaking = {
           {
             name: "creatorWhitelist",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "userV2",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "user",
+            type: "publicKey",
+          },
+          {
+            name: "config",
+            type: "publicKey",
+          },
+          {
+            name: "rewardAccrued",
+            type: "u64",
+          },
+          {
+            name: "rewardStored",
+            type: "u64",
+          },
+          {
+            name: "timeLastStake",
+            type: "u64",
+          },
+          {
+            name: "timeLastClaim",
+            type: "u64",
+          },
+          {
+            name: "nftsStaked",
+            type: "u64",
+          },
+          {
+            name: "timeStakingStart",
+            type: "u64",
           },
         ],
       },
