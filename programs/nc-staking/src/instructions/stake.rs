@@ -8,8 +8,13 @@ use std::str::FromStr;
 pub struct Stake<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut, has_one = user)]
-    pub user_state: Account<'info, User>,
+    #[account(
+        mut,
+        has_one = user,
+        seeds = [b"user_state_v2", config.to_account_info().key.as_ref(), user.to_account_info().key.as_ref()],
+        bump
+    )]
+    pub user_state: Account<'info, UserV2>,
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
     #[account(

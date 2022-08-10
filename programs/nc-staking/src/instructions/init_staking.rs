@@ -11,14 +11,14 @@ pub struct InitStaking<'info> {
         init,
         payer = user,
         seeds = [
-          b"user_state",
+          b"user_state_v2",
           config.to_account_info().key.as_ref(),
           user.to_account_info().key.as_ref(),
         ],
         bump,
-        space = 8 + std::mem::size_of::<User>(),
+        space = 8 + std::mem::size_of::<UserV2>(),
     )]
-    pub user_state: Account<'info, User>,
+    pub user_state: Account<'info, UserV2>,
     pub system_program: Program<'info, System>,
 }
 

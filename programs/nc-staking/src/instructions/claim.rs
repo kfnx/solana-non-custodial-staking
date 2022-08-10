@@ -15,10 +15,18 @@ pub struct ClaimStakingReward<'info> {
     /// CHECK:
     #[account(seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
     pub config_authority: AccountInfo<'info>,
-    #[account(mut)]
-    pub user_state: Box<Account<'info, User>>,
-
-    #[account(mut, seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()], bump = bump_reward_pot)]
+    #[account(
+        mut,
+        has_one = user,
+        seeds = [b"user_state_v2", config.to_account_info().key.as_ref(), user.to_account_info().key.as_ref()],
+        bump
+    )]
+    pub user_state: Box<Account<'info, UserV2>>,
+    #[account(
+        mut,
+        seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()],
+        bump = bump_reward_pot
+    )]
     pub reward_pot: Box<Account<'info, TokenAccount>>,
     pub reward_mint: Box<Account<'info, Mint>>,
     #[account(

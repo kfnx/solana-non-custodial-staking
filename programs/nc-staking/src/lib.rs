@@ -52,4 +52,8 @@ pub mod nc_staking {
     pub fn modify_whitelist(ctx: Context<ModifyWhitelist>) -> Result<()> {
         instructions::modify_whitelist::handler(ctx)
     }
+
+    pub fn upgrade_user_state(ctx: Context<UpgradeUserState>) -> Result<()> {
+        instructions::upgrade_user_state::handler(ctx)
+    }
 }

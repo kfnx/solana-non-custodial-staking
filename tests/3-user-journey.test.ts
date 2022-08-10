@@ -91,7 +91,7 @@ describe("User journey", () => {
         .signers([justin.keypair])
         .rpc();
 
-      const account = await program.account.user.fetch(userState);
+      const account = await program.account.userV2.fetch(userState);
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.ok(account.nftsStaked.toNumber() === 0);
     });
@@ -140,7 +140,7 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const account = await program.account.user.fetch(justinState);
+      const account = await program.account.userV2.fetch(justinState);
 
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.ok(account.nftsStaked.toNumber() === 1);
@@ -254,7 +254,7 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const account = await program.account.user.fetch(justinState);
+      const account = await program.account.userV2.fetch(justinState);
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.equal(account.nftsStaked.toNumber(), 0);
     });
@@ -343,7 +343,7 @@ describe("User journey", () => {
       );
 
       const prevState = (
-        await program.account.user.fetch(justinState)
+        await program.account.userV2.fetch(justinState)
       ).nftsStaked.toNumber();
 
       await expect(
@@ -351,7 +351,7 @@ describe("User journey", () => {
       ).to.be.rejectedWith("AccountNotInitialized");
 
       const currentState = (
-        await program.account.user.fetch(justinState)
+        await program.account.userV2.fetch(justinState)
       ).nftsStaked.toNumber();
       assert.ok(currentState === prevState, "nothing should change");
     });
@@ -470,7 +470,7 @@ describe("User journey", () => {
       );
       console.log(
         "rewardStored",
-        (await program.account.user.fetch(justinState)).rewardStored.toNumber()
+        (await program.account.userV2.fetch(justinState)).rewardStored.toNumber()
       );
 
       // wait for lock time to finish
@@ -497,7 +497,7 @@ describe("User journey", () => {
       console.log("balance", balance);
 
       // assert.equal(
-      //   (await program.account.user.fetch(justinState)).rewardStored.toNumber(),
+      //   (await program.account.userV2.fetch(justinState)).rewardStored.toNumber(),
       //   1,
       //   "1 NFT staked"
       // );
@@ -515,7 +515,7 @@ describe("User journey", () => {
       // await delay(3000);
 
       // assert.equal(
-      //   (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
       //   2,
       //   "2 NFT staked"
       // );
@@ -534,7 +534,7 @@ describe("User journey", () => {
       // await delay(3000);
 
       // assert.equal(
-      //   (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
       //   3,
       //   "3 NFT staked"
       // );
@@ -655,7 +655,7 @@ describe("User journey", () => {
       // await delay(5000);
 
       // assert.equal(
-      //   (await program.account.user.fetch(justinState)).nftsStaked.toNumber(),
+      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
       //   0,
       //   "should be 0 because all NFT was unstaked previously"
       // );
@@ -736,7 +736,7 @@ describe("User journey", () => {
         .signers([markers.keypair])
         .rpc();
 
-      const account = await program.account.user.fetch(userState);
+      const account = await program.account.userV2.fetch(userState);
       assert.ok(account.user.equals(markers.wallet.publicKey));
       assert.ok(account.nftsStaked.toNumber() === 0);
     });
@@ -1075,7 +1075,7 @@ describe("User journey", () => {
 
   describe("Final program state", () => {
     it("Check program accounts", async () => {
-      const allStakingAccounts = await program.account.user.all();
+      const allStakingAccounts = await program.account.userV2.all();
       assert.equal(
         allStakingAccounts.length,
         2 + 1, // 2 Justin + 1 Markers account
@@ -1095,7 +1095,7 @@ describe("User journey", () => {
         justin.wallet.publicKey,
         config.publicKey
       );
-      const justinStateAcc = await program.account.user.fetch(justinState);
+      const justinStateAcc = await program.account.userV2.fetch(justinState);
       assert.equal(
         justinStateAcc.config.toBase58(),
         config.publicKey.toBase58(),
@@ -1107,7 +1107,7 @@ describe("User journey", () => {
         markers.wallet.publicKey,
         config.publicKey
       );
-      const markersStateAcc = await program.account.user.fetch(markersState);
+      const markersStateAcc = await program.account.userV2.fetch(markersState);
       assert.equal(
         markersStateAcc.config.toBase58(),
         config.publicKey.toBase58(),
