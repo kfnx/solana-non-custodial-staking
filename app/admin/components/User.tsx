@@ -26,13 +26,17 @@ export default function User() {
   const [showClaim, setShowClaim] = useState(false);
   const [mintAmount, setMintAmount] = useState(1);
   const users = useGlobalStore((state) => state.users);
+  const oldUsers = useGlobalStore((state) => state.oldUsers);
   const loading = useGlobalStore((state) => state.fetchUsersLoading);
   const success = useGlobalStore((state) => state.fetchUsersSuccess);
   const fetchUsers = useGlobalStore((state) => state.fetchUsers);
   const config = useGlobalStore((state) => state.config);
   const configs = useGlobalStore((state) => state.configs);
-  const userInitiated = useGlobalStore((state) => state.userInitiated);
-  const checkUser = useGlobalStore((state) => state.checkUserInitiated);
+  const initiated = useGlobalStore((state) => state.userConfigV2Initiated);
+  const v1initiated = useGlobalStore((state) => state.userConfigV1Initiated);
+  const migrated = useGlobalStore((state) => state.userConfigV1MigratedToV2);
+  const checkUser = useGlobalStore((state) => state.checkUserConfig);
+  const upgrade = useGlobalStore((state) => state.upgrade);
   const balance = useGlobalStore((state) => state.userTokenBalance);
   const fetchBalance = useGlobalStore((state) => state.fetchUserTokenBalance);
   const wallet = useGlobalStore((state) => state.wallet);
@@ -56,8 +60,8 @@ export default function User() {
   }, [checkUser, config, configs.length, wallet]);
 
   useEffect(() => {
-    if (userInitiated && configs.length > 0) fetchBalance();
-  }, [userInitiated, configs.length, fetchBalance]);
+    if (initiated && configs.length > 0) fetchBalance();
+  }, [initiated, configs.length, fetchBalance]);
 
   return (
     <div className="text-sm">
@@ -130,21 +134,20 @@ export default function User() {
       </h2>
       <hr className="-mt-3 mb-4" />
       <ConfigSelector />
+      <p className="my-2 text-center">
+        {initiated ? "✅ initiated" : "❌ not initiated"}{" "}
+      </p>
       <button
         className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
         onClick={() => setShowInitStake(true)}
       >
         Initiate staking <UserAddIcon height={20} className="ml-2" />
       </button>
-      <p className="mt-2 text-center">
-        user state in selected config:{" "}
-        {userInitiated ? "✅ initiated" : "❌ not initiated"}{" "}
-      </p>
       <div className="grid grid-cols-3 gap-2 my-2">
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowStake(true)}
-          disabled={!userInitiated}
+          disabled={!initiated}
         >
           Stake
           <LockClosedIcon height={20} className="ml-2" />
@@ -152,7 +155,7 @@ export default function User() {
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowUnstake(true)}
-          disabled={!userInitiated}
+          disabled={!initiated}
         >
           Unstake
           <LockOpenIcon height={20} className="ml-2" />
@@ -160,7 +163,7 @@ export default function User() {
         <button
           className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 disabled:cursor-not-allowed"
           onClick={() => setShowClaim(true)}
-          disabled={!userInitiated}
+          disabled={!initiated}
         >
           Claim
           <HandIcon height={20} className="ml-2" />
@@ -218,6 +221,39 @@ export default function User() {
         </h2>
         <hr className="-mt-3 mb-4" />
         <UserStakings stakings={users} />
+
+        <h2 className="mt-4 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
+          Migrate PDA for old users
+        </h2>
+        <hr className="-mt-3 mb-4" />
+        <ConfigSelector />
+        <p className="my-2 text-center">
+          {v1initiated ? "✅ Initiated" : "❌ Never Initiated"}{" "}
+          {migrated ? "✅ Migrated" : "❌ Not Migrated yet"}
+        </p>
+        <button
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
+          onClick={upgrade}
+        >
+          Migrate <UserAddIcon height={20} className="ml-2" />
+        </button>
+
+        <h2 className="mt-8 my-4">
+          <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
+            old staking acc (please migrate) ({oldUsers.length}):
+          </span>
+          <button
+            className="rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 hover:opacity-90 p-1 ml-2"
+            onClick={fetchUsers}
+          >
+            <RefreshIcon
+              height={14}
+              className={loading ? "animate-spin" : ""}
+            />
+          </button>
+        </h2>
+        <hr className="-mt-3 mb-4" />
+        <UserStakings stakings={oldUsers} />
       </div>
       <InitStakingModal isOpen={showInitStake} setIsOpen={setShowInitStake} />
       <StakeModal isOpen={showStake} setIsOpen={setShowStake} />

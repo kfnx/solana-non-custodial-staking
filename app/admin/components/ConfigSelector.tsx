@@ -17,7 +17,6 @@ export default function ConfigSelector() {
   const configs = useGlobalStore((state) => state.configs);
   const config = useGlobalStore((state) => state.config);
   const setConfig = useGlobalStore((state) => state.setConfig);
-  console.log("active config", configs[config]);
 
   return (
     <Listbox value={config} onChange={setConfig}>
