@@ -137,9 +137,15 @@ export default function User() {
       <p className="my-2 text-center">
         {initiated ? "✅ initiated" : "❌ not initiated"}{" "}
       </p>
+      {v1initiated && !migrated && (
+        <p className="my-2 text-center">
+          ☢️ This user use old PDA, please migrate to new PDA
+        </p>
+      )}
       <button
-        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
+        className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full disabled:cursor-not-allowed"
         onClick={() => setShowInitStake(true)}
+        disabled={v1initiated || initiated}
       >
         Initiate staking <UserAddIcon height={20} className="ml-2" />
       </button>
@@ -228,12 +234,12 @@ export default function User() {
         <hr className="-mt-3 mb-4" />
         <ConfigSelector />
         <p className="my-2 text-center">
-          {v1initiated ? "✅ Initiated" : "❌ Never Initiated"}{" "}
-          {migrated ? "✅ Migrated" : "❌ Not Migrated yet"}
+          {v1initiated && !initiated && "☢️ Old PDA detected, Please Migrate"}
         </p>
         <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full"
+          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full disabled:cursor-not-allowed"
           onClick={upgrade}
+          disabled={initiated}
         >
           Migrate <UserAddIcon height={20} className="ml-2" />
         </button>

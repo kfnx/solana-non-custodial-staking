@@ -831,32 +831,33 @@ describe("User journey", () => {
       ).to.be.rejectedWith("unknown signer");
     });
 
-    it("Markers cannot modify whitelist", async () => {
-      await expect(
-        program.methods
-          .modifyWhitelist()
-          .accounts({
-            admin: dev.wallet.publicKey,
-            config: config.publicKey,
-            creatorAddressToWhitelist: markers.wallet.publicKey,
-          })
-          .signers([markers.keypair])
-          .rpc()
-      ).to.be.rejectedWith("unknown signer");
+    // modify whitelist removed
+    // it("Markers cannot modify whitelist", async () => {
+    //   await expect(
+    //     program.methods
+    //       .modifyWhitelist()
+    //       .accounts({
+    //         admin: dev.wallet.publicKey,
+    //         config: config.publicKey,
+    //         creatorAddressToWhitelist: markers.wallet.publicKey,
+    //       })
+    //       .signers([markers.keypair])
+    //       .rpc()
+    //   ).to.be.rejectedWith("unknown signer");
 
-      // try again with markers as admin
-      await expect(
-        program.methods
-          .modifyWhitelist()
-          .accounts({
-            admin: markers.wallet.publicKey,
-            config: config.publicKey,
-            creatorAddressToWhitelist: markers.wallet.publicKey,
-          })
-          .signers([markers.keypair])
-          .rpc()
-      ).to.be.rejectedWith("ConstraintHasOne");
-    });
+    //   // try again with markers as admin
+    //   await expect(
+    //     program.methods
+    //       .modifyWhitelist()
+    //       .accounts({
+    //         admin: markers.wallet.publicKey,
+    //         config: config.publicKey,
+    //         creatorAddressToWhitelist: markers.wallet.publicKey,
+    //       })
+    //       .signers([markers.keypair])
+    //       .rpc()
+    //   ).to.be.rejectedWith("ConstraintHasOne");
+    // });
 
     it("Markers cannot stake other collection NFT (not whitelisted)", async () => {
       // setup unofficial NFT

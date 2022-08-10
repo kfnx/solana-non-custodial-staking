@@ -202,7 +202,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const configId = configs[config].publicKey;
 
     const result = await checkUserStatePDA(wallet.publicKey, configId, program);
-    console.log(result)
+    console.log(result);
     set({
       userConfigV1Initiated: result.v1Initiated,
       userConfigV2Initiated: result.v2Initiated,
@@ -231,15 +231,49 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       toast.error("Select a staking config");
       return;
     }
-    const configId = configs[config].publicKey;
-    // const [v1] = await findUserStatePDA(wallet.publicKey, configId);
-    // const [v2] = await findUserStateV2PDA(wallet.publicKey, configId);
+    const configId = configs[config].publicKey as PublicKey;
+    const [oldUserState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [newUserState] = await findUserStateV2PDA(wallet.publicKey, configId);
+    console.log("upgrade configId", configId.toString());
+    console.log("upgrade oldUserState", oldUserState.toString());
+    console.log("upgrade newUserState", newUserState.toString());
 
-    // const isUserConfigV2Initiated = await fetchUserPDA(
-    //   userStatePDA,
-    //   program
-    // );
-    // set({ userConfigV2Initiated: isUserConfigV2Initiated });
+    const tx = program.methods
+      .upgradeUserState()
+      .accounts({
+        user: wallet.publicKey,
+        oldUserState,
+        newUserState,
+        config: configId,
+        // programs
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    const ixName = "Migrate User State PDA";
+    toast
+      .promise(tx, {
+        loading: `Processing ${ixName} tx...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        set({ userConfigV1MigratedToV2: true });
+        console.log(`${ixName} sig`, val);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
+      });
   },
 
   // program accounts fetchs
