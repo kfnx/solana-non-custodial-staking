@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { useEffect } from "react";
 import useGlobalStore from "../hooks/useGlobalStore";
-import { findUserStatePDA } from "../sdk/pda";
+import { findUserStatePDA, findUserStateV2PDA } from "../sdk/pda";
 import { convertSecondsToReadableTime } from "../utils/convertSecToReadableTime";
 import { unixTimeConverter } from "../utils/unixTimeConverter";
 
@@ -9,11 +9,14 @@ function readLockTime(configs: any[], configId: PublicKey) {
   const config = configs.find(
     (config) => config.publicKey.toString() === configId
   );
-  return (
-    convertSecondsToReadableTime(
-      Number(config.account.stakingLockDurationInSec.toString())
-    ) || " Flexible"
-  );
+
+  if (config?.account) {
+    return (
+      convertSecondsToReadableTime(
+        Number(config.account.stakingLockDurationInSec.toString())
+      ) || " Flexible"
+    );
+  }
 }
 
 const UserState: React.FC<{ index: number; configs: any[]; item: any }> = ({
@@ -21,18 +24,24 @@ const UserState: React.FC<{ index: number; configs: any[]; item: any }> = ({
   configs,
   item,
 }) => {
-  const currentPDA = item.publicKey;
-  const userId = item.account["user"];
-  const config = item.account["config"];
+  // const currentPDA = item.publicKey;
+  // const userId = item.account["user"];
+  // const config = item.account["config"];
 
   // @ts-ignore
-  useEffect(async () => {
-    const [v1] = await findUserStatePDA(userId, config);
-    const isV1 = currentPDA.toString() === v1.toString();
-    const tss = item.account["time_staking_start"];
-
-    console.log(userId.toString(), currentPDA.toString(), tss, item.account);
-  });
+  // useEffect(async () => {
+  //   let v1 = false;
+  //   try {
+  //     const [v1pda] = await findUserStatePDA(userId, config);
+  //     v1 = true;
+  //   } catch {}
+  //   let v2 = false;
+  //   try {
+  //     const [v2pda] = await findUserStateV2PDA(userId, config);
+  //     v2 = true;
+  //   } catch {}
+  //   const tss = item.account["time_staking_start"];
+  // });
 
   return (
     <div className="text-xs mt-4">
@@ -88,14 +97,17 @@ const UserStakings: React.FC<{ stakings: any[] }> = ({ stakings }) => {
 
   return (
     <>
-      {stakings.map((item: any, index) => (
-        <UserState
-          key={item.publicKey.toString()}
-          index={index}
-          configs={configs}
-          item={item}
-        />
-      ))}
+      {stakings.map(
+        (item: any, index) =>
+          item && (
+            <UserState
+              key={item.publicKey.toString()}
+              index={index}
+              configs={configs}
+              item={item}
+            />
+          )
+      )}
     </>
   );
 };

@@ -289,32 +289,6 @@ export type NcStaking = {
       ];
     },
     {
-      name: "modifyWhitelist";
-      accounts: [
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "config";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "creatorAddressToWhitelist";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
       name: "upgradeUserState";
       accounts: [
         {
@@ -324,12 +298,12 @@ export type NcStaking = {
         },
         {
           name: "config";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
           name: "oldUserState";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -869,32 +843,6 @@ export const IDL: NcStaking = {
       ],
     },
     {
-      name: "modifyWhitelist",
-      accounts: [
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "config",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "creatorAddressToWhitelist",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "upgradeUserState",
       accounts: [
         {
@@ -904,12 +852,12 @@ export const IDL: NcStaking = {
         },
         {
           name: "config",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
           name: "oldUserState",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
