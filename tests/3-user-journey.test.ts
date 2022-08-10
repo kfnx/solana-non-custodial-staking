@@ -741,6 +741,51 @@ describe("User journey", () => {
       assert.ok(account.nftsStaked.toNumber() === 0);
     });
 
+    it("Markers cannot stake Markers NFT using justin userstate", async () => {
+      const markersNFT = nfts[0].mint.publicKey;
+      const markersNFTAta = await findUserATA(
+        justin.wallet.publicKey,
+        markersNFT
+      );
+      const [delegate] = await findDelegateAuthPDA(markersNFTAta);
+      const [edition] = await findEditionPDA(markersNFT);
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+      const [stakeInfo] = await findStakeInfoPDA(
+        markers.wallet.publicKey,
+        markersNFT
+      );
+      const metadata = await findMetadataPDA(markersNFT);
+
+      await expect(
+        program.methods
+          .stake()
+          .accounts({
+            user: markers.wallet.publicKey,
+            stakeInfo,
+            config: config.publicKey,
+            userState: justinState,
+            mint: markersNFT,
+            tokenAccount: markersNFTAta,
+            edition,
+            delegate,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          })
+          .remainingAccounts([
+            {
+              pubkey: metadata,
+              isWritable: false,
+              isSigner: false,
+            },
+          ])
+          .signers([markers.keypair])
+          .rpc()
+      ).to.be.rejectedWith("-AnchorError caused by account: user_state. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.");
+    });
+
     it("Markers cannot stake other user NFT (owned by Justin)", async () => {
       const justinNFTmint = nfts[0].mint.publicKey;
       const justinNFTata = await findUserATA(
