@@ -1,5 +1,5 @@
 import create from "zustand";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -33,7 +33,7 @@ export const networks: Network[] = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
   { name: "Testnet", endpoint: "https://api.testnet.solana.com" },
   { name: "Devnet", endpoint: "https://api.devnet.solana.com" },
-  { name: "Mainnet-beta", endpoint: "https://api.mainnet-beta.solana.com" },
+  { name: "Mainnet-beta", endpoint: "https://bitter-twilight-night.solana-mainnet.quiknode.pro/386d6ff7459b7d27a96b41c0b382ec26dd0b1c91/" },
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
@@ -80,7 +80,21 @@ async function checkUserStatePDA(
 
   return result;
 }
+export interface UserStateWrapper {
+  account: UserState;
+  publicKey: PublicKey;
+}
+interface UserState {
+  user: PublicKey;
+  config: PublicKey;
+  nftsStaked: BN;
+  rewardAccrued: BN;
+  rewardStored: BN;
 
+  timeLastClaim: BN;
+  timeLastStake: BN;
+  timeStakingStart?: BN;
+}
 interface GlobalState {
   // setters
   connection: Connection;
@@ -101,11 +115,11 @@ interface GlobalState {
   userConfigV2Initiated: boolean;
   userConfigV1MigratedToV2: boolean;
   checkUserConfig: () => void;
-  upgrade: () => void;
+  upgradeOnBehalf: (userToUpgrade: PublicKey, config: PublicKey) => void;
 
   // program account fetch
-  users: any[];
-  oldUsers: any[];
+  users: UserStateWrapper[];
+  oldUsers: UserStateWrapper[];
   fetchUsersLoading: boolean;
   fetchUsersSuccess: boolean;
   fetchUsers: () => void;
@@ -209,14 +223,11 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       userConfigV1MigratedToV2: result.v1MigratedToV2,
     });
   },
-  upgrade: async () => {
+  upgradeOnBehalf: async (userToUpgrade: PublicKey, config: PublicKey) => {
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
-      return set({
-        userConfigV2Initiated: false,
-        userConfigV1MigratedToV2: false,
-      });
+      return;
     }
     const connection = get().connection;
     const provider = new AnchorProvider(
@@ -226,15 +237,9 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
 
-    const { configs, config } = get();
-    if (!configs[config]) {
-      toast.error("Select a staking config");
-      return;
-    }
-    const configId = configs[config].publicKey as PublicKey;
-    const [oldUserState] = await findUserStatePDA(wallet.publicKey, configId);
-    const [newUserState] = await findUserStateV2PDA(wallet.publicKey, configId);
-    console.log("upgrade configId", configId.toString());
+    const [oldUserState] = await findUserStatePDA(userToUpgrade, config);
+    const [newUserState] = await findUserStateV2PDA(userToUpgrade, config);
+    console.log("upgrade configId", config.toString());
     console.log("upgrade oldUserState", oldUserState.toString());
     console.log("upgrade newUserState", newUserState.toString());
 
@@ -242,9 +247,10 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       .upgradeUserState()
       .accounts({
         user: wallet.publicKey,
+        actualUser: userToUpgrade,
         oldUserState,
         newUserState,
-        config: configId,
+        config,
         // programs
         systemProgram: SystemProgram.programId,
       })
@@ -258,7 +264,6 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         error: `${ixName} failed`,
       })
       .then((val) => {
-        set({ userConfigV1MigratedToV2: true });
         console.log(`${ixName} sig`, val);
       })
       .catch((err) => {

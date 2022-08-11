@@ -36,7 +36,6 @@ export default function User() {
   const v1initiated = useGlobalStore((state) => state.userConfigV1Initiated);
   const migrated = useGlobalStore((state) => state.userConfigV1MigratedToV2);
   const checkUser = useGlobalStore((state) => state.checkUserConfig);
-  const upgrade = useGlobalStore((state) => state.upgrade);
   const balance = useGlobalStore((state) => state.userTokenBalance);
   const fetchBalance = useGlobalStore((state) => state.fetchUserTokenBalance);
   const wallet = useGlobalStore((state) => state.wallet);
@@ -229,25 +228,9 @@ export default function User() {
         <hr className="-mt-3 mb-4" />
         <UserStakings stakings={users} />
 
-        <h2 className="mt-4 mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
-          Migrate PDA for old users
-        </h2>
-        <hr className="-mt-3 mb-4" />
-        <ConfigSelector />
-        <p className="my-2 text-center">
-          {v1initiated && !initiated && "☢️ Old PDA detected, Please Migrate"}
-        </p>
-        <button
-          className="inline-flex items-center justify-center h-10 px-6 rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 font-medium hover:opacity-90 w-full disabled:cursor-not-allowed"
-          onClick={upgrade}
-          disabled={initiated}
-        >
-          Migrate <UserAddIcon height={20} className="ml-2" />
-        </button>
-
         <h2 className="mt-8 my-4">
           <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
-            old staking acc (please migrate) ({oldUsers.length}):
+            Old staking accounts (to migrate) ({oldUsers.length}):
           </span>
           <button
             className="rounded-md shadow bg-blue-900/20 text-slate-600 dark:text-gray-200 hover:opacity-90 p-1 ml-2"
@@ -260,7 +243,7 @@ export default function User() {
           </button>
         </h2>
         <hr className="-mt-3 mb-4" />
-        <UserStakings stakings={oldUsers} />
+        <UserStakings stakings={oldUsers} oldAccount={true}/>
       </div>
       <InitStakingModal isOpen={showInitStake} setIsOpen={setShowInitStake} />
       <StakeModal isOpen={showStake} setIsOpen={setShowStake} />
