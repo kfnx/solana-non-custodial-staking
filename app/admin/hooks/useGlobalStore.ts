@@ -33,7 +33,7 @@ export const networks: Network[] = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
   { name: "Testnet", endpoint: "https://api.testnet.solana.com" },
   { name: "Devnet", endpoint: "https://api.devnet.solana.com" },
-  { name: "Mainnet-beta", endpoint: "https://api.mainnet-beta.solana.com" },
+  { name: "Mainnet-beta", endpoint: "https://bitter-twilight-night.solana-mainnet.quiknode.pro/386d6ff7459b7d27a96b41c0b382ec26dd0b1c91/" },
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
@@ -115,7 +115,6 @@ interface GlobalState {
   userConfigV2Initiated: boolean;
   userConfigV1MigratedToV2: boolean;
   checkUserConfig: () => void;
-  upgrade: () => void;
   upgradeOnBehalf: (userToUpgrade: PublicKey, config: PublicKey) => void;
 
   // program account fetch
@@ -265,73 +264,6 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         error: `${ixName} failed`,
       })
       .then((val) => {
-        set({ userConfigV1MigratedToV2: true });
-        console.log(`${ixName} sig`, val);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (
-          err.message ===
-          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
-        ) {
-          toast.error("Your solana balance is empty");
-        } else if (err?.error?.errorMessage) {
-          toast.error(err.error.errorMessage);
-        } else {
-          toast.error("Transaction Error");
-        }
-      });
-  },
-  upgrade: async () => {
-    const wallet = get().wallet;
-    if (!wallet) {
-      toast.error("Wallet Not Connected");
-      return set({
-        userConfigV2Initiated: false,
-        userConfigV1MigratedToV2: false,
-      });
-    }
-    const connection = get().connection;
-    const provider = new AnchorProvider(
-      connection,
-      wallet,
-      AnchorProvider.defaultOptions()
-    );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-
-    const { configs, config } = get();
-    if (!configs[config]) {
-      toast.error("Select a staking config");
-      return;
-    }
-    const configId = configs[config].publicKey as PublicKey;
-    const [oldUserState] = await findUserStatePDA(wallet.publicKey, configId);
-    const [newUserState] = await findUserStateV2PDA(wallet.publicKey, configId);
-    console.log("upgrade configId", configId.toString());
-    console.log("upgrade oldUserState", oldUserState.toString());
-    console.log("upgrade newUserState", newUserState.toString());
-
-    const tx = program.methods
-      .upgradeUserState()
-      .accounts({
-        user: wallet.publicKey,
-        oldUserState,
-        newUserState,
-        config: configId,
-        // programs
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
-
-    const ixName = "Migrate User State PDA";
-    toast
-      .promise(tx, {
-        loading: `Processing ${ixName} tx...`,
-        success: `${ixName} success!`,
-        error: `${ixName} failed`,
-      })
-      .then((val) => {
-        set({ userConfigV1MigratedToV2: true });
         console.log(`${ixName} sig`, val);
       })
       .catch((err) => {
