@@ -6,15 +6,16 @@ use anchor_lang::prelude::*;
 pub struct UpgradeUserState<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
+    /// CHECK: read only, for passing user address
+    pub actual_user: UncheckedAccount<'info>,
     /// CHECK: read only. state are per config
     pub config: Account<'info, StakingConfig>,
     #[account(
         mut,
-        has_one = user,
         seeds = [
             b"user_state",
             config.to_account_info().key.as_ref(),
-            user.to_account_info().key.as_ref(),
+            actual_user.to_account_info().key.as_ref(),
           ],
         bump
     )]
@@ -25,7 +26,7 @@ pub struct UpgradeUserState<'info> {
         seeds = [
           b"user_state_v2",
           config.to_account_info().key.as_ref(),
-          user.to_account_info().key.as_ref(),
+          actual_user.to_account_info().key.as_ref(),
         ],
         bump,
         space = 8 + std::mem::size_of::<UserV2>(),
