@@ -7,7 +7,7 @@ pub struct UpgradeUserState<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     /// CHECK: read only, for passing user address
-    pub actual_user: UncheckedAccount<'info>, 
+    pub actual_user: UncheckedAccount<'info>,
     /// CHECK: read only. state are per config
     pub config: Account<'info, StakingConfig>,
     #[account(
