@@ -22,6 +22,7 @@ import {
   findRewardPotPDA,
   findStakeInfoPDA,
   findUserStatePDA,
+  findUserStateV2PDA,
 } from "../sdk/pda";
 import { STAKING_REWARD_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
 import { IDL, NcStaking } from "../sdk/nc_staking";
@@ -36,17 +37,48 @@ export const networks: Network[] = [
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
-async function checkUserInitiated(
-  userStatePDA: PublicKey,
+async function checkUserStatePDA(
+  user: PublicKey,
+  config: PublicKey,
   program: Program<NcStaking>
 ) {
+  let result = {
+    v1Initiated: false,
+    v2Initiated: false,
+    v1MigratedToV2: false,
+  };
+
   try {
-    // will throw error if not found
-    await program.account.user.fetch(userStatePDA);
-    return true;
+    const [pda] = await findUserStatePDA(user, config);
+    const available = await program.account.user.fetch(pda);
+    result.v1Initiated = true;
+    console.log(
+      "v1 OK",
+      user.toString(),
+      config.toString(),
+      pda.toString(),
+      available
+    );
   } catch (error) {
-    return false;
+    console.log("v1 null", error);
   }
+  try {
+    const [pda] = await findUserStateV2PDA(user, config);
+    const available = await program.account.userV2.fetch(pda);
+    result.v2Initiated = true;
+
+    console.log(
+      "v2 OK",
+      user.toString(),
+      config.toString(),
+      pda.toString(),
+      available
+    );
+  } catch (error) {
+    console.log("v2 null", error);
+  }
+
+  return result;
 }
 
 interface GlobalState {
@@ -65,12 +97,15 @@ interface GlobalState {
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
   selectNFT: (mint: PublicKey | undefined) => void;
-  userInitiated: boolean;
-  setUserState: (isInit: Boolean) => void;
-  checkUserInitiated: () => void;
+  userConfigV1Initiated: boolean;
+  userConfigV2Initiated: boolean;
+  userConfigV1MigratedToV2: boolean;
+  checkUserConfig: () => void;
+  upgrade: () => void;
 
   // program account fetch
   users: any[];
+  oldUsers: any[];
   fetchUsersLoading: boolean;
   fetchUsersSuccess: boolean;
   fetchUsers: () => void;
@@ -138,16 +173,17 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   selectNFT: (selectedNFT) => {
     set({ selectedNFT });
   },
-  userInitiated: false,
-  setUserState: (userInitiated) => {
-    set({ userInitiated: Boolean(userInitiated) });
-  },
-  checkUserInitiated: async () => {
+  userConfigV1Initiated: false,
+  userConfigV2Initiated: false,
+  userConfigV1MigratedToV2: false,
+  checkUserConfig: async () => {
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
       return set({
-        userInitiated: false,
+        userConfigV1Initiated: false,
+        userConfigV2Initiated: false,
+        userConfigV1MigratedToV2: false,
       });
     }
     const connection = get().connection;
@@ -164,14 +200,85 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    const [userStatePDA] = await findUserStatePDA(wallet.publicKey, configId);
 
-    const isUserInitiated = await checkUserInitiated(userStatePDA, program);
-    set({ userInitiated: isUserInitiated });
+    const result = await checkUserStatePDA(wallet.publicKey, configId, program);
+    console.log(result);
+    set({
+      userConfigV1Initiated: result.v1Initiated,
+      userConfigV2Initiated: result.v2Initiated,
+      userConfigV1MigratedToV2: result.v1MigratedToV2,
+    });
+  },
+  upgrade: async () => {
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return set({
+        userConfigV2Initiated: false,
+        userConfigV1MigratedToV2: false,
+      });
+    }
+    const connection = get().connection;
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const { configs, config } = get();
+    if (!configs[config]) {
+      toast.error("Select a staking config");
+      return;
+    }
+    const configId = configs[config].publicKey as PublicKey;
+    const [oldUserState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [newUserState] = await findUserStateV2PDA(wallet.publicKey, configId);
+    console.log("upgrade configId", configId.toString());
+    console.log("upgrade oldUserState", oldUserState.toString());
+    console.log("upgrade newUserState", newUserState.toString());
+
+    const tx = program.methods
+      .upgradeUserState()
+      .accounts({
+        user: wallet.publicKey,
+        oldUserState,
+        newUserState,
+        config: configId,
+        // programs
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    const ixName = "Migrate User State PDA";
+    toast
+      .promise(tx, {
+        loading: `Processing ${ixName} tx...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        set({ userConfigV1MigratedToV2: true });
+        console.log(`${ixName} sig`, val);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
+      });
   },
 
   // program accounts fetchs
   users: [],
+  oldUsers: [],
   fetchUsersLoading: false,
   fetchUsersSuccess: false,
   fetchUsers: async () => {
@@ -184,6 +291,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       toast.error("Wallet Not Connected");
       return set({
         users: [],
+        oldUsers: [],
         fetchUsersLoading: false,
         fetchUsersSuccess: false,
       });
@@ -197,10 +305,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const users = await program.account.user.all();
+    const users = await program.account.userV2.all();
+    const oldUsers = await program.account.user.all();
 
     set({
       users,
+      oldUsers,
       fetchUsersLoading: false,
       fetchUsersSuccess: true,
     });
@@ -336,7 +446,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [userState] = await findUserStateV2PDA(wallet.publicKey, configId);
 
     const accounts = {
       userState,
@@ -369,7 +479,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       })
       .then((val) => {
         console.log(`${ixName} sig`, val);
-        set({ userInitiated: true });
+        set({ userConfigV2Initiated: true });
         if (callbackOptions.onSuccess) {
           callbackOptions.onSuccess();
         }

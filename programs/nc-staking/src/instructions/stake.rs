@@ -8,8 +8,13 @@ use std::str::FromStr;
 pub struct Stake<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut, has_one = user)]
-    pub user_state: Account<'info, User>,
+    #[account(
+        mut,
+        has_one = user,
+        seeds = [b"user_state_v2", config.to_account_info().key.as_ref(), user.to_account_info().key.as_ref()],
+        bump
+    )]
+    pub user_state: Account<'info, UserV2>,
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
     #[account(
@@ -145,17 +150,7 @@ pub fn handler(ctx: Context<Stake>) -> Result<()> {
     config.nfts_staked = config.nfts_staked.checked_add(1).unwrap();
 
     let time_now = now_ts()?;
-    let total_reward = calc_reward(
-        time_now,
-        user_state.nfts_staked,
-        user_state.time_last_stake,
-        user_state.time_last_claim,
-        user_state.reward_stored,
-        user_state.time_staking_start,
-        config.reward_per_sec,
-        config.reward_denominator,
-        config.staking_lock_duration_in_sec,
-    );
+    let total_reward = calc_reward(time_now, user_state, config);
     user_state.nfts_staked = user_state.nfts_staked.checked_add(1).unwrap();
     user_state.reward_stored = total_reward;
     msg!("reward stored: {}", user_state.reward_stored);

@@ -8,24 +8,28 @@ pub struct InitStakingConfig<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
     #[account(
-    init,
-    payer = admin,
-    space = 8 + std::mem::size_of::<StakingConfig>()
-  )]
+      init,
+      payer = admin,
+      space = 8 + std::mem::size_of::<StakingConfig>()
+    )]
     pub config: Account<'info, StakingConfig>,
     /// CHECK: not read or written
     pub creator_address_to_whitelist: AccountInfo<'info>,
     /// CHECK: used to transfer reward token to user from reward pot which the auth is config_authority
-    #[account(mut, seeds = [b"config", config.key().as_ref()], bump = bump_config_auth)]
+    #[account(
+      mut,
+      seeds = [b"config", config.key().as_ref()],
+      bump = bump_config_auth
+    )]
     pub config_authority: AccountInfo<'info>,
     #[account(
-    init,
-    seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()],
-    bump,
-    token::mint = reward_mint,
-    token::authority = config_authority,
-    payer = admin
-  )]
+      init,
+      seeds = [b"reward_pot".as_ref(), config.key().as_ref(), reward_mint.key().as_ref()],
+      bump,
+      token::mint = reward_mint,
+      token::authority = config_authority,
+      payer = admin
+    )]
     pub reward_pot: Account<'info, TokenAccount>,
     pub reward_mint: Account<'info, Mint>,
 
