@@ -298,8 +298,8 @@ export type NcStaking = {
         },
         {
           name: "actualUser";
-          isMut: true;
-          isSigner: true;
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "config";
@@ -857,8 +857,8 @@ export const IDL: NcStaking = {
         },
         {
           name: "actualUser",
-          isMut: true,
-          isSigner: true,
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "config",
