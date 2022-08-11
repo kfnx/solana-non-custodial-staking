@@ -259,7 +259,7 @@ export default function User() {
           </button>
         </h2>
         <hr className="-mt-3 mb-4" />
-        <UserStakings stakings={oldUsers} />
+        <UserStakings stakings={oldUsers} oldAccount={true}/>
       </div>
       <InitStakingModal isOpen={showInitStake} setIsOpen={setShowInitStake} />
       <StakeModal isOpen={showStake} setIsOpen={setShowStake} />

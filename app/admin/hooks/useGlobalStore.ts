@@ -1,5 +1,5 @@
 import create from "zustand";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -80,7 +80,21 @@ async function checkUserStatePDA(
 
   return result;
 }
+export interface UserStateWrapper {
+  account: UserState;
+  publicKey: PublicKey;
+}
+interface UserState {
+  user: PublicKey;
+  config: PublicKey;
+  nftsStaked: BN;
+  rewardAccrued: BN;
+  rewardStored: BN;
 
+  timeLastClaim: BN;
+  timeLastStake: BN;
+  timeStakingStart?: BN;
+}
 interface GlobalState {
   // setters
   connection: Connection;
@@ -102,10 +116,11 @@ interface GlobalState {
   userConfigV1MigratedToV2: boolean;
   checkUserConfig: () => void;
   upgrade: () => void;
+  upgradeOnBehalf: (userToUpgrade: PublicKey, config: PublicKey) => void;
 
   // program account fetch
-  users: any[];
-  oldUsers: any[];
+  users: UserStateWrapper[];
+  oldUsers: UserStateWrapper[];
   fetchUsersLoading: boolean;
   fetchUsersSuccess: boolean;
   fetchUsers: () => void;
@@ -208,6 +223,64 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       userConfigV2Initiated: result.v2Initiated,
       userConfigV1MigratedToV2: result.v1MigratedToV2,
     });
+  },
+  upgradeOnBehalf: async (userToUpgrade: PublicKey, config: PublicKey) => {
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return;
+    }
+    const connection = get().connection;
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const [oldUserState] = await findUserStatePDA(userToUpgrade, config);
+    const [newUserState] = await findUserStateV2PDA(userToUpgrade, config);
+    console.log("upgrade configId", config.toString());
+    console.log("upgrade oldUserState", oldUserState.toString());
+    console.log("upgrade newUserState", newUserState.toString());
+
+    const tx = program.methods
+      .upgradeUserState()
+      .accounts({
+        user: wallet.publicKey,
+        actualUser: userToUpgrade,
+        oldUserState,
+        newUserState,
+        config,
+        // programs
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    const ixName = "Migrate User State PDA";
+    toast
+      .promise(tx, {
+        loading: `Processing ${ixName} tx...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        set({ userConfigV1MigratedToV2: true });
+        console.log(`${ixName} sig`, val);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
+      });
   },
   upgrade: async () => {
     const wallet = get().wallet;
