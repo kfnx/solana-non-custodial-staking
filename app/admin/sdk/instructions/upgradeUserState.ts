@@ -23,8 +23,9 @@ export const upgradeUserStateStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _upgradeUserState_ instruction
  *
  * @property [_writable_, **signer**] user
- * @property [_writable_] config
- * @property [] oldUserState
+ * @property [] actualUser
+ * @property [] config
+ * @property [_writable_] oldUserState
  * @property [_writable_] newUserState
  * @category Instructions
  * @category UpgradeUserState
@@ -32,6 +33,7 @@ export const upgradeUserStateStruct = new beet.BeetArgsStruct<{
  */
 export type UpgradeUserStateInstructionAccounts = {
   user: web3.PublicKey
+  actualUser: web3.PublicKey
   config: web3.PublicKey
   oldUserState: web3.PublicKey
   newUserState: web3.PublicKey
@@ -52,7 +54,7 @@ export const upgradeUserStateInstructionDiscriminator = [
 export function createUpgradeUserStateInstruction(
   accounts: UpgradeUserStateInstructionAccounts
 ) {
-  const { user, config, oldUserState, newUserState } = accounts
+  const { user, actualUser, config, oldUserState, newUserState } = accounts
 
   const [data] = upgradeUserStateStruct.serialize({
     instructionDiscriminator: upgradeUserStateInstructionDiscriminator,
@@ -64,13 +66,18 @@ export function createUpgradeUserStateInstruction(
       isSigner: true,
     },
     {
+      pubkey: actualUser,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: config,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
       pubkey: oldUserState,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

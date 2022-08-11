@@ -297,6 +297,11 @@
           "isSigner": true
         },
         {
+          "name": "actualUser",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "config",
           "isMut": false,
           "isSigner": false
