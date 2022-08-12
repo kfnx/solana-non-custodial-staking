@@ -289,21 +289,31 @@ export type NcStaking = {
       ];
     },
     {
-      name: "modifyWhitelist";
+      name: "upgradeUserState";
       accounts: [
         {
-          name: "admin";
+          name: "user";
           isMut: true;
           isSigner: true;
         },
         {
+          name: "actualUser";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "config";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldUserState";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "creatorAddressToWhitelist";
-          isMut: false;
+          name: "newUserState";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -402,6 +412,46 @@ export type NcStaking = {
           {
             name: "creatorWhitelist";
             type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "userV2";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "user";
+            type: "publicKey";
+          },
+          {
+            name: "config";
+            type: "publicKey";
+          },
+          {
+            name: "rewardAccrued";
+            type: "u64";
+          },
+          {
+            name: "rewardStored";
+            type: "u64";
+          },
+          {
+            name: "timeLastStake";
+            type: "u64";
+          },
+          {
+            name: "timeLastClaim";
+            type: "u64";
+          },
+          {
+            name: "nftsStaked";
+            type: "u64";
+          },
+          {
+            name: "timeStakingStart";
+            type: "u64";
           }
         ];
       };
@@ -798,21 +848,31 @@ export const IDL: NcStaking = {
       ],
     },
     {
-      name: "modifyWhitelist",
+      name: "upgradeUserState",
       accounts: [
         {
-          name: "admin",
+          name: "user",
           isMut: true,
           isSigner: true,
         },
         {
+          name: "actualUser",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "config",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldUserState",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "creatorAddressToWhitelist",
-          isMut: false,
+          name: "newUserState",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -911,6 +971,46 @@ export const IDL: NcStaking = {
           {
             name: "creatorWhitelist",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "userV2",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "user",
+            type: "publicKey",
+          },
+          {
+            name: "config",
+            type: "publicKey",
+          },
+          {
+            name: "rewardAccrued",
+            type: "u64",
+          },
+          {
+            name: "rewardStored",
+            type: "u64",
+          },
+          {
+            name: "timeLastStake",
+            type: "u64",
+          },
+          {
+            name: "timeLastClaim",
+            type: "u64",
+          },
+          {
+            name: "nftsStaked",
+            type: "u64",
+          },
+          {
+            name: "timeStakingStart",
+            type: "u64",
           },
         ],
       },

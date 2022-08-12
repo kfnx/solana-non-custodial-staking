@@ -13,7 +13,7 @@ export const findUserStatePDA = async (
   programId?: PublicKey
 ) => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
+    [Buffer.from("user_state_v2"), config.toBytes(), user.toBytes()],
     programId || PROGRAM_ID
   );
 };

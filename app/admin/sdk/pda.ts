@@ -10,6 +10,13 @@ export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
   );
 };
 
+export const findUserStateV2PDA = async (user: PublicKey, config: PublicKey) => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from("user_state_v2"), config.toBytes(), user.toBytes()],
+    PROGRAM_ID
+  );
+};
+
 export const findDelegateAuthPDA = async (tokenAccount: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],

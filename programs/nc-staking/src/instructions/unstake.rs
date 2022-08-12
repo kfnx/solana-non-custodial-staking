@@ -12,8 +12,13 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub struct Unstake<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut, has_one = user)]
-    pub user_state: Account<'info, User>,
+    #[account(
+        mut,
+        has_one = user,
+        seeds = [b"user_state_v2", config.to_account_info().key.as_ref(), user.to_account_info().key.as_ref()],
+        bump
+    )]
+    pub user_state: Account<'info, UserV2>,
     #[account(mut)]
     pub config: Account<'info, StakingConfig>,
     #[account(
@@ -44,11 +49,11 @@ pub struct Unstake<'info> {
 }
 
 fn assert_unstake_allowed<'info>(
-    stake_info: &Account<'info, StakeInfo>,
+    user_state: &Account<'info, UserV2>,
     config: &Account<'info, StakingConfig>,
 ) -> Result<()> {
     let time_now = now_ts()?;
-    let time_when_unlocked = stake_info
+    let time_when_unlocked = user_state
         .time_staking_start
         .checked_add(config.staking_lock_duration_in_sec)
         .unwrap();
@@ -62,10 +67,10 @@ fn assert_unstake_allowed<'info>(
 pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     // check minimum time to unstake
     let config = &ctx.accounts.config;
-    let stake_info = &ctx.accounts.stake_info;
-    assert_unstake_allowed(stake_info, config)?;
-
     let user_state = &mut ctx.accounts.user_state;
+
+    assert_unstake_allowed(user_state, config)?;
+
     let user = *ctx.accounts.user.to_account_info().key;
 
     if user_state.user != user {
@@ -98,15 +103,7 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
 
     // store prev stake reward
     let time_now = now_ts()?;
-    let total_reward = calc_reward(
-        time_now,
-        user_state.nfts_staked,
-        user_state.time_last_stake,
-        user_state.time_last_claim,
-        user_state.reward_stored,
-        config.reward_per_sec,
-        config.reward_denominator,
-    );
+    let total_reward = calc_reward(time_now, user_state, config);
     user_state.reward_stored = total_reward;
     msg!("reward stored: {}", user_state.reward_stored);
     user_state.time_last_stake = time_now;

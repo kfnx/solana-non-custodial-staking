@@ -224,7 +224,11 @@ const createNFT = async (
   console.log(`✅ finish creating NFT`, meta.name);
 };
 
-const mintWhitelistedNFTs = async () => {
+const mintWhitelistedNFTs = async (amount: number) => {
+  let nftToMint = [];
+  for (let index = 0; index < amount; index++) {
+    nftToMint.push(allJsonMetadata[index]);
+  }
   const { wallet, provider } = useGlobalStore.getState();
   if (!wallet) {
     return toast.error("Wallet not connected");
@@ -238,7 +242,7 @@ const mintWhitelistedNFTs = async () => {
   console.log("Minting NFT to", wallet.publicKey.toBase58());
 
   await allSynchronously(
-    allJsonMetadata.map((meta) => async () => {
+    nftToMint.map((meta) => async () => {
       await createNFT(NFTcreator, wallet.publicKey, meta, provider);
     })
   );

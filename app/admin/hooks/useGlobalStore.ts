@@ -1,5 +1,5 @@
 import create from "zustand";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@project-serum/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -22,6 +22,7 @@ import {
   findRewardPotPDA,
   findStakeInfoPDA,
   findUserStatePDA,
+  findUserStateV2PDA,
 } from "../sdk/pda";
 import { STAKING_REWARD_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
 import { IDL, NcStaking } from "../sdk/nc_staking";
@@ -32,23 +33,68 @@ export const networks: Network[] = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
   { name: "Testnet", endpoint: "https://api.testnet.solana.com" },
   { name: "Devnet", endpoint: "https://api.devnet.solana.com" },
-  { name: "Mainnet-beta", endpoint: "https://api.mainnet-beta.solana.com" },
+  { name: "Mainnet-beta", endpoint: "https://bitter-twilight-night.solana-mainnet.quiknode.pro/386d6ff7459b7d27a96b41c0b382ec26dd0b1c91/" },
   // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
 ];
 
-async function checkUserInitiated(
-  userStatePDA: PublicKey,
+async function checkUserStatePDA(
+  user: PublicKey,
+  config: PublicKey,
   program: Program<NcStaking>
 ) {
-  try {
-    // will throw error if not found
-    await program.account.user.fetch(userStatePDA);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
+  let result = {
+    v1Initiated: false,
+    v2Initiated: false,
+    v1MigratedToV2: false,
+  };
 
+  try {
+    const [pda] = await findUserStatePDA(user, config);
+    const available = await program.account.user.fetch(pda);
+    result.v1Initiated = true;
+    console.log(
+      "v1 OK",
+      user.toString(),
+      config.toString(),
+      pda.toString(),
+      available
+    );
+  } catch (error) {
+    console.log("v1 null", error);
+  }
+  try {
+    const [pda] = await findUserStateV2PDA(user, config);
+    const available = await program.account.userV2.fetch(pda);
+    result.v2Initiated = true;
+
+    console.log(
+      "v2 OK",
+      user.toString(),
+      config.toString(),
+      pda.toString(),
+      available
+    );
+  } catch (error) {
+    console.log("v2 null", error);
+  }
+
+  return result;
+}
+export interface UserStateWrapper {
+  account: UserState;
+  publicKey: PublicKey;
+}
+interface UserState {
+  user: PublicKey;
+  config: PublicKey;
+  nftsStaked: BN;
+  rewardAccrued: BN;
+  rewardStored: BN;
+
+  timeLastClaim: BN;
+  timeLastStake: BN;
+  timeStakingStart?: BN;
+}
 interface GlobalState {
   // setters
   connection: Connection;
@@ -65,12 +111,15 @@ interface GlobalState {
   setConfig: (index: number) => void;
   selectedNFT: undefined | PublicKey;
   selectNFT: (mint: PublicKey | undefined) => void;
-  userInitiated: boolean;
-  setUserState: (isInit: Boolean) => void;
-  checkUserInitiated: () => void;
+  userConfigV1Initiated: boolean;
+  userConfigV2Initiated: boolean;
+  userConfigV1MigratedToV2: boolean;
+  checkUserConfig: () => void;
+  upgradeOnBehalf: (userToUpgrade: PublicKey, config: PublicKey) => void;
 
   // program account fetch
-  users: any[];
+  users: UserStateWrapper[];
+  oldUsers: UserStateWrapper[];
   fetchUsersLoading: boolean;
   fetchUsersSuccess: boolean;
   fetchUsers: () => void;
@@ -138,16 +187,17 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
   selectNFT: (selectedNFT) => {
     set({ selectedNFT });
   },
-  userInitiated: false,
-  setUserState: (userInitiated) => {
-    set({ userInitiated: Boolean(userInitiated) });
-  },
-  checkUserInitiated: async () => {
+  userConfigV1Initiated: false,
+  userConfigV2Initiated: false,
+  userConfigV1MigratedToV2: false,
+  checkUserConfig: async () => {
     const wallet = get().wallet;
     if (!wallet) {
       toast.error("Wallet Not Connected");
       return set({
-        userInitiated: false,
+        userConfigV1Initiated: false,
+        userConfigV2Initiated: false,
+        userConfigV1MigratedToV2: false,
       });
     }
     const connection = get().connection;
@@ -164,14 +214,76 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    const [userStatePDA] = await findUserStatePDA(wallet.publicKey, configId);
 
-    const isUserInitiated = await checkUserInitiated(userStatePDA, program);
-    set({ userInitiated: isUserInitiated });
+    const result = await checkUserStatePDA(wallet.publicKey, configId, program);
+    console.log(result);
+    set({
+      userConfigV1Initiated: result.v1Initiated,
+      userConfigV2Initiated: result.v2Initiated,
+      userConfigV1MigratedToV2: result.v1MigratedToV2,
+    });
+  },
+  upgradeOnBehalf: async (userToUpgrade: PublicKey, config: PublicKey) => {
+    const wallet = get().wallet;
+    if (!wallet) {
+      toast.error("Wallet Not Connected");
+      return;
+    }
+    const connection = get().connection;
+    const provider = new AnchorProvider(
+      connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+
+    const [oldUserState] = await findUserStatePDA(userToUpgrade, config);
+    const [newUserState] = await findUserStateV2PDA(userToUpgrade, config);
+    console.log("upgrade configId", config.toString());
+    console.log("upgrade oldUserState", oldUserState.toString());
+    console.log("upgrade newUserState", newUserState.toString());
+
+    const tx = program.methods
+      .upgradeUserState()
+      .accounts({
+        user: wallet.publicKey,
+        actualUser: userToUpgrade,
+        oldUserState,
+        newUserState,
+        config,
+        // programs
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    const ixName = "Migrate User State PDA";
+    toast
+      .promise(tx, {
+        loading: `Processing ${ixName} tx...`,
+        success: `${ixName} success!`,
+        error: `${ixName} failed`,
+      })
+      .then((val) => {
+        console.log(`${ixName} sig`, val);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (
+          err.message ===
+          "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
+        ) {
+          toast.error("Your solana balance is empty");
+        } else if (err?.error?.errorMessage) {
+          toast.error(err.error.errorMessage);
+        } else {
+          toast.error("Transaction Error");
+        }
+      });
   },
 
   // program accounts fetchs
   users: [],
+  oldUsers: [],
   fetchUsersLoading: false,
   fetchUsersSuccess: false,
   fetchUsers: async () => {
@@ -184,6 +296,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       toast.error("Wallet Not Connected");
       return set({
         users: [],
+        oldUsers: [],
         fetchUsersLoading: false,
         fetchUsersSuccess: false,
       });
@@ -197,10 +310,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const users = await program.account.user.all();
+    const users = await program.account.userV2.all();
+    const oldUsers = await program.account.user.all();
 
     set({
       users,
+      oldUsers,
       fetchUsersLoading: false,
       fetchUsersSuccess: true,
     });
@@ -336,7 +451,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [userState] = await findUserStateV2PDA(wallet.publicKey, configId);
 
     const accounts = {
       userState,
@@ -369,7 +484,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       })
       .then((val) => {
         console.log(`${ixName} sig`, val);
-        set({ userInitiated: true });
+        set({ userConfigV2Initiated: true });
         if (callbackOptions.onSuccess) {
           callbackOptions.onSuccess();
         }

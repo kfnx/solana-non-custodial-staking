@@ -162,7 +162,7 @@ export const store = {
     {
       // testing config
       option: {
-        rewardPerSec: new anchor.BN(100),
+        rewardPerSec: new anchor.BN(1),
         rewardDenominator: new anchor.BN(1),
         stakingLockDurationInSec: new anchor.BN(5),
       },
