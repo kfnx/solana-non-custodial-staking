@@ -141,7 +141,7 @@ interface GlobalState {
   claim: (cbOptions: CallbackOptions) => void;
 }
 
-const initialNetwork = networks[2];
+const initialNetwork = networks[3];
 
 const useGlobalStore = create<GlobalState>((set, get) => ({
   connection: new Connection(initialNetwork.endpoint, {
