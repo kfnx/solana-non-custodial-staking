@@ -444,8 +444,19 @@ describe("User journey", () => {
     //   );
     // });
 
+    /**
+     * this test is very subjective, ask me @kafin if you need more explanation or walktrough to each line of code about what it means
+     * the way reward works is everytime user stake/unstake it calc reward and store it but dont transfer any reward, just store like a checkpoint.
+     * then everytime user claim it calc reward again + use prev stored value, then transfer the reward.
+     * shortly, this test covering the expected reward given from claim.rs, covering case 1,2,3
+     * it create a scenario to stake/claim and use each case, then assert expected rewardStored for stake and reward amount for claim
+     */
     it("Advanced claim test: CASE 1", async () => {
+      // using a clean untouched config: config[1]
       console.log(timeNow());
+      const rewardPerSec =
+        configs[1].option.rewardPerSec.toNumber() /
+        configs[1].option.rewardDenominator.toNumber();
       const config = configs[1].keypair;
 
       const [userState] = await findUserStatePDA(
@@ -495,6 +506,8 @@ describe("User journey", () => {
         config.publicKey,
         nfts[1].mint.publicKey
       );
+      const timeStake1 = Date.now();
+      const timeStake1ceil = Math.ceil(timeStake1 / 1000);
       console.log(timeNow(), "NFT #1 stake tx", stake1);
 
       await delay(2000);
@@ -505,65 +518,118 @@ describe("User journey", () => {
         config.publicKey,
         nfts[2].mint.publicKey
       );
+      const timeStake2 = Date.now();
+      const timeStake2ceil = Math.ceil(timeStake2 / 1000);
       console.log(timeNow(), "NFT #2 stake tx", stake2);
 
       const rewardStored1 = (
         await program.account.userV2.fetch(justinState)
       ).rewardStored.toNumber();
       console.log("rewardStored1", rewardStored1);
-      assert.isAbove(
-        rewardStored1,
-        0, // probably 2 or 3 after 2000 delay if the rate is 1/s
-        "Reward stored should be above 0 after second stake"
-      );
+
+      {
+        // CASE 1 reward calc
+        const duration = timeStake2ceil - timeStake1ceil;
+        console.log("timeStake1", timeStake1);
+        console.log("timeStake1ceil", timeStake1ceil);
+        console.log("timeStake2", timeStake2);
+        console.log("timeStake2ceil", timeStake2ceil);
+        console.log("duration", duration, "seconds");
+        const stakedNFTs = 1;
+        const expectedReward = duration * rewardPerSec * stakedNFTs;
+        console.log("stakedNFTs", stakedNFTs);
+        console.log("rewardPerSec", rewardPerSec);
+        console.log("expectedReward", expectedReward);
+        assert.closeTo(
+          rewardStored1,
+          expectedReward,
+          1, // each code have execution time that add the delay, so we have delta here
+          "Reward stored should be above 0 after second stake"
+        );
+      }
 
       // wait for another 2 seconds to check basic bonus accrual (1 igs)
       await delay(2000);
 
-      // claim #1 (reward_stored + reward_now)
-      const claimTx = await claim(
+      // claim should be using CASE 1 (reward_stored + reward_now)
+      const claim1Tx = await claim(
         program,
         justin,
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log(timeNow(), "claim tx", claimTx);
+      const timeClaim1Tx = Date.now();
+      const timeClaim1Txceil = Math.ceil(timeClaim1Tx / 1000);
+      console.log(timeNow(), "claim1Tx", claim1Tx);
 
       const balance1 = await getTokenBalanceByATA(
         justin.provider.connection,
         await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
-      console.log("balance1:", balance1, "before:", balance0);
-      assert.isAbove(
-        balance1,
-        balance0,
-        "Balance should be increased after a valid claim"
-      );
+      console.log("balance1", balance1, "| before", balance0);
+
+      {
+        // CASE 1 reward calc
+        const duration = timeClaim1Txceil - timeStake2ceil;
+        console.log("timeStake2", timeStake2);
+        console.log("timeStake2ceil", timeStake2ceil);
+        console.log("timeClaim1Tx", timeClaim1Tx);
+        console.log("timeClaim1Txceil", timeClaim1Txceil);
+        console.log("duration", duration, "seconds");
+        const stakedNFTs = 2;
+        const expectedReward = duration * rewardPerSec * stakedNFTs;
+        console.log("stakedNFTs", stakedNFTs);
+        console.log("rewardPerSec", rewardPerSec);
+        console.log("expectedReward", expectedReward);
+        assert.equal(
+          balance1,
+          rewardStored1 + expectedReward,
+          "Balance should be increased after a valid claim"
+        );
+      }
 
       // claim #2 all should be 0 cos prev claim. reward_stored = 0, reward_now = 0
       // second claim instantly after first claim
+      // claim should be using CASE 1 (reward_stored + reward_now)
       const claim2Tx = await claim(
         program,
         justin,
         config.publicKey,
         rewardMint.publicKey
       );
-      console.log(timeNow(), "claim2 tx", claim2Tx);
+      const timeClaim2Tx = Date.now();
+      const timeClaim2Txceil = Math.ceil(timeClaim2Tx / 1000);
+      console.log(timeNow(), "claim2Tx", claim2Tx);
 
       const balance2 = await getTokenBalanceByATA(
         justin.provider.connection,
         await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
-      console.log("balance2", balance2);
+      console.log("balance2", balance2, "| before", balance1);
       // there could be some problem if with the execution time
       // resulting in the 2nd claim accruing reward for 1 seconds
       // (1 seconds duration, 2 nft staked, 1/s reward = 1*2*1 = 2)
       // so we are using isBelow with the value + 2.1
-      assert.isBelow(
-        balance2,
-        balance1 + 2.1,
-        "Balance should be the same as previous claim, because second claim return 0 reward"
-      );
+
+      {
+        // CASE 1 reward calc
+        const duration = timeClaim2Txceil - timeClaim1Txceil;
+        console.log("timeClaim1Tx", timeClaim1Tx);
+        console.log("timeClaim1Txceil", timeClaim1Txceil);
+        console.log("timeClaim2Tx", timeClaim2Tx);
+        console.log("timeClaim2Txceil", timeClaim2Txceil);
+        console.log("duration", duration, "seconds");
+        const stakedNFTs = 2;
+        const expectedReward = duration * rewardPerSec * stakedNFTs;
+        console.log("stakedNFTs", stakedNFTs);
+        console.log("rewardPerSec", rewardPerSec);
+        console.log("expectedReward", expectedReward);
+        assert.equal(
+          balance2,
+          balance1 + expectedReward,
+          "Balance should be the same as previous claim, because second claim return 0 reward"
+        );
+      }
 
       const rewardStored2 = (
         await program.account.userV2.fetch(justinState)
@@ -576,9 +642,40 @@ describe("User journey", () => {
       );
 
       // wait for lock time to finish
-      // const locktime =
-      //   configs[0].option.stakingLockDurationInSec.toNumber() * 1000;
-      // await delay(locktime);
+      const locktime =
+        configs[1].option.stakingLockDurationInSec.toNumber() * 1000;
+      await delay(locktime);
+
+      // claim should be using CASE 3
+      const claim3Tx = await claim(
+        program,
+        justin,
+        config.publicKey,
+        rewardMint.publicKey
+      );
+      console.log(timeNow(), "claim3Tx", claim3Tx);
+
+      const balance3 = await getTokenBalanceByATA(
+        justin.provider.connection,
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
+      );
+      console.log("balance3", balance3, "| before", balance2);
+      // assert.isAbove(balance3, balance3);
+
+      // claim should be using CASE 2
+      const claim4Tx = await claim(
+        program,
+        justin,
+        config.publicKey,
+        rewardMint.publicKey
+      );
+      console.log(timeNow(), "claim4tx", claim4Tx);
+
+      const balance4 = await getTokenBalanceByATA(
+        justin.provider.connection,
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
+      );
+      console.log("balance4", balance4);
     });
   });
 

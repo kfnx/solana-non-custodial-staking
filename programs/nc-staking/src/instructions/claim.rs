@@ -76,6 +76,7 @@ pub fn calc_reward<'info>(
     msg!("time_last_stake: {}", user_state.time_last_stake);
     msg!("time_last_claim: {}", user_state.time_last_claim);
     msg!("time_last_interact: {}", time_last_interact);
+    msg!("time_lock_end: {}", time_lock_end);
     let mut new_reward: u64 = 0;
     // check current ts vs time last interact.
     // case 1: current ts && last interact are both before lock end
@@ -85,6 +86,7 @@ pub fn calc_reward<'info>(
         if time_now < time_lock_end {
             // case 1
             msg!("calc reward w/ case 1");
+            msg!("time using: {}", time_last_interact);
             let time_accrued = time_now.safe_sub(time_last_interact).unwrap();
             new_reward = new_reward
                 .safe_add(calc_reward_internal(
@@ -97,6 +99,7 @@ pub fn calc_reward<'info>(
         } else {
             // case 3
             msg!("calc reward w/ case 3");
+            msg!("time using: {}", time_last_interact);
             let time_accrued_bef = time_lock_end.safe_sub(time_last_interact).unwrap();
             let reward_before = calc_reward_internal(
                 config.reward_per_sec,
@@ -117,7 +120,8 @@ pub fn calc_reward<'info>(
     } else if time_now > time_lock_end {
         // case 2
         msg!("calc reward w/ case 2");
-        let time_accrued = time_now.safe_sub(user_state.time_last_stake).unwrap();
+        msg!("time using: {}", time_last_interact);
+        let time_accrued = time_now.safe_sub(time_last_interact).unwrap();
         new_reward = new_reward
             .safe_add(calc_reward_internal_1_igs(
                 time_accrued,
