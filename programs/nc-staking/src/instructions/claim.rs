@@ -62,9 +62,6 @@ pub fn calc_reward<'info>(
     user_state: &Account<'info, UserV2>,
     config: &Account<'info, StakingConfig>,
 ) -> u64 {
-    // msg!("time_now: {}", time_now);
-    // msg!("time_last_stake: {}", time_last_stake);
-    // msg!("time_last_claim: {}", time_last_claim);
     // if you never stake, you should get nothing
     if user_state.time_last_stake == 0 {
         return 0;
@@ -75,6 +72,10 @@ pub fn calc_reward<'info>(
     } else {
         user_state.time_last_claim
     };
+    msg!("time_now: {}", time_now);
+    msg!("time_last_stake: {}", user_state.time_last_stake);
+    msg!("time_last_claim: {}", user_state.time_last_claim);
+    msg!("time_last_interact: {}", time_last_interact);
     let mut new_reward: u64 = 0;
     // check current ts vs time last interact.
     // case 1: current ts && last interact are both before lock end
@@ -84,7 +85,7 @@ pub fn calc_reward<'info>(
         if time_now < time_lock_end {
             // case 1
             msg!("calc reward w/ case 1");
-            let time_accrued = time_now.safe_sub(user_state.time_last_stake).unwrap();
+            let time_accrued = time_now.safe_sub(time_last_interact).unwrap();
             new_reward = new_reward
                 .safe_add(calc_reward_internal(
                     config.reward_per_sec,
@@ -170,7 +171,7 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
 
     let time_now = now_ts()?;
     let total_reward = calc_reward(time_now, user_state, config);
-
+    msg!("total_reward: {}", total_reward);
     token::transfer(
         ctx.accounts
             .transfer_reward_token_ctx()
@@ -185,6 +186,8 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     user_state.reward_accrued = user_state.reward_accrued.checked_add(total_reward).unwrap();
     user_state.time_last_claim = time_now;
     // clear reward stored cos all claimed already
+    msg!("user_state.reward_stored: {}", user_state.reward_stored);
     user_state.reward_stored = 0;
+    msg!("user_state.reward_stored: {}", user_state.reward_stored);
     Ok(())
 }

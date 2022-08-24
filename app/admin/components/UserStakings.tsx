@@ -46,7 +46,9 @@ const UserState: React.FC<{
             id % 2 ? " bg-slate-200 dark:bg-slate-500/75" : ""
           }`;
 
-          if (k === "timeLastClaim" || k === "timeLastStake") {
+          if (
+            ["timeStakingStart", "timeLastClaim", "timeLastStake"].includes(k)
+          ) {
             const unixTime = Number(v);
             const time = unixTime ? unixTimeConverter(unixTime) : "Never";
             return (
@@ -84,7 +86,7 @@ const UserState: React.FC<{
 const UserStakings: React.FC<{
   stakings: UserStateWrapper[];
   oldAccount?: boolean;
-}> = ({ stakings, oldAccount=false }) => {
+}> = ({ stakings, oldAccount = false }) => {
   const configs = useGlobalStore((state) => state.configs);
 
   if (stakings.length === 0) {

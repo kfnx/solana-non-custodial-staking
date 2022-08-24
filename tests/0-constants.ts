@@ -41,6 +41,29 @@ export const store = {
       )
     )
   ),
+  markers: createUser(
+    Keypair.fromSecretKey(
+      // mar1nrVs4KCvigLCRFEuX9RsfJieDxFMBErBCNmiRCY
+      Uint8Array.from([
+        122, 210, 2, 101, 246, 207, 210, 129, 1, 212, 17, 31, 114, 249, 37, 25,
+        64, 124, 33, 5, 28, 39, 240, 244, 158, 138, 202, 187, 253, 186, 36, 75,
+        11, 107, 211, 7, 134, 147, 81, 61, 247, 39, 115, 162, 158, 130, 209,
+        156, 31, 205, 87, 174, 184, 198, 254, 72, 28, 59, 25, 167, 222, 20, 12,
+        5,
+      ])
+    )
+  ),
+  lily: createUser(
+    Keypair.fromSecretKey(
+      // catZVWzLsLW9Sr46kbX6ue6HuZQwfirDMbBcJFgqpJw
+      Uint8Array.from([
+        109, 52, 83, 253, 31, 14, 126, 105, 171, 214, 207, 252, 9, 208, 30, 206,
+        43, 198, 36, 60, 128, 178, 135, 103, 17, 137, 217, 212, 107, 37, 117,
+        115, 9, 29, 165, 141, 239, 157, 22, 87, 159, 56, 188, 72, 1, 17, 93, 53,
+        29, 244, 135, 96, 202, 125, 95, 5, 59, 7, 73, 212, 222, 181, 217, 28,
+      ])
+    )
+  ),
   NFTcreator: createUser(
     Keypair.fromSecretKey(
       Uint8Array.from(
@@ -53,18 +76,6 @@ export const store = {
           88, 126, 55,
         ]
       )
-    )
-  ),
-  markers: createUser(
-    Keypair.fromSecretKey(
-      // mar1nrVs4KCvigLCRFEuX9RsfJieDxFMBErBCNmiRCY
-      Uint8Array.from([
-        122, 210, 2, 101, 246, 207, 210, 129, 1, 212, 17, 31, 114, 249, 37, 25,
-        64, 124, 33, 5, 28, 39, 240, 244, 158, 138, 202, 187, 253, 186, 36, 75,
-        11, 107, 211, 7, 134, 147, 81, 61, 247, 39, 115, 162, 158, 130, 209,
-        156, 31, 205, 87, 174, 184, 198, 254, 72, 28, 59, 25, 167, 222, 20, 12,
-        5,
-      ])
     )
   ),
   rewardToken: Keypair.fromSecretKey(
@@ -174,6 +185,23 @@ export const store = {
           105, 12, 247, 179, 104, 137, 150, 81, 154, 115, 87, 87, 253, 7, 224,
           138, 84, 208, 222, 54, 223, 244, 231, 21, 241, 152, 149, 79, 33, 100,
           233, 63, 117,
+        ])
+      ),
+    },
+    {
+      option: {
+        rewardPerSec: new anchor.BN(1),
+        rewardDenominator: new anchor.BN(1),
+        stakingLockDurationInSec: new anchor.BN(10),
+      },
+      keypair: Keypair.fromSecretKey(
+        // sc1B2RFctpCyFchTv3tmNAcCNuhNwojQFtx7NgSSUXN;
+        Uint8Array.from([
+          116, 42, 138, 155, 37, 2, 231, 209, 37, 141, 171, 188, 72, 140, 226,
+          149, 115, 91, 70, 57, 96, 108, 120, 129, 44, 125, 93, 155, 205, 213,
+          105, 189, 12, 246, 158, 82, 177, 229, 211, 177, 175, 171, 92, 148,
+          133, 118, 185, 5, 8, 14, 80, 202, 8, 69, 106, 70, 206, 58, 36, 249,
+          34, 216, 224, 197,
         ])
       ),
     },

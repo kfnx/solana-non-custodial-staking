@@ -392,59 +392,102 @@ describe("User journey", () => {
       );
     });
 
-    it("Justin claim staking reward", async () => {
-      const [rewardPot] = await findRewardPotPDA(
-        config.publicKey,
-        rewardMint.publicKey
-      );
-      const earlyRewardPotBalance = await getTokenBalanceByATA(
-        justin.provider.connection,
-        rewardPot
-      );
-      console.log("reward pot balance before claim: ", earlyRewardPotBalance);
-      const userATA = await findUserATA(
+    // DEPRECATED, for now
+    // it("Justin claim staking reward", async () => {
+    //   const [rewardPot] = await findRewardPotPDA(
+    //     config.publicKey,
+    //     rewardMint.publicKey
+    //   );
+    //   const earlyRewardPotBalance = await getTokenBalanceByATA(
+    //     justin.provider.connection,
+    //     rewardPot
+    //   );
+    //   console.log("reward pot balance before claim: ", earlyRewardPotBalance);
+    //   const justinRewardATA = await findUserATA(
+    //     justin.wallet.publicKey,
+    //     rewardMint.publicKey
+    //   );
+    //   const earlyUserTokenBalance = await getTokenBalanceByATA(
+    //     justin.provider.connection,
+    //     justinRewardATA
+    //   );
+    //   console.log("justin balance before claim: ", earlyUserTokenBalance);
+
+    //   await delay(5000);
+
+    //   const claimTx = await claim(
+    //     program,
+    //     justin,
+    //     config.publicKey,
+    //     rewardMint.publicKey
+    //   );
+    //   console.log(timeNow(), "claim tx", claimTx);
+
+    //   const finalRewardPotBalance = await getTokenBalanceByATA(
+    //     justin.provider.connection,
+    //     rewardPot
+    //   );
+    //   console.log("reward pot balance after claim: ", finalRewardPotBalance);
+
+    //   const finalUserTokenBalance = await getTokenBalanceByATA(
+    //     justin.provider.connection,
+    //     justinRewardATA
+    //   );
+    //   console.log("justin balance after claim: ", finalUserTokenBalance);
+
+    //   assert.ok(finalUserTokenBalance > 0, "justin got the reward");
+    //   const rewardPotBalanceNow = earlyRewardPotBalance - finalUserTokenBalance;
+    //   assert.equal(
+    //     rewardPotBalanceNow,
+    //     finalRewardPotBalance,
+    //     "final reward pot should be equal to early pot balance reduced by claimed reward"
+    //   );
+    // });
+
+    it("Advanced claim test: CASE 1", async () => {
+      console.log(timeNow());
+      const config = configs[1].keypair;
+
+      const [userState] = await findUserStatePDA(
         justin.wallet.publicKey,
-        rewardMint.publicKey
+        config.publicKey
       );
-      const earlyUserTokenBalance = await getTokenBalanceByATA(
+
+      const tx0 = await program.methods
+        .initStaking()
+        .accounts({
+          userState,
+          config: config.publicKey,
+          user: justin.wallet.publicKey,
+        })
+        .signers([justin.keypair])
+        .rpc();
+      console.log(timeNow(), "init user state", tx0);
+
+      const balance0 = await getTokenBalanceByATA(
         justin.provider.connection,
-        userATA
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
-      console.log("justin balance before claim: ", earlyUserTokenBalance);
-
-      await delay(5000);
-
-      const claimTx = await claim(
-        program,
-        justin,
-        config.publicKey,
-        rewardMint.publicKey
-      );
-      console.log(timeNow(), "claim tx", claimTx);
-
-      const finalRewardPotBalance = await getTokenBalanceByATA(
-        justin.provider.connection,
-        rewardPot
-      );
-      console.log("reward pot balance after claim: ", finalRewardPotBalance);
-
-      const finalUserTokenBalance = await getTokenBalanceByATA(
-        justin.provider.connection,
-        userATA
-      );
-      console.log("justin balance after claim: ", finalUserTokenBalance);
-
-      assert.ok(finalUserTokenBalance > 0, "justin got the reward");
-      const rewardPotBalanceNow = earlyRewardPotBalance - finalUserTokenBalance;
+      console.log("balance0", balance0);
       assert.equal(
-        rewardPotBalanceNow,
-        finalRewardPotBalance,
-        "final reward pot should be equal to early pot balance reduced by claimed reward"
+        balance0,
+        0,
+        "Balance should start from 0 to make clean test"
       );
-    });
 
-    it("Advanced claim test", async () => {
-      console.log(timeNow(), "NFT #1", nfts[1].mint.publicKey.toBase58());
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        config.publicKey
+      );
+      const rewardStored0 = (
+        await program.account.userV2.fetch(justinState)
+      ).rewardStored.toNumber();
+      console.log("rewardStored0", rewardStored0);
+      assert.equal(
+        rewardStored0,
+        0,
+        "Reward stored should be 0 if user never stake anything"
+      );
 
       const stake1 = await stake(
         program,
@@ -464,24 +507,20 @@ describe("User journey", () => {
       );
       console.log(timeNow(), "NFT #2 stake tx", stake2);
 
-      const [justinState] = await findUserStatePDA(
-        justin.wallet.publicKey,
-        config.publicKey
+      const rewardStored1 = (
+        await program.account.userV2.fetch(justinState)
+      ).rewardStored.toNumber();
+      console.log("rewardStored1", rewardStored1);
+      assert.isAbove(
+        rewardStored1,
+        0, // probably 2 or 3 after 2000 delay if the rate is 1/s
+        "Reward stored should be above 0 after second stake"
       );
-      console.log(
-        "rewardStored",
-        (await program.account.userV2.fetch(justinState)).rewardStored.toNumber()
-      );
-
-      // wait for lock time to finish
-      const locktime =
-        configs[0].option.stakingLockDurationInSec.toNumber() * 1000;
-      await delay(locktime);
 
       // wait for another 2 seconds to check basic bonus accrual (1 igs)
       await delay(2000);
 
-      // claim
+      // claim #1 (reward_stored + reward_now)
       const claimTx = await claim(
         program,
         justin,
@@ -490,227 +529,56 @@ describe("User journey", () => {
       );
       console.log(timeNow(), "claim tx", claimTx);
 
-      const balance = await getTokenBalanceByATA(
+      const balance1 = await getTokenBalanceByATA(
         justin.provider.connection,
         await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
-      console.log("balance", balance);
+      console.log("balance1:", balance1, "before:", balance0);
+      assert.isAbove(
+        balance1,
+        balance0,
+        "Balance should be increased after a valid claim"
+      );
 
-      // assert.equal(
-      //   (await program.account.userV2.fetch(justinState)).rewardStored.toNumber(),
-      //   1,
-      //   "1 NFT staked"
-      // );
+      // claim #2 all should be 0 cos prev claim. reward_stored = 0, reward_now = 0
+      // second claim instantly after first claim
+      const claim2Tx = await claim(
+        program,
+        justin,
+        config.publicKey,
+        rewardMint.publicKey
+      );
+      console.log(timeNow(), "claim2 tx", claim2Tx);
 
-      // console.log(timeNow(), "NFT #2", nfts[2].mint.publicKey.toBase58());
+      const balance2 = await getTokenBalanceByATA(
+        justin.provider.connection,
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
+      );
+      console.log("balance2", balance2);
+      // there could be some problem if with the execution time
+      // resulting in the 2nd claim accruing reward for 1 seconds
+      // (1 seconds duration, 2 nft staked, 1/s reward = 1*2*1 = 2)
+      // so we are using isBelow with the value + 2.1
+      assert.isBelow(
+        balance2,
+        balance1 + 2.1,
+        "Balance should be the same as previous claim, because second claim return 0 reward"
+      );
 
-      // const secondStakeTx = await stake(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   nfts[2].mint.publicKey
-      // );
-      // console.log(timeNow(), "NFT #2 stake tx", secondStakeTx);
+      const rewardStored2 = (
+        await program.account.userV2.fetch(justinState)
+      ).rewardStored.toNumber();
+      console.log("rewardStored2", rewardStored2);
+      assert.equal(
+        rewardStored2,
+        0,
+        "Reward stored should be zeroed after a claim, only stake and unstake can increment reward stored"
+      );
 
-      // await delay(3000);
-
-      // assert.equal(
-      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
-      //   2,
-      //   "2 NFT staked"
-      // );
-
-      // console.log(timeNow(), "NFT #3", nfts[3].mint.publicKey.toBase58());
-
-      // const thirdStakeTx = await stake(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   nfts[3].mint.publicKey
-      // );
-      // console.log(timeNow(), "NFT #3 stake tx", thirdStakeTx);
-      // console.log(timeNow(), "Waiting for 3 seconds to accrue reward..");
-
-      // await delay(3000);
-
-      // assert.equal(
-      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
-      //   3,
-      //   "3 NFT staked"
-      // );
-
-      // const userATA = await findUserATA(
-      //   justin.wallet.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // // console.log( timeNow(), "userATA", userATA.toBase58());
-
-      // const balance0 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-
-      // const claimTx = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // console.log(timeNow(), "[1st] claim tx", claimTx);
-
-      // const balance1 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-      // const claim1rw = balance1 - balance0;
-      // console.log(timeNow(), "[1st] claim reward amount:", claim1rw);
-      // assert.isAbove(
-      //   claim1rw,
-      //   1799,
-      //   "is around 2000, depend on miliseconds on the 3 stakes"
-      // );
-      // assert.isBelow(
-      //   claim1rw,
-      //   2601,
-      //   "is around 2000, depend on miliseconds on the 3 stakes"
-      // );
-
-      // console.log(
-      //   "Waiting for 3 seconds to accrue reward without any stake or unstake changes.."
-      // );
-      // await delay(3000);
-
-      // const claimTx2 = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // const timeClaim2 = new Date();
-      // console.log(timeNow(timeClaim2), "[2nd] claim tx", claimTx2);
-      // const balance2 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-      // const claim2rw = balance2 - balance1;
-      // console.log(timeNow(), "[2nd] claim reward amount:", claim2rw);
-      // assert.isOk(
-      //   claim2rw === 900 || claim2rw === 1200,
-      //   "900 or 1200 depend on the miliseconds (300/s multiply by 3-4s)"
-      // );
-
-      // console.log("Waiting for 750 miliseconds to accrue..");
-      // await delay(750);
-
-      // const claimTx3 = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // const timeClaim3 = new Date();
-      // console.log(timeNow(timeClaim3), "[3nd] claim tx", claimTx3);
-
-      // const balance3 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-      // const claim3rw = balance3 - balance2;
-      // console.log(timeNow(), "[3rd] claim reward amount:", claim3rw);
-
-      // const intervalInSeconds = Number(
-      //   ((timeClaim3.getTime() - timeClaim2.getTime()) / 1000).toFixed(0)
-      // );
-      // const rewardPerSeconds = 300; // 100 * 3 staked
-      // const claimExpected = intervalInSeconds * rewardPerSeconds;
-      // console.log(
-      //   "interval between 2nd to 3rd claim (seconds):",
-      //   intervalInSeconds
-      // );
-      // assert.equal(claim3rw, claimExpected, "Expected 300/s");
-
-      // console.log("Sequentially unstaking staked NFTs every 2 second...");
-
-      // console.log(
-      //   timeNow(),
-      //   "NFT #1 unstake tx",
-      //   await unstake(program, justin, config.publicKey, nfts[1].mint.publicKey)
-      // );
-      // await delay(2000);
-      // console.log(
-      //   timeNow(),
-      //   "NFT #2 unstake tx",
-      //   await unstake(program, justin, config.publicKey, nfts[2].mint.publicKey)
-      // );
-      // console.log(
-      //   timeNow(),
-      //   "NFT #3 unstake tx",
-      //   await unstake(program, justin, config.publicKey, nfts[3].mint.publicKey)
-      // );
-
-      // console.log(
-      //   "Waiting for 5 seconds.. Making sure all tx confirmed on blockchain.."
-      // );
-
-      // await delay(5000);
-
-      // assert.equal(
-      //   (await program.account.userV2.fetch(justinState)).nftsStaked.toNumber(),
-      //   0,
-      //   "should be 0 because all NFT was unstaked previously"
-      // );
-
-      // const claimTx4 = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // console.log(timeNow(), "[4th] claim tx", claimTx4);
-
-      // const balance4 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-      // const claim4rw = balance4 - balance3;
-      // console.log(timeNow(), "[4th] claim reward amount:", claim4rw);
-      // assert.isAbove(
-      //   claim4rw,
-      //   499,
-      //   "reward should be above 500 depend on miliseconds at the 3 unstakes"
-      // );
-      // assert.isBelow(
-      //   claim4rw,
-      //   1101,
-      //   "reward should be below 1000 depend on miliseconds at the 3 unstakes"
-      // );
-
-      // await delay(2000);
-
-      // console.log(
-      //   "Waiting for 2 seconds.. last claim should be 0 since no NFT staked anymore.."
-      // );
-
-      // const claimTx5 = await claim(
-      //   program,
-      //   justin,
-      //   config.publicKey,
-      //   rewardMint.publicKey
-      // );
-      // console.log(timeNow(), "[5th] claim tx", claimTx5);
-
-      // const balance5 = await getTokenBalanceByATA(
-      //   justin.provider.connection,
-      //   userATA
-      // );
-      // const claim5rw = balance5 - balance4;
-      // console.log(timeNow(), "[5th] claim reward amount:", claim5rw);
-
-      // assert.equal(
-      //   claim5rw,
-      //   0,
-      //   "final claim should be 0 since all NFT are unstaked"
-      // );
+      // wait for lock time to finish
+      // const locktime =
+      //   configs[0].option.stakingLockDurationInSec.toNumber() * 1000;
+      // await delay(locktime);
     });
   });
 
@@ -726,15 +594,16 @@ describe("User journey", () => {
         config.publicKey
       );
 
-      await expect(program.methods
-        .initStaking()
-        .accounts({
-          userState,
-          config: config.publicKey,
-          user: markers.wallet.publicKey,
-        })
-        .signers([markers.keypair])
-        .rpc()
+      await expect(
+        program.methods
+          .initStaking()
+          .accounts({
+            userState,
+            config: config.publicKey,
+            user: markers.wallet.publicKey,
+          })
+          .signers([markers.keypair])
+          .rpc()
       ).to.be.rejectedWith("unauthorized signer or writable account");
     });
 
@@ -1138,21 +1007,21 @@ describe("User journey", () => {
   });
 
   describe("Final program state", () => {
-    it("Check program accounts", async () => {
-      const allStakingAccounts = await program.account.userV2.all();
-      assert.equal(
-        allStakingAccounts.length,
-        2 + 1, // 2 Justin + 1 Markers account
-        "total staking accounts created"
-      );
+    // it("Check program accounts", async () => {
+    //   const allStakingAccounts = await program.account.userV2.all();
+    //   assert.equal(
+    //     allStakingAccounts.length,
+    //     configs.length + 1, // 2 Justin on each config + 1 Markers account
+    //     "total staking accounts created"
+    //   );
 
-      const allStakingConfig = await program.account.stakingConfig.all();
-      assert.equal(
-        allStakingConfig.length,
-        configs.length + 1, // +1 markers config
-        "total staking configs created"
-      );
-    });
+    //   const allStakingConfig = await program.account.stakingConfig.all();
+    //   assert.equal(
+    //     allStakingConfig.length,
+    //     configs.length + 1, // + 1 Markers config
+    //     "total staking configs created"
+    //   );
+    // });
 
     it("Check overall state", async () => {
       const [justinState] = await findUserStatePDA(

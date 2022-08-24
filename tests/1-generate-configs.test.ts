@@ -1,9 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import {
-  Keypair,
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { assert } from "chai";
 import {
@@ -68,23 +64,30 @@ describe("Generate staking configs", () => {
     const prevTotalConfigs = (await program.account.stakingConfig.all()).length;
 
     await allSynchronously(
-      configs.map((config) => async () => {
-        await createStakingConfig(
-          program,
-          dev,
-          config.keypair,
-          rewardToken.publicKey,
-          NFTcreator.wallet.publicKey,
-          config.option
-        );
-        await checkConfigResult(
-          program,
-          dev.keypair,
-          config.keypair,
-          rewardToken.publicKey,
-          NFTcreator.wallet.publicKey,
-          config.option
-        );
+      configs.map((config, index) => async () => {
+        try {
+          console.log(index, "createStakingConfig");
+          await createStakingConfig(
+            program,
+            dev,
+            config.keypair,
+            rewardToken.publicKey,
+            NFTcreator.wallet.publicKey,
+            config.option
+          );
+          console.log(index, "checkConfigResult");
+          await checkConfigResult(
+            program,
+            dev.keypair,
+            config.keypair,
+            rewardToken.publicKey,
+            NFTcreator.wallet.publicKey,
+            config.option
+          );
+          console.log(index, "config OK");
+        } catch (error) {
+          console.log(index, "config", error);
+        }
       })
     );
 
