@@ -190,8 +190,6 @@ pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
     user_state.reward_accrued = user_state.reward_accrued.checked_add(total_reward).unwrap();
     user_state.time_last_claim = time_now;
     // clear reward stored cos all claimed already
-    msg!("user_state.reward_stored: {}", user_state.reward_stored);
     user_state.reward_stored = 0;
-    msg!("user_state.reward_stored: {}", user_state.reward_stored);
     Ok(())
 }

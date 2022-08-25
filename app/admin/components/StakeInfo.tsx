@@ -18,17 +18,17 @@ async function checkStakeInfo(
   mint: string,
   successCallback: any // function
 ) {
-    const userPK = new PublicKey(user);
-    const mintPK = new PublicKey(mint);
-    const [stakeInfoPDA] = await findStakeInfoPDA(userPK, mintPK);
-    const provider = new anchor.AnchorProvider(
-      connection,
-      wallet,
-      anchor.AnchorProvider.defaultOptions()
-    );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
-    successCallback(stakeInfo);
+  const userPK = new PublicKey(user);
+  const mintPK = new PublicKey(mint);
+  const [stakeInfoPDA] = await findStakeInfoPDA(userPK, mintPK);
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    anchor.AnchorProvider.defaultOptions()
+  );
+  const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+  const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
+  successCallback(stakeInfo);
 }
 
 export default function StakeInfo() {
@@ -115,9 +115,9 @@ export default function StakeInfo() {
       >
         Check stake info
       </button>
-      <div className="my-4 min-h-[64px] border-slate-500 border-2 p-1">
+      <pre className="my-4 min-h-[64px] border-slate-500 border-2 p-1 text-xs">
         {JSON.stringify(checkedStakeInfo, null, 2)}
-      </div>
+      </pre>
 
       <h2 className="mb-4 text-slate-600 dark:text-gray-200 font-medium text-xs">
         <span className="text-slate-600 dark:text-gray-200 font-medium text-xs">
