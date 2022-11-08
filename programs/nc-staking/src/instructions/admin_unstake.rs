@@ -21,7 +21,10 @@ pub struct AdminUnstake<'info> {
         bump
     )]
     pub user_state: Account<'info, UserV2>,
-    #[account(mut)]
+    #[account(
+        mut,
+        has_one = admin
+    )]
     pub config: Account<'info, StakingConfig>,
     #[account(
         mut,
@@ -110,7 +113,6 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
 
     // do transfer here with delegate's authority
-    
 
     // store prev stake reward
     let time_now = now_ts()?;
