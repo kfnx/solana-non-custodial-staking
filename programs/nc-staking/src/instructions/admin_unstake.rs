@@ -13,6 +13,7 @@ pub struct AdminUnstake<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
     #[account()]
+    /// CHECK: passed for key only. data not read
     pub user: AccountInfo<'info>,
     #[account(
         mut,
