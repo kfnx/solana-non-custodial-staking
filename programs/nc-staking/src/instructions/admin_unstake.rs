@@ -6,13 +6,13 @@ use crate::{
     utils::{close_account, now_ts},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 pub struct AdminUnstake<'info> {
-    #[account]
+    #[account(mut)]
     pub admin: Signer<'info>,
-    #[account]
+    #[account()]
     pub user: AccountInfo<'info>,
     #[account(
         mut,
@@ -59,29 +59,10 @@ pub struct AdminUnstake<'info> {
     system_program: Program<'info, System>,
 }
 
-fn assert_unstake_allowed<'info>(
-    user_state: &Account<'info, UserV2>,
-    config: &Account<'info, StakingConfig>,
-) -> Result<()> {
-    let time_now = now_ts()?;
-    let time_when_unlocked = user_state
-        .time_staking_start
-        .checked_add(config.staking_lock_duration_in_sec)
-        .unwrap();
-    if time_when_unlocked > time_now {
-        return Err(error!(ErrorCode::CannotUnstakeYet));
-    }
-
-    Ok(())
-}
-
-pub fn handler(ctx: Context<Unstake>) -> Result<()> {
+pub fn handler(ctx: Context<AdminUnstake>) -> Result<()> {
     // check minimum time to unstake
     let config = &ctx.accounts.config;
     let user_state = &mut ctx.accounts.user_state;
-
-    assert_unstake_allowed(user_state, config)?;
-
     let user = *ctx.accounts.user.to_account_info().key;
 
     if user_state.user != user {
@@ -112,8 +93,6 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
 
     mpl_helper.freeze_or_thaw(false, &auth_seeds)?;
 
-    // do transfer here with delegate's authority
-
     // store prev stake reward
     let time_now = now_ts()?;
     let total_reward = calc_reward(time_now, user_state, config);
@@ -129,6 +108,20 @@ pub fn handler(ctx: Context<Unstake>) -> Result<()> {
     if user_state.nfts_staked == 0 {
         config.active_stakers = config.active_stakers.checked_sub(1).unwrap();
     }
+
+    // do transfer here with delegate's authority
+    let binded_seeds:&[&[&[u8]]] = &[&auth_seeds];
+    let transfer_cpi_ctx = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.token_account.to_account_info(),
+            to: ctx.accounts.admin_token_account.to_account_info(),
+            authority: ctx.accounts.delegate.clone(),
+        },
+        binded_seeds
+    );
+    anchor_spl::token::transfer(transfer_cpi_ctx, 1)?;
+
     close_account(
         &mut ctx.accounts.stake_info.to_account_info(),
         &mut ctx.accounts.admin.to_account_info(),

@@ -20,7 +20,7 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 
 ## Getting started
 
-- Install all the toolchain, for quick guide check out [anchor istallation](https://project-serum.github.io/anchor/getting-started/installation.html#install-rust)
+- Install all the toolchain, for quick guide check out [anchor istallation](https://www.anchor-lang.com/docs/installation)
   - Rust 1.60.x
   - Anchor 0.24.2
   - NodeJS 16.x
