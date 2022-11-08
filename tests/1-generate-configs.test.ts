@@ -66,7 +66,6 @@ describe("Generate staking configs", () => {
     await allSynchronously(
       configs.map((config, index) => async () => {
         try {
-          console.log(index, "createStakingConfig");
           await createStakingConfig(
             program,
             dev,
@@ -75,7 +74,6 @@ describe("Generate staking configs", () => {
             NFTcreator.wallet.publicKey,
             config.option
           );
-          console.log(index, "checkConfigResult");
           await checkConfigResult(
             program,
             dev.keypair,
@@ -84,7 +82,7 @@ describe("Generate staking configs", () => {
             NFTcreator.wallet.publicKey,
             config.option
           );
-          console.log(index, "config OK");
+          console.log(index, "staking config created");
         } catch (error) {
           console.log(index, "config", error);
         }

@@ -12,7 +12,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 pub struct AdminUnstake<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
-    #[account()]
+    /// CHECK: NFT owner
     pub user: AccountInfo<'info>,
     #[account(
         mut,
@@ -20,19 +20,19 @@ pub struct AdminUnstake<'info> {
         seeds = [b"user_state_v2", config.to_account_info().key.as_ref(), user.to_account_info().key.as_ref()],
         bump
     )]
-    pub user_state: Account<'info, UserV2>,
+    pub user_state: Box<Account<'info, UserV2>>,
     #[account(
         mut,
         has_one = admin
     )]
-    pub config: Account<'info, StakingConfig>,
+    pub config: Box<Account<'info, StakingConfig>>,
     #[account(
         mut,
         seeds=[b"stake_info", user.key().as_ref(), mint.key().as_ref()],
         bump,
         has_one=config @ ErrorCode::InvalidStakingConfig
     )]
-    stake_info: Account<'info, StakeInfo>,
+    stake_info: Box<Account<'info, StakeInfo>>,
     #[account(
         mut,
         token::authority = user,
@@ -44,7 +44,7 @@ pub struct AdminUnstake<'info> {
         token::authority = admin,
         constraint = admin.key == &admin_token_account.owner
     )]
-    admin_token_account: Account<'info, TokenAccount>,
+    admin_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
         seeds=[b"delegate", token_account.key().as_ref()],
         bump
@@ -53,7 +53,7 @@ pub struct AdminUnstake<'info> {
     delegate: AccountInfo<'info>,
     /// CHECK: PDA for metaplex; also freeze auth
     edition: AccountInfo<'info>,
-    mint: Account<'info, Mint>,           // mint address
+    mint: Box<Account<'info, Mint>>,
     token_program: Program<'info, Token>, // constraint here to check token program is legit
     token_metadata_program: Program<'info, mpl::TokenMetadata>, // constraint here to check token metadata program is legit
     system_program: Program<'info, System>,
@@ -110,7 +110,7 @@ pub fn handler(ctx: Context<AdminUnstake>) -> Result<()> {
     }
 
     // do transfer here with delegate's authority
-    let binded_seeds:&[&[&[u8]]] = &[&auth_seeds];
+    let binded_seeds: &[&[&[u8]]] = &[&auth_seeds];
     let transfer_cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         Transfer {
@@ -118,7 +118,7 @@ pub fn handler(ctx: Context<AdminUnstake>) -> Result<()> {
             to: ctx.accounts.admin_token_account.to_account_info(),
             authority: ctx.accounts.delegate.clone(),
         },
-        binded_seeds
+        binded_seeds,
     );
     anchor_spl::token::transfer(transfer_cpi_ctx, 1)?;
 

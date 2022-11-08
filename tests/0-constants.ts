@@ -344,7 +344,6 @@ export const store = {
         creators: [],
       },
     },
-    /* commented because more nft means more time to test. uncomment if you need more nft to test
     {
       mint: Keypair.generate(),
       metadata: {
@@ -355,6 +354,7 @@ export const store = {
         creators: [],
       },
     },
+    /* commented because more nft means more time to test. uncomment if you need more nft to test
     {
       mint: Keypair.generate(),
       metadata: {

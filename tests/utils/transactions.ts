@@ -30,7 +30,7 @@ import { createUser, findUserATA, User } from "./user";
 
 export async function createStakingConfig(
   program: anchor.Program<NcStaking>,
-  user: User,
+  admin: User,
   config: Keypair,
   rewardMint: PublicKey,
   creatorAddressToWhitelist: PublicKey,
@@ -51,7 +51,7 @@ export async function createStakingConfig(
       stakingConfig.stakingLockDurationInSec
     )
     .accounts({
-      admin: user.keypair.publicKey,
+      admin: admin.keypair.publicKey,
       config: config.publicKey,
       configAuthority: configAuth,
       rewardMint,
@@ -62,7 +62,7 @@ export async function createStakingConfig(
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([user.keypair, config])
+    .signers([admin.keypair, config])
     .rpc();
   return tx;
 }
@@ -145,6 +145,49 @@ export async function unstake(
       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
     })
     .signers([user.keypair])
+    .rpc();
+}
+
+export async function adminUnstake(
+  program: anchor.Program<NcStaking>,
+  user: User,
+  config: PublicKey,
+  mint: PublicKey,
+  admin: Keypair
+) {
+  const userId = user.wallet.publicKey;
+  console.log("user", userId.toBase58());
+  const tokenAccount = await findUserATA(userId, mint);
+  console.log("user ATA", tokenAccount.toBase58());
+  const adminTokenAccount = await findUserATA(admin.publicKey, mint);
+  console.log("admin", admin.publicKey.toBase58());
+  console.log("admin ATA", adminTokenAccount.toBase58());
+  const [delegate] = await findDelegateAuthPDA(tokenAccount);
+  // console.log("user delegate", delegate.toBase58());
+  const [edition] = await findEditionPDA(mint);
+  // console.log("edition", edition.toBase58());
+  const [userState] = await findUserStatePDA(userId, config);
+  // console.log("user state", userState.toBase58());
+  const [stakeInfo] = await findStakeInfoPDA(userId, mint);
+  // console.log("stakeInfo", stakeInfo.toBase58());
+
+  return program.methods
+    .adminUnstake()
+    .accounts({
+      admin: admin.publicKey,
+      user: userId,
+      stakeInfo,
+      config,
+      mint,
+      tokenAccount,
+      adminTokenAccount,
+      userState,
+      delegate,
+      edition,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+    })
+    .signers([admin])
     .rpc();
 }
 
