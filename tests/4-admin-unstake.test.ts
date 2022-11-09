@@ -21,11 +21,12 @@ chai.use(chaiAsPromised);
  * Configs and NFTs are created on test 1 and 2.
  * Justin as normal and kind user test the NFT project and staking program
  * Admin as project owner
+ * Markers as bad user attempt to exploit the program
  * uncomment the logs for debugging
  */
 
 describe("User journey", () => {
-  const { dev, justin, nfts, configs } = store;
+  const { dev, justin, markers, nfts, configs } = store;
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const config = configs[0].keypair;
   const nft = nfts[4].mint.publicKey;
@@ -83,6 +84,61 @@ describe("User journey", () => {
 
       assert.ok(account.user.equals(justin.wallet.publicKey));
       assert.ok(account.nftsStaked.toNumber() === 1);
+    });
+
+    it("Markers try to use Admin unstake instruction to steal Justin NFT", async () => {
+      // initialize markers ATA to hold the NFT after unstaked
+      await getOrCreateAssociatedTokenAccount(
+        markers.provider.connection,
+        markers.wallet.payer,
+        nft,
+        markers.wallet.publicKey
+      );
+
+      console.log(
+        "markers balance:",
+        await getSolanaBalance(markers.wallet.publicKey)
+      );
+
+      await expect(
+        adminUnstake(program, justin, config.publicKey, nft, markers.keypair)
+      ).to.be.rejectedWith("one constraint was violated");
+
+      const justinATA = await findUserATA(justin.wallet.publicKey, nft);
+      const ataInfo = await justin.provider.connection.getParsedAccountInfo(
+        justinATA
+      );
+      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+
+      assert.equal(
+        parsed.info.state,
+        "frozen",
+        "NFT state should be still frozen cos the admin unstake fail"
+      );
+      assert.equal(
+        parsed.info.tokenAmount.amount,
+        1,
+        "Justin NFT amount value should be 1 because markers fail to stole it"
+      );
+      console.log("Justin NFT amount:", parsed.info.tokenAmount.amount);
+
+      console.log(
+        "markers balance:",
+        await getSolanaBalance(markers.wallet.publicKey)
+      );
+      {
+        const ATA = await findUserATA(markers.wallet.publicKey, nft);
+        const ataInfo = await markers.provider.connection.getParsedAccountInfo(
+          ATA
+        );
+        const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+        assert.equal(
+          parsed.info.tokenAmount.amount,
+          0,
+          "Markers NFT amount value should be 0 because he got nothing"
+        );
+        console.log("Markers NFT amount:", parsed.info.tokenAmount.amount);
+      }
     });
 
     it("Oh no, justin wallet is compromised! Admin unstake Justin NFT despite the locktime and transfer to admin wallet", async () => {
