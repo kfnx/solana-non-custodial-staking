@@ -24,7 +24,7 @@ import {
   findUserStatePDA,
   findUserStateV2PDA,
 } from "../sdk/pda";
-import { STAKING_REWARD_ID, TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
+import address, { TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
 import { IDL, NcStaking } from "../sdk/nc_staking";
 import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
 import { PROGRAM_ID } from "../sdk";
@@ -32,9 +32,16 @@ import { PROGRAM_ID } from "../sdk";
 export const networks: Network[] = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
   { name: "Testnet", endpoint: "https://api.testnet.solana.com" },
-  { name: "Devnet", endpoint: "https://api.devnet.solana.com" },
-  { name: "Mainnet-beta", endpoint: "https://bitter-twilight-night.solana-mainnet.quiknode.pro/386d6ff7459b7d27a96b41c0b382ec26dd0b1c91/" },
-  // { name: "Mainnet-beta (private node)", endpoint: "http://localhost:8899" },
+  {
+    name: "Devnet",
+    endpoint:
+      "https://solana-devnet.g.alchemy.com/v2/UhHycdI5YouCZZQkTizOC8pBAF2SX6Ly",
+  },
+  {
+    name: "Mainnet-beta",
+    endpoint:
+      "https://solana-mainnet.g.alchemy.com/v2/j-aMW77Scbfn1L-eABXP07dx6wIn6mzT",
+  },
 ];
 
 async function checkUserStatePDA(
@@ -80,10 +87,12 @@ async function checkUserStatePDA(
 
   return result;
 }
+
 export interface UserStateWrapper {
   account: UserState;
   publicKey: PublicKey;
 }
+
 interface UserState {
   user: PublicKey;
   config: PublicKey;
@@ -95,6 +104,7 @@ interface UserState {
   timeLastStake: BN;
   timeStakingStart?: BN;
 }
+
 interface GlobalState {
   // setters
   connection: Connection;
@@ -141,7 +151,10 @@ interface GlobalState {
   claim: (cbOptions: CallbackOptions) => void;
 }
 
-const initialNetwork = networks[3];
+const initialNetwork = networks[2];
+const { STAKING_REWARD_ID } = address.devnet;
+// const initialNetwork = networks[3];
+// const { STAKING_REWARD_ID } = address.mainnet;
 
 const useGlobalStore = create<GlobalState>((set, get) => ({
   connection: new Connection(initialNetwork.endpoint, {
