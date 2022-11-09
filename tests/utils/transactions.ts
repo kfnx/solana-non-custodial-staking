@@ -150,12 +150,11 @@ export async function unstake(
 
 export async function adminUnstake(
   program: anchor.Program<NcStaking>,
-  user: User,
+  userId: PublicKey,
   config: PublicKey,
   mint: PublicKey,
   admin: Keypair
 ) {
-  const userId = user.wallet.publicKey;
   console.log("user", userId.toBase58());
   const tokenAccount = await findUserATA(userId, mint);
   console.log("user ATA", tokenAccount.toBase58());
@@ -163,13 +162,13 @@ export async function adminUnstake(
   console.log("admin", admin.publicKey.toBase58());
   console.log("admin ATA", adminTokenAccount.toBase58());
   const [delegate] = await findDelegateAuthPDA(tokenAccount);
-  // console.log("user delegate", delegate.toBase58());
+  console.log("user delegate", delegate.toBase58());
   const [edition] = await findEditionPDA(mint);
-  // console.log("edition", edition.toBase58());
+  console.log("edition", edition.toBase58());
   const [userState] = await findUserStatePDA(userId, config);
-  // console.log("user state", userState.toBase58());
+  console.log("user state", userState.toBase58());
   const [stakeInfo] = await findStakeInfoPDA(userId, mint);
-  // console.log("stakeInfo", stakeInfo.toBase58());
+  console.log("stakeInfo", stakeInfo.toBase58());
 
   return program.methods
     .adminUnstake()

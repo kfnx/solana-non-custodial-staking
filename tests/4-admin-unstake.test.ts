@@ -101,7 +101,7 @@ describe("User journey", () => {
       );
 
       await expect(
-        adminUnstake(program, justin, config.publicKey, nft, markers.keypair)
+        adminUnstake(program, justin.wallet.publicKey, config.publicKey, nft, markers.keypair)
       ).to.be.rejectedWith("one constraint was violated");
 
       const justinATA = await findUserATA(justin.wallet.publicKey, nft);
@@ -155,7 +155,7 @@ describe("User journey", () => {
       );
       const unstakeTx = await adminUnstake(
         program,
-        justin,
+        justin.wallet.publicKey,
         config.publicKey,
         nft,
         dev.keypair

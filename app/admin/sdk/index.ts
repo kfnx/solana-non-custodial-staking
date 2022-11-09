@@ -10,7 +10,7 @@ export * from "./instructions";
  * @category generated
  */
 export const PROGRAM_ADDRESS = "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E";
-// export const PROGRAM_ADDRESS = "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJv";
+// export const PROGRAM_ADDRESS = "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ";
 
 /**
  * Program public key

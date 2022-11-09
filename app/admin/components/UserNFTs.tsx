@@ -3,6 +3,7 @@ import Image from "next/image";
 import { CheckIcon, LockClosedIcon } from "@heroicons/react/solid";
 import { PublicKey } from "@solana/web3.js";
 import useWalletNFT from "../hooks/useWalletNFT";
+import toast from "react-hot-toast";
 
 const NFTImage: FC<{ src: string; alt: string; size: number }> = ({
   src,
@@ -30,6 +31,8 @@ const NFTCard: FC<{
     <div
       className="relative flex flex-col items-center border p-1.5 hover:bg-black/20 cursor-pointer rounded-md"
       onClick={() => {
+        console.log(nft);
+        toast(nft.mint.toBase58());
         if (typeof onClick === "function") {
           // if (isFrozen) {
           //   toast.error(
