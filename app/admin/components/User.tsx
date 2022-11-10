@@ -15,7 +15,7 @@ import UnstakeModal from "./Modal/UnstakeModal";
 import ClaimModal from "./Modal/ClaimModal";
 import UserNFTs from "./UserNFTs";
 import UserStakings from "./UserStakings";
-import mintWhitelistedNFTs from "../utils/mintWhitelistedNFTs";
+import mintWhitelistedNFTs, { NFTcreator } from "../utils/mintWhitelistedNFTs";
 import { NFT_CREATOR_ID } from "../sdk/address";
 import useWalletNfts from "../hooks/useWalletNFT";
 
@@ -88,7 +88,7 @@ export default function User() {
       <div className="my-2">
         <p className="block mb-2 text-sm text-gray-500">Creator Address</p>
         <div className="bg-gray-200 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 hover:cursor-not-allowed">
-          {NFT_CREATOR_ID.toBase58()}
+          {NFTcreator.publicKey.toBase58()}
         </div>
       </div>
       <div className="flex w-full space-x-2">
@@ -243,7 +243,7 @@ export default function User() {
           </button>
         </h2>
         <hr className="-mt-3 mb-4" />
-        <UserStakings stakings={oldUsers} oldAccount={true}/>
+        <UserStakings stakings={oldUsers} oldAccount={true} />
       </div>
       <InitStakingModal isOpen={showInitStake} setIsOpen={setShowInitStake} />
       <StakeModal isOpen={showStake} setIsOpen={setShowStake} />

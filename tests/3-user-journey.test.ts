@@ -26,7 +26,6 @@ import {
   findDelegateAuthPDA,
   findEditionPDA,
   TOKEN_METADATA_PROGRAM_ID,
-  findRewardPotPDA,
   delay,
   findMetadataPDA,
   findStakeInfoPDA,

@@ -4,8 +4,13 @@ import { programs } from "@metaplex/js";
 import { NcStaking } from "../../target/types/nc_staking";
 import { TOKEN_METADATA_PROGRAM_ID } from "./program-id";
 
-const { programId: PROGRAM_ID } = anchor.workspace
-  .NcStaking as anchor.Program<NcStaking>;
+let PROGRAM_ID;
+if (anchor.workspace.NcStaking) {
+  const { programId } = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
+  PROGRAM_ID = programId;
+}else{
+  console.log("anchor workspace program id is not detected")
+}
 
 export const findUserStatePDA = async (
   user: PublicKey,

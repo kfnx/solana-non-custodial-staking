@@ -4,10 +4,14 @@ import Head from "next/head";
 import Image from "next/image";
 import NetworkSelector from "../components/NetworkSelector";
 import Tabs from "../components/Tabs";
-import { PROGRAM_ID } from "../sdk";
-import { NFT_CREATOR_ID, STAKING_REWARD_ID } from "../sdk/address";
+import useGlobalStore from "../hooks/useGlobalStore";
+import address from "../sdk/address";
 
 const Home: NextPage = () => {
+  const network = useGlobalStore((state) => state.network);
+  const networkName = network.name === "Mainnet-beta" ? "mainnet" : "devnet"
+  const { NFT_CREATOR_ID, STAKING_REWARD_ID, PROGRAM_ID } = address[networkName];
+
   return (
     <div>
       <Head>
