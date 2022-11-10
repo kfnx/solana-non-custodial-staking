@@ -31,7 +31,6 @@ const NFTCard: FC<{
     <div
       className="relative flex flex-col items-center border p-1.5 hover:bg-black/20 cursor-pointer rounded-md"
       onClick={() => {
-        console.log(nft);
         toast(nft.mint.toBase58());
         if (typeof onClick === "function") {
           // if (isFrozen) {
