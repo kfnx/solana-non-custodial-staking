@@ -1,17 +1,17 @@
-import chai, { assert, expect } from "chai";
+import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import * as anchor from "@project-serum/anchor";
-import {
-  Connection,
-  Keypair,
-  ParsedAccountData,
-  PublicKey,
-} from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
-import { getSolanaBalance, createUser, findUserATA } from "./utils/user";
-import { timeNow } from "./utils/helper";
+import {
+  getSolanaBalance,
+  createUser,
+  findUserATA,
+  getTokenBalanceByATA,
+} from "./utils/user";
 import { adminUnstake } from "./utils/transactions";
 import { IDL, NcStaking } from "../target/types/nc_staking";
+import { delay } from "./utils";
 
 chai.use(chaiAsPromised);
 
@@ -33,23 +33,26 @@ describe("Admin unstake", () => {
    * Update constants below before running this script
    */
   const ADMIN_KEYPAIR = Keypair.fromSecretKey(
-    // HwT
-    Uint8Array.from([
-      141, 58, 226, 141, 130, 99, 186, 38, 86, 15, 152, 191, 236, 139, 29, 19,
-      115, 176, 159, 145, 188, 210, 203, 64, 37, 188, 89, 4, 145, 255, 180, 35,
-      251, 174, 168, 122, 192, 149, 227, 185, 114, 75, 193, 206, 166, 209, 149,
-      87, 11, 239, 79, 164, 156, 153, 233, 57, 57, 245, 252, 117, 28, 82, 178,
-      219,
-    ])
+    Uint8Array.from(
+      // THIS is dummy keypair, please update before running the script
+      // HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL
+      [
+        141, 58, 226, 141, 130, 99, 186, 38, 86, 15, 152, 191, 236, 139, 29, 19,
+        115, 176, 159, 145, 188, 210, 203, 64, 37, 188, 89, 4, 145, 255, 180,
+        35, 251, 174, 168, 122, 192, 149, 227, 185, 114, 75, 193, 206, 166, 209,
+        149, 87, 11, 239, 79, 164, 156, 153, 233, 57, 57, 245, 252, 117, 28, 82,
+        178, 219,
+      ]
+    )
   );
   const NFT_OWNER = new PublicKey(
-    "6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt"
+    "7xt7ig8o8T2BiHte8cNhtkwE8JmWRWegYfpHMCWkQUy3"
   );
   const NFT_TO_UNSTAKE = new PublicKey(
-    "6Km3nACchn8bhWfx3Ao2J9i54vhnfT2Qsy5bm5ZUs1pa"
+    "F4z21K16LnCYQjJCGefcua9tFUGBHSVQKtynKmznypE6"
   );
   const CONFIG_OF_THE_NFT = new PublicKey(
-    "8tWp4jN5fH9tqubcGKBdjWp6gAVS39ayCGnqMzzfnD5m"
+    "ENXqqfi3JsB2omHYaZry99wPVqyUS1qahEcWxrRJSKpg"
   );
   const CONNECTION = new Connection(
     "https://solana-devnet.g.alchemy.com/v2/UhHycdI5YouCZZQkTizOC8pBAF2SX6Ly"
@@ -57,7 +60,13 @@ describe("Admin unstake", () => {
   const PROGRAM_ID = new PublicKey(
     "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ"
   );
-  console.log("\n\n\n");
+
+  const checkNFT = async (user: PublicKey) =>
+    await getTokenBalanceByATA(
+      CONNECTION,
+      await findUserATA(user, NFT_TO_UNSTAKE)
+    );
+
   console.log("RUNNING ADMIN UNSTAKE");
   console.log("CONNECTION", CONNECTION.rpcEndpoint);
   console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
@@ -65,7 +74,6 @@ describe("Admin unstake", () => {
   console.log("NFT_OWNER", NFT_OWNER.toBase58());
   console.log("NFT_TO_UNSTAKE", NFT_TO_UNSTAKE.toBase58());
   console.log("CONFIG_OF_THE_NFT", CONFIG_OF_THE_NFT.toBase58());
-  console.log("\n\n\n");
 
   it("starts", async () => {
     const admin = createUser(ADMIN_KEYPAIR, CONNECTION);
@@ -81,7 +89,12 @@ describe("Admin unstake", () => {
       PROGRAM_ID,
       admin.provider
     );
+
+    // check before unstake
     const balance0 = await getSolanaBalance(admin.wallet.publicKey);
+    console.log("User NFT:", await checkNFT(NFT_OWNER));
+    console.log("Admin NFT:", await checkNFT(ADMIN_KEYPAIR.publicKey));
+
     const unstakeTx = await adminUnstake(
       program,
       NFT_OWNER,
@@ -89,21 +102,16 @@ describe("Admin unstake", () => {
       NFT_TO_UNSTAKE,
       admin.keypair
     );
-    console.log(timeNow(), "unstake tx", unstakeTx);
+    console.log("unstake tx", unstakeTx);
+
+    // check after unstake
+    console.log(
+      "wait for 30s for the changes to be implemented in blockchain.."
+    );
+    await delay(30000);
     const balance1 = await getSolanaBalance(admin.wallet.publicKey);
     console.log("admin balance before:", balance0, "after:", balance1);
-    {
-      const ataInfo = await admin.provider.connection.getParsedAccountInfo(
-        ATA.address
-      );
-      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
-      console.log("admin ata", parsed);
-    }
-    {
-      const ata = await findUserATA(NFT_OWNER, NFT_TO_UNSTAKE);
-      const ataInfo = await admin.provider.connection.getParsedAccountInfo(ata);
-      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
-      console.log("nft owner ata", parsed);
-    }
+    console.log("User NFT:", await checkNFT(NFT_OWNER));
+    console.log("Admin NFT:", await checkNFT(ADMIN_KEYPAIR.publicKey));
   });
 });
