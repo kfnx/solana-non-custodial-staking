@@ -44,7 +44,7 @@ pub mod nc_staking {
     pub fn admin_unstake(ctx: Context<AdminUnstake>) -> Result<()> {
         instructions::admin_unstake::handler(ctx)
     }
-    
+
     pub fn claim(
         ctx: Context<ClaimStakingReward>,
         _bump_config_auth: u8,
