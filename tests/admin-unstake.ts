@@ -42,23 +42,22 @@ describe("Admin unstake", () => {
         35, 251, 174, 168, 122, 192, 149, 227, 185, 114, 75, 193, 206, 166, 209,
         149, 87, 11, 239, 79, 164, 156, 153, 233, 57, 57, 245, 252, 117, 28, 82,
         178, 219,
-      ]
-    )
+      ]    )
   );
   const NFT_OWNER = new PublicKey(
-    "7xt7ig8o8T2BiHte8cNhtkwE8JmWRWegYfpHMCWkQUy3"
+    "4XVquRb8vV5VahhrgkNHTUQiKjRQPkhgpRLi3TRirF1x"
   );
   const NFT_TO_UNSTAKE = new PublicKey(
-    "F4z21K16LnCYQjJCGefcua9tFUGBHSVQKtynKmznypE6"
+    "5UNKBSV4kVQjpGY9wcc6AvQGXzQLMDqVwy549GeEfsvA"
   );
   const CONFIG_OF_THE_NFT = new PublicKey(
-    "ENXqqfi3JsB2omHYaZry99wPVqyUS1qahEcWxrRJSKpg"
+    "62nhMVwrQQHp8cBm4G9H5xFW8dU2k7NukoUuGxxKVumq"
   );
   const CONNECTION = new Connection(
-    "https://solana-devnet.g.alchemy.com/v2/UhHycdI5YouCZZQkTizOC8pBAF2SX6Ly"
+    "https://bitter-twilight-night.solana-mainnet.quiknode.pro/a3bdc396f3fdb8417dd5308dde0901f6d470ca44/"
   );
   const PROGRAM_ID = new PublicKey(
-    "stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ"
+    "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
   );
 
   const checkNFT = async (user: PublicKey) =>
@@ -91,7 +90,7 @@ describe("Admin unstake", () => {
     );
 
     // check before unstake
-    const balance0 = await getSolanaBalance(admin.wallet.publicKey);
+    const balance0 = await getSolanaBalance(admin.wallet.publicKey,CONNECTION);
     console.log("User NFT:", await checkNFT(NFT_OWNER));
     console.log("Admin NFT:", await checkNFT(ADMIN_KEYPAIR.publicKey));
 
@@ -109,7 +108,7 @@ describe("Admin unstake", () => {
       "wait for 30s for the changes to be implemented in blockchain.."
     );
     await delay(30000);
-    const balance1 = await getSolanaBalance(admin.wallet.publicKey);
+    const balance1 = await getSolanaBalance(admin.wallet.publicKey,CONNECTION);
     console.log("admin balance before:", balance0, "after:", balance1);
     console.log("User NFT:", await checkNFT(NFT_OWNER));
     console.log("Admin NFT:", await checkNFT(ADMIN_KEYPAIR.publicKey));

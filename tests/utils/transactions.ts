@@ -161,13 +161,13 @@ export async function adminUnstake(
   const adminTokenAccount = await findUserATA(admin.publicKey, mint);
   console.log("admin", admin.publicKey.toBase58());
   console.log("admin ATA", adminTokenAccount.toBase58());
-  const [delegate] = await findDelegateAuthPDA(tokenAccount);
+  const [delegate] = await findDelegateAuthPDA(tokenAccount, program.programId);
   console.log("user delegate", delegate.toBase58());
   const [edition] = await findEditionPDA(mint);
   console.log("edition", edition.toBase58());
-  const [userState] = await findUserStatePDA(userId, config);
+  const [userState] = await findUserStatePDA(userId, config, program.programId);
   console.log("user state", userState.toBase58());
-  const [stakeInfo] = await findStakeInfoPDA(userId, mint);
+  const [stakeInfo] = await findStakeInfoPDA(userId, mint, program.programId);
   console.log("stakeInfo", stakeInfo.toBase58());
 
   return program.methods
