@@ -22,8 +22,8 @@ export const STAKING_REWARD_ID = new PublicKey(
 );
 
 export const NFT_CREATOR_ID = new PublicKey(
-  // "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
-  "crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9"
+  "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
+  // "crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9"
 );
 
 // TODO: move this to store so it sync with address
@@ -43,7 +43,8 @@ const address = {
       "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
     ),
     NFT_CREATOR_ID: new PublicKey(
-      "crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9"
+      // "crezn94Dr12A1FdEn9heFMq7fv5MAEjtFRtTBBBGqP9"
+      "cretSiBGE5V7BJXnLsE84GBX5X8jxuSnbBfhAVpwGqU"
     ),
   },
 };

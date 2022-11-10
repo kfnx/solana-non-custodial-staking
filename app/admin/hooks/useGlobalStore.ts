@@ -520,11 +520,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       });
   },
   stake: async (callbackOptions) => {
+    console.log("STAKE START");
     if (callbackOptions.onStart) {
       callbackOptions.onStart();
     }
     const ixName = "Stake";
     const { connection, wallet, configs, config, selectedNFT } = get();
+
     if (!wallet) {
       toast.error("Wallet Not Connected");
       if (callbackOptions.onFinish) {
@@ -545,7 +547,10 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
+    console.log("provider", provider.wallet.publicKey.toBase58());
+    console.log("provider", provider.connection.rpcEndpoint);
     const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    console.log("program", program.programId.toBase58());
 
     if (!configs[config]) {
       toast.error("Select a staking config");
@@ -554,16 +559,28 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       }
       return;
     }
+
+    console.log(
+      "selectedNFT",
+      connection.rpcEndpoint,
+      wallet?.publicKey.toBase58(),
+      configs,
+      config.toString(),
+      selectedNFT?.toBase58()
+    );
     const configId = new PublicKey(configs[config].publicKey);
+    console.log("configId", configId.toBase58());
 
     const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
-    // console.log("user ATA", tokenAccount.toBase58());
+    console.log("user ATA", tokenAccount.toBase58());
     const [delegate] = await findDelegateAuthPDA(tokenAccount);
-    // console.log("user delegate", delegate.toBase58());
+    console.log("user delegate", delegate.toBase58());
     const [edition] = await findEditionPDA(selectedNFT);
-    // console.log("edition", edition.toBase58());
+    console.log("edition", edition.toBase58());
     const [userState] = await findUserStatePDA(wallet.publicKey, configId);
-    // console.log("user state", userState.toBase58());
+    console.log("user state", userState.toBase58());
+    const [userStateV2] = await findUserStateV2PDA(wallet.publicKey, configId);
+    console.log("user state v2", userStateV2.toBase58());
     const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT);
     const metadata = await findMetadataPDA(selectedNFT);
 
@@ -575,7 +592,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         config: configId,
         mint: selectedNFT,
         tokenAccount,
-        userState,
+        userState: userStateV2,
         delegate,
         edition,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -603,6 +620,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         }
       })
       .catch((err) => {
+        console.log("catch", err);
         if (
           err.message ===
           "failed to send transaction: Transaction simulation failed: Attempt to debit an account but found no record of a prior credit."
@@ -615,11 +633,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
         }
       })
       .finally(() => {
+        console.log("finally");
         set({ selectedNFT: undefined });
         if (callbackOptions.onFinish) {
           callbackOptions.onFinish();
         }
       });
+    console.log("END");
   },
   unstake: async (callbackOptions) => {
     if (callbackOptions.onStart) {

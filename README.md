@@ -1,6 +1,8 @@
 Non custodial staking program
 
-program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
+program id:
+- mainnet: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
+- devnet: `stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ`
 
 <br/>
 <p align="center">
@@ -37,6 +39,7 @@ program id: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 - Run solana local cluster with `solana-test-validator`, this is useful for development with fast network speed with of repetition and less strict environtment
 - Run test in started local cluster with `anchor test --skip-local-validator`, this is useful to test with persistent network
 - Upgrade command `anchor upgrade target/deploy/nc_staking.so --provider.cluster https://bitter-twilight-night.solana-mainnet.quiknode.pro/386d6ff7459b7d27a96b41c0b382ec26dd0b1c91/ --provider.wallet ../TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5.json --program-id stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
+- Run admin unstake script: update the value in the /tests/admin-unstake.ts and run `anchor run admin-unstake`
 
 ## Deploy your own program
 
