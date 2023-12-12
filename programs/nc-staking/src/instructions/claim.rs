@@ -66,6 +66,10 @@ pub fn calc_reward<'info>(
     if user_state.time_last_stake == 0 {
         return 0;
     };
+    // if the config has a 0 reward per sec 
+    if config.reward_per_sec == 0 {
+        return 0;
+    }
     let time_lock_end = user_state.time_staking_start + config.staking_lock_duration_in_sec;
     let time_last_interact = if user_state.time_last_stake > user_state.time_last_claim {
         user_state.time_last_stake
