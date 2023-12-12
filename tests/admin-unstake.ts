@@ -32,6 +32,7 @@ describe("Admin unstake", () => {
   /**
    * Update constants below before running this script
    */
+  // Mainnet TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5
   const ADMIN_KEYPAIR = Keypair.fromSecretKey(
     Uint8Array.from(
       // THIS is dummy keypair, please update before running the script
@@ -45,16 +46,17 @@ describe("Admin unstake", () => {
       ]    )
   );
   const NFT_OWNER = new PublicKey(
-    "4XVquRb8vV5VahhrgkNHTUQiKjRQPkhgpRLi3TRirF1x"
+    "2j4R25qomKjYEww1rGMqSBU2eSN9R6aCy6rrXhDQeHze"
   );
   const NFT_TO_UNSTAKE = new PublicKey(
-    "5UNKBSV4kVQjpGY9wcc6AvQGXzQLMDqVwy549GeEfsvA"
+    "HKYSjAdnLzhYEoTU561LJ1Yh7M461swpXGN6ytrsPeb8"
   );
+  //can be checked: 3rd signer of the stake instruction
   const CONFIG_OF_THE_NFT = new PublicKey(
-    "62nhMVwrQQHp8cBm4G9H5xFW8dU2k7NukoUuGxxKVumq"
+    "62nhMVwrQQHp8cBm4G9H5xFW8dU2k7NukoUuGxxKVumq" //90 days
   );
   const CONNECTION = new Connection(
-    "https://bitter-twilight-night.solana-mainnet.quiknode.pro/a3bdc396f3fdb8417dd5308dde0901f6d470ca44/"
+    "https://bitter-twilight-night.solana-mainnet.discover.quiknode.pro/c0d5a9290c79e2a87e32cc3e6406d952c8ec2cd5"
   );
   const PROGRAM_ID = new PublicKey(
     "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
