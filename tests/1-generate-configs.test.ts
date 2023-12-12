@@ -98,6 +98,36 @@ describe("Generate staking configs", () => {
     );
   });
 
+  // it("Update config reward rate", async () => {
+  //   await allSynchronously(
+  //     configs.map((config) => async () => {
+  //       const configId = config.keypair.publicKey;
+  //       console.log(config.option);
+  //       const tx = await program.methods
+  //         .updateStakingConfig(
+  //           new anchor.BN(2),
+  //           new anchor.BN(2),
+  //           new anchor.BN(5)
+  //         )
+  //         .accounts({
+  //           admin: dev.keypair.publicKey,
+  //           config: configId,
+  //         })
+  //         .signers([dev.keypair])
+  //         .rpc();
+  //       console.log(tx);
+  //       await checkConfigResult(
+  //         program,
+  //         dev.keypair,
+  //         config.keypair,
+  //         rewardToken.publicKey,
+  //         NFTcreator.wallet.publicKey,
+  //         config.option
+  //       );
+  //     })
+  //   );
+  // });
+
   it("Fund config reward pot so user can claim token rewards", async () => {
     await allSynchronously(
       configs.map((config) => async () => {

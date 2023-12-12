@@ -29,6 +29,19 @@ pub mod nc_staking {
             staking_lock_duration_in_sec,
         )
     }
+    pub fn update_staking_config(
+        ctx: Context<UpdateStakingConfig>,
+        reward_per_sec: u64,
+        reward_denominator: u64,
+        staking_lock_duration_in_sec: u64,
+    ) -> Result<()> {
+        instructions::update_staking_config::handler(
+            ctx,
+            reward_per_sec,
+            reward_denominator,
+            staking_lock_duration_in_sec,
+        )
+    }
     pub fn init_staking(ctx: Context<InitStaking>) -> Result<()> {
         instructions::init_staking::handler(ctx)
     }
