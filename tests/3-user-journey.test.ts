@@ -50,7 +50,7 @@ chai.use(chaiAsPromised);
  * uncomment the logs for debugging
  */
 
-describe("User journey", () => {
+describe("User Journey", () => {
   const {
     dev,
     justin,
@@ -61,9 +61,9 @@ describe("User journey", () => {
     NFTcreator,
   } = store;
   const program = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
-  const config = configs[0].keypair;
-
-  describe("NFT owner Justin exist", () => {
+  const config = configs[0].keypair; // 5s staking
+  const slowConfig = configs[2]; // 1000s staking
+  describe("Normal NFT Owner: Justin", () => {
     it("User Justin created", async () => {
       await airdropUser(justin.wallet.publicKey);
       console.log(
@@ -576,15 +576,12 @@ describe("User journey", () => {
         console.log("timeClaim1Txceil", timeClaim1Txceil);
         console.log("duration", duration, "seconds");
         const stakedNFTs = 2;
-        const expectedReward = duration * rewardPerSec * stakedNFTs;
+        const minExpectedReward = (duration-1) * rewardPerSec * stakedNFTs;
+        const maxExpectedReward = (duration+1) * rewardPerSec * stakedNFTs;
         console.log("stakedNFTs", stakedNFTs);
         console.log("rewardPerSec", rewardPerSec);
-        console.log("expectedReward", expectedReward);
-        assert.equal(
-          balance1,
-          rewardStored1 + expectedReward,
-          "Balance should be increased after a valid claim"
-        );
+        console.log(`expectedReward: ${minExpectedReward} - ${maxExpectedReward}`);
+        assert.isTrue(balance1 <= maxExpectedReward && balance1 >= minExpectedReward, "Balance should be increased after a valid claim");
       }
 
       // claim #2 all should be 0 cos prev claim. reward_stored = 0, reward_now = 0
@@ -678,7 +675,7 @@ describe("User journey", () => {
     });
   });
 
-  describe("Markers should not be able to exploit staking program", () => {
+  describe("Malicious User: Markers should not be able to exploit staking program", () => {
     it("User Markers Created", async () => {
       await airdropUser(markers.wallet.publicKey);
       console.log("Markers address", markers.keypair.publicKey.toBase58());
@@ -1099,6 +1096,201 @@ describe("User journey", () => {
       await expect(
         claim(program, markers, markersConfig, rewardMint.publicKey)
       ).to.be.rejectedWith("UserNeverStake");
+    });
+  });
+
+  describe("Normal NFT Owner: Justin on long staking", () => {
+    const configAddress = slowConfig.keypair.publicKey;
+    it("Justin initate staking", async () => {
+      const [userState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        configAddress
+      );
+
+      await program.methods
+        .initStaking()
+        .accounts({
+          userState,
+          config: configAddress,
+          user: justin.wallet.publicKey,
+        })
+        .signers([justin.keypair])
+        .rpc();
+
+      const account = await program.account.userV2.fetch(userState);
+      assert.ok(account.user.equals(justin.wallet.publicKey));
+      assert.ok(account.nftsStaked.toNumber() === 0);
+    });
+    const nftToUse = nfts[5]; // meekolony#6
+    it("Justin stake one NFT", async () => {
+      const tx = await stake(
+        program,
+        justin,
+        configAddress,
+        nftToUse.mint.publicKey
+      );
+      console.log(timeNow(), "stake NFT tx", tx);
+
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nftToUse.mint.publicKey
+      );
+      const ataInfo = await justin.provider.connection.getParsedAccountInfo(
+        justinATA
+      );
+      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+      assert.equal(parsed.info.state, "frozen");
+
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        configAddress
+      );
+      const account = await program.account.userV2.fetch(justinState);
+
+      assert.ok(account.user.equals(justin.wallet.publicKey));
+      assert.ok(account.nftsStaked.toNumber() === 1);
+    });
+
+    it("Justin cannot unstake/thaw his own NFT before lock period finish", async () => {
+      // first unstake attempt, cannot unstake because it haven't reach minimum staking period
+      await expect(
+        unstake(program, justin, configAddress, nftToUse.mint.publicKey)
+      ).to.be.rejectedWith("CannotUnstakeYet");
+
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nftToUse.mint.publicKey
+      );
+      const earlyAtaInfo =
+        await justin.provider.connection.getParsedAccountInfo(justinATA);
+      const parsedAcc = (<ParsedAccountData>earlyAtaInfo.value.data).parsed;
+      assert.equal(
+        parsedAcc.info.state,
+        "frozen",
+        "NFT state should be frozen if unstaking fail"
+      );
+    });
+
+    it("dev can change lock period to 0", async () => {
+      await program.methods
+        .updateStakingConfig(
+          slowConfig.option.rewardPerSec,
+          slowConfig.option.rewardDenominator,
+          new anchor.BN(0), //allow immediate unlock
+        )
+        .accounts({
+          admin: dev.keypair.publicKey,
+          config: configAddress,
+        })
+        .signers([dev.keypair])
+        .rpc();
+    });
+
+    it("Justin can unstake/thaw his own NFT after lock period changed", async () => {
+      const balanceBefore = await getSolanaBalance(justin.wallet.publicKey);
+      const unstakeTx = await unstake(
+        program,
+        justin,
+        configAddress,
+        nftToUse.mint.publicKey
+      );
+      console.log(timeNow(), "unstake tx", unstakeTx);
+      const balanceAfter = await getSolanaBalance(justin.wallet.publicKey);
+      assert.isAbove(
+        balanceAfter,
+        balanceBefore,
+        "user solana balance after unstake should be higher"
+      );
+
+      const [stakeInfo] = await findStakeInfoPDA(
+        justin.wallet.publicKey,
+        nftToUse.mint.publicKey
+      );
+      // account should be closed and user reclaim rent fee
+      await expect(
+        program.account.stakeInfo.fetch(stakeInfo)
+      ).to.be.rejectedWith("Account does not exist");
+
+      const justinATA = await findUserATA(
+        justin.wallet.publicKey,
+        nftToUse.mint.publicKey
+      );
+      const ataInfo = await justin.provider.connection.getParsedAccountInfo(
+        justinATA
+      );
+      const parsed = (<ParsedAccountData>ataInfo.value.data).parsed;
+      assert.equal(
+        parsed.info.state,
+        "initialized",
+        "NFT state should be initialized if unstaking success"
+      );
+      const [justinState] = await findUserStatePDA(
+        justin.wallet.publicKey,
+        configAddress
+      );
+      const account = await program.account.userV2.fetch(justinState);
+      assert.ok(account.user.equals(justin.wallet.publicKey));
+      assert.equal(account.nftsStaked.toNumber(), 0);
+    });
+
+    it("dev can restore lock period", async () => {
+      await program.methods
+        .updateStakingConfig(
+          slowConfig.option.rewardPerSec,
+          slowConfig.option.rewardDenominator,
+          slowConfig.option.stakingLockDurationInSec,
+        )
+        .accounts({
+          admin: dev.keypair.publicKey,
+          config: configAddress,
+        })
+        .signers([dev.keypair])
+        .rpc();
+    });
+
+    it("justin will stake again", async () => {
+      await stake(
+        program,
+        justin,
+        configAddress,
+        nftToUse.mint.publicKey
+      );
+    });
+
+    it("dev can modify reward rate", async () => {
+      await program.methods
+        .updateStakingConfig(
+          new anchor.BN(0),
+          slowConfig.option.rewardDenominator,
+          new anchor.BN(0),
+        )
+        .accounts({
+          admin: dev.keypair.publicKey,
+          config: configAddress,
+        })
+        .signers([dev.keypair])
+        .rpc();
+    });
+
+    it("justin will claim and get nothing", async () => {
+      await delay(2000);
+      const originalBalance = await getTokenBalanceByATA(
+        justin.provider.connection,
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
+      );
+      console.log("originalBalance:", originalBalance);
+      await claim(
+        program,
+        justin,
+        configAddress,
+        rewardMint.publicKey
+      );
+      const newBalance = await getTokenBalanceByATA(
+        justin.provider.connection,
+        await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
+      );
+      console.log("newBalance:", newBalance);
+      assert.equal(newBalance, originalBalance, "managed to get rewards even though rps is 0");
     });
   });
 

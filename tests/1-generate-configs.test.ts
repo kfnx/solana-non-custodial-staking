@@ -40,7 +40,7 @@ const checkConfigResult = async (
 console.log(anchor.AnchorProvider.env().connection.rpcEndpoint);
 
 describe("Generate staking configs", () => {
-  const { dev, rewardToken, configs, NFTcreator } = store;
+  const { dev, rewardToken, configs, NFTcreator, markers } = store;
   const anchorProgram = anchor.workspace.NcStaking as anchor.Program<NcStaking>;
   const program = new anchor.Program(
     IDL,
@@ -58,6 +58,9 @@ describe("Generate staking configs", () => {
     );
     await createToken(dev.keypair, rewardToken, dev.provider);
     console.log("rewardToken address", rewardToken.publicKey.toBase58());
+
+    // give our hacker user sol
+    await airdropUser(markers.wallet.publicKey);
   });
 
   it("Create Configs", async () => {
@@ -98,35 +101,108 @@ describe("Generate staking configs", () => {
     );
   });
 
-  // it("Update config reward rate", async () => {
-  //   await allSynchronously(
-  //     configs.map((config) => async () => {
-  //       const configId = config.keypair.publicKey;
-  //       console.log(config.option);
-  //       const tx = await program.methods
-  //         .updateStakingConfig(
-  //           new anchor.BN(2),
-  //           new anchor.BN(2),
-  //           new anchor.BN(5)
-  //         )
-  //         .accounts({
-  //           admin: dev.keypair.publicKey,
-  //           config: configId,
-  //         })
-  //         .signers([dev.keypair])
-  //         .rpc();
-  //       console.log(tx);
-  //       await checkConfigResult(
-  //         program,
-  //         dev.keypair,
-  //         config.keypair,
-  //         rewardToken.publicKey,
-  //         NFTcreator.wallet.publicKey,
-  //         config.option
-  //       );
-  //     })
-  //   );
-  // });
+  it("cannot update config reward rate with random key", async () => {
+    await allSynchronously(
+      configs.map((config) => async () => {
+        const configId = config.keypair.publicKey;
+        try {
+          const tx = await program.methods
+            .updateStakingConfig(
+              new anchor.BN(2),
+              new anchor.BN(2),
+              new anchor.BN(5)
+            )
+            .accounts({
+              admin: markers.keypair.publicKey,
+              config: configId,
+            })
+            .signers([markers.keypair])
+            .rpc();
+        } catch (err) {
+          // console.log(err);
+          return;
+        }
+        // if it reaches here there was no error so test has failed
+        assert.fail("update config reward rate with hacker key did not error");
+      })
+    );
+  });
+
+  it("can update config reward rate with admin key", async () => {
+    await allSynchronously(
+      configs.map((config) => async () => {
+        const configId = config.keypair.publicKey;
+        const newConfigOption: StakingConfigOption = {
+          rewardPerSec: new anchor.BN(2),
+          rewardDenominator: new anchor.BN(2),
+          stakingLockDurationInSec: new anchor.BN(5)
+        }
+        try {
+          const tx = await program.methods
+            .updateStakingConfig(
+              newConfigOption.rewardPerSec,
+              newConfigOption.rewardDenominator,
+              newConfigOption.stakingLockDurationInSec,
+            )
+            .accounts({
+              admin: dev.keypair.publicKey,
+              config: configId,
+            })
+            .signers([dev.keypair])
+            .rpc();
+
+          await checkConfigResult(
+            program,
+            dev.keypair,
+            config.keypair,
+            rewardToken.publicKey,
+            NFTcreator.wallet.publicKey,
+            newConfigOption
+          );
+        } catch (err) {
+          assert.fail("error encountered");
+        }
+      })
+    );
+  });
+
+  it("update config reward rate back to normal with admin key", async () => {
+    await allSynchronously(
+      configs.map((config) => async () => {
+        const configId = config.keypair.publicKey;
+        const newConfigOption: StakingConfigOption = {
+          rewardPerSec: new anchor.BN(2),
+          rewardDenominator: new anchor.BN(2),
+          stakingLockDurationInSec: new anchor.BN(5)
+        }
+        try {
+          const tx = await program.methods
+            .updateStakingConfig(
+              config.option.rewardPerSec,
+              config.option.rewardDenominator,
+              config.option.stakingLockDurationInSec,
+            )
+            .accounts({
+              admin: dev.keypair.publicKey,
+              config: configId,
+            })
+            .signers([dev.keypair])
+            .rpc();
+
+          await checkConfigResult(
+            program,
+            dev.keypair,
+            config.keypair,
+            rewardToken.publicKey,
+            NFTcreator.wallet.publicKey,
+            config.option
+          );
+        } catch (err) {
+          assert.fail("error encountered", err);
+        }
+      })
+    );
+  });
 
   it("Fund config reward pot so user can claim token rewards", async () => {
     await allSynchronously(
