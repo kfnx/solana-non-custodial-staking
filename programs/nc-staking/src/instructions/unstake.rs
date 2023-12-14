@@ -64,7 +64,7 @@ fn assert_unstake_allowed<'info>(
     Ok(())
 }
 
-pub fn handler(ctx: Context<Unstake>) -> Result<()> {
+pub fn handle_unstake(ctx: Context<Unstake>) -> Result<()> {
     // check minimum time to unstake
     let config = &ctx.accounts.config;
     let user_state = &mut ctx.accounts.user_state;

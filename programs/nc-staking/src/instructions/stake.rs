@@ -110,7 +110,7 @@ fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
     Err(error!(ErrorCode::NotWhitelisted))
 }
 
-pub fn handler(ctx: Context<Stake>) -> Result<()> {
+pub fn handle_stake(ctx: Context<Stake>) -> Result<()> {
     assert_whitelist(&ctx)?;
 
     // assign delegate to PDA

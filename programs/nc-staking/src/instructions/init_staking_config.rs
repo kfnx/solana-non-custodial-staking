@@ -39,7 +39,7 @@ pub struct InitStakingConfig<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(
+pub fn handle_init_staking_config(
     ctx: Context<InitStakingConfig>,
     bump_config_auth: u8,
     reward_per_sec: u64,

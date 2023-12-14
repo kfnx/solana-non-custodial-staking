@@ -50,7 +50,7 @@ pub struct UpgradeUserState<'info> {
 /// Q: Can user initiate with old PDA structure?
 /// A: Cannot, the init staking instruction is also updated with new PDA structure.
 ///
-pub fn handler(ctx: Context<UpgradeUserState>) -> Result<()> {
+pub fn handle_upgrade_user_state(ctx: Context<UpgradeUserState>) -> Result<()> {
     let old = &ctx.accounts.old_user_state;
     let new = &mut ctx.accounts.new_user_state;
     new.user = old.user;

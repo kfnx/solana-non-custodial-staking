@@ -12,7 +12,7 @@ pub struct UpdateStakingConfig<'info> {
     pub config: Account<'info, StakingConfig>,
 }
 
-pub fn handler(
+pub fn handle_update_staking_config(
     ctx: Context<UpdateStakingConfig>,
     reward_per_sec: u64,
     reward_denominator: u64,

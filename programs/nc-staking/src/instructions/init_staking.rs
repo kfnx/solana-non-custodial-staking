@@ -22,7 +22,7 @@ pub struct InitStaking<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<InitStaking>) -> Result<()> {
+pub fn handle_init_staking(ctx: Context<InitStaking>) -> Result<()> {
     let user = &mut ctx.accounts.user_state;
     user.user = ctx.accounts.user.key();
     user.config = ctx.accounts.config.key();

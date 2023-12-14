@@ -169,7 +169,7 @@ fn calc_reward_internal_1_igs(time_accrued: u64, nfts_staked: u64) -> u64 {
     calc_reward_internal(1157407, 100000000000, time_accrued, nfts_staked)
 }
 
-pub fn handler(ctx: Context<ClaimStakingReward>) -> Result<()> {
+pub fn handle_claim(ctx: Context<ClaimStakingReward>) -> Result<()> {
     let config = &ctx.accounts.config;
     let user_state = &ctx.accounts.user_state;
 
