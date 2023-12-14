@@ -67,6 +67,31 @@ export async function createStakingConfig(
   return tx;
 }
 
+export async function getStakingConfig(program: anchor.Program<NcStaking>, config: PublicKey) {
+  return program.account.stakingConfig.fetch(config);
+}
+
+export async function updateStakingConfig(
+  program: anchor.Program<NcStaking>,
+  admin: User,
+  config: PublicKey,
+  stakingConfig: StakingConfigOption
+) {
+  const tx = await program.methods
+    .updateStakingConfig(
+      stakingConfig.rewardPerSec,
+      stakingConfig.rewardDenominator,
+      stakingConfig.stakingLockDurationInSec
+    )
+    .accounts({
+      admin: admin.keypair.publicKey,
+      config: config,
+    })
+    .signers([admin.keypair])
+    .rpc();
+  return tx;
+}
+
 export async function stake(
   program: anchor.Program<NcStaking>,
   user: User,
