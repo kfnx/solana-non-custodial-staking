@@ -6,7 +6,6 @@ import StakeInfoSection from "./StakeInfoSection";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { findStakeInfoPDA } from "../sdk/pda";
 import { IDL, NcStaking } from "../sdk/nc_staking";
-import { PROGRAM_ID } from "../sdk";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import ConfigSelector from "./ConfigSelector";
 import toast from "react-hot-toast";
@@ -14,21 +13,22 @@ import toast from "react-hot-toast";
 async function checkStakeInfo(
   connection: Connection,
   wallet: AnchorWallet,
+  programId: PublicKey,
   user: string,
   mint: string,
   successCallback: any // function
 ) {
-    const userPK = new PublicKey(user);
-    const mintPK = new PublicKey(mint);
-    const [stakeInfoPDA] = await findStakeInfoPDA(userPK, mintPK);
-    const provider = new anchor.AnchorProvider(
-      connection,
-      wallet,
-      anchor.AnchorProvider.defaultOptions()
-    );
-    const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
-    successCallback(stakeInfo);
+  const userPK = new PublicKey(user);
+  const mintPK = new PublicKey(mint);
+  const [stakeInfoPDA] = await findStakeInfoPDA(userPK, mintPK, programId);
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    anchor.AnchorProvider.defaultOptions()
+  );
+  const program = new anchor.Program<NcStaking>(IDL, programId, provider);
+  const stakeInfo = await program.account.stakeInfo.fetch(stakeInfoPDA);
+  successCallback(stakeInfo);
 }
 
 export default function MigrateUserStatePDA() {
@@ -38,6 +38,8 @@ export default function MigrateUserStatePDA() {
   const fetchStakeInfo = useGlobalStore((state) => state.fetchStakeInfo);
   const wallet = useGlobalStore((state) => state.wallet);
   const connection = useGlobalStore((state) => state.connection);
+  const getProgramId = useGlobalStore((state) => state.getProgramID);
+  const programId = getProgramId();
 
   console.log("stakeInfo", stakeInfo);
 
@@ -100,7 +102,14 @@ export default function MigrateUserStatePDA() {
         onClick={() => {
           try {
             toast.promise(
-              checkStakeInfo(connection, wallet!, user!, mint!, setStakeInfo),
+              checkStakeInfo(
+                connection,
+                wallet!,
+                programId,
+                user!,
+                mint!,
+                setStakeInfo
+              ),
               {
                 loading: "Checking stake info..",
                 success: "Checking stake info Finished",

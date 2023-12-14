@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "../LoadingSpinner";
 import { findConfigAuthorityPDA, findRewardPotPDA } from "../../sdk/pda";
 import { IDL, NcStaking } from "../../sdk/nc_staking";
-import { PROGRAM_ID } from "../../sdk";
+import useGlobalStore from "../../hooks/useGlobalStore";
 
 interface CreateStakingConfigArgs {
   rewardMint: PublicKey;
@@ -31,6 +31,7 @@ interface CreateStakingConfigArgs {
 const createNewConfig = async (
   connection: Connection,
   wallet: AnchorWallet,
+  programId: PublicKey,
   args: CreateStakingConfigArgs,
   config: Keypair = Keypair.generate()
 ) => {
@@ -48,15 +49,20 @@ const createNewConfig = async (
     anchor.AnchorProvider.defaultOptions()
   );
   // anchor.setProvider(provider);
-  const program = new anchor.Program<NcStaking>(IDL, PROGRAM_ID, provider);
+  const program = new anchor.Program<NcStaking>(IDL, programId, provider);
 
   console.log("config", config.publicKey.toBase58());
   const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
-    config.publicKey
+    config.publicKey,
+    programId
   );
   console.log("configAuth", configAuth.toBase58());
 
-  const [rewardPot] = await findRewardPotPDA(config.publicKey, rewardMint);
+  const [rewardPot] = await findRewardPotPDA(
+    config.publicKey,
+    rewardMint,
+    programId
+  );
   console.log("reward pot", rewardPot.toBase58());
 
   // init staking config
@@ -100,6 +106,7 @@ const CreateNewConfigModal: React.FC<{
     useState<number>(0);
   const [creatorWhitelist, setWhitelistCreator] = useState<string>("");
 
+  const getProgramId = useGlobalStore((state) => state.getProgramID);
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
   const closeModal = () => setIsOpen(false);
@@ -298,19 +305,25 @@ const CreateNewConfigModal: React.FC<{
                         async (resolve, reject) => {
                           setLoading(true);
                           try {
-                            await createNewConfig(connection, wallet!, {
-                              rewardMint: new PublicKey(rewardMint!),
-                              rewardPerSec: new anchor.BN(rewardPerSec!),
-                              rewardDenominator: new anchor.BN(
-                                rewardDenominator!
-                              ),
-                              stakingLockDurationInSec: new anchor.BN(
-                                stakingLockDurationInSec!
-                              ),
-                              creatorWhitelist: new PublicKey(
-                                creatorWhitelist!
-                              ),
-                            });
+                            const programId = getProgramId();
+                            await createNewConfig(
+                              connection,
+                              wallet!,
+                              programId,
+                              {
+                                rewardMint: new PublicKey(rewardMint!),
+                                rewardPerSec: new anchor.BN(rewardPerSec!),
+                                rewardDenominator: new anchor.BN(
+                                  rewardDenominator!
+                                ),
+                                stakingLockDurationInSec: new anchor.BN(
+                                  stakingLockDurationInSec!
+                                ),
+                                creatorWhitelist: new PublicKey(
+                                  creatorWhitelist!
+                                ),
+                              }
+                            );
                             closeModal();
                             resolve(1);
                           } catch (error: any) {
