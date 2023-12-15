@@ -697,7 +697,7 @@ describe("User Journey", () => {
           })
           .signers([markers.keypair])
           .rpc()
-      ).to.be.rejectedWith("unauthorized signer or writable account");
+      ).to.be.rejectedWith("A seeds constraint was violated");
     });
 
     it("Markers initate staking", async () => {

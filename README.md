@@ -71,3 +71,6 @@ spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEg
 
 - Github action will check for build, lint and format.
 - If making changes on an open Pull Request, convert it to draft so that the CI does not continuously run for each commit
+
+### Solana CLI Version
+sh -c "$(curl -sSfL https://release.solana.com/v1.16.23/install)"

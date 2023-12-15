@@ -1,7 +1,7 @@
 use crate::{claim::calc_reward, errors::ErrorCode, mpl, state::*, utils::*};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Approve, Mint, Token, TokenAccount};
-use metaplex_token_metadata::state::Metadata;
+use mpl_token_metadata::accounts::Metadata;
 use std::str::FromStr;
 
 #[derive(Accounts)]
@@ -61,7 +61,7 @@ impl<'info> Stake<'info> {
 fn assert_valid_metadata(
     metadata: &AccountInfo,
     mint: &Pubkey,
-) -> core::result::Result<Metadata, ProgramError> {
+) -> core::result::Result<Metadata, std::io::Error> {
     let metadata_program = Pubkey::from_str("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s").unwrap();
 
     // 1 verify the owner of the account is metaplex's metadata program
@@ -77,7 +77,7 @@ fn assert_valid_metadata(
     let (metadata_addr, _bump) = Pubkey::find_program_address(seed, &metadata_program);
     assert_eq!(metadata_addr, metadata.key());
 
-    Metadata::from_account_info(metadata)
+    Metadata::try_from(metadata)
 }
 
 fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
@@ -90,7 +90,7 @@ fn assert_whitelist(ctx: &Context<Stake>) -> Result<()> {
     let metadata = assert_valid_metadata(metadata_info, &mint.key())?;
     // metaplex constraints this to max 5, so won't go crazy on compute
     // (empirical testing showed there's practically 0 diff between stopping at 0th and 5th creator)
-    for creator in &metadata.data.creators.unwrap() {
+    for creator in &metadata.creators.unwrap() {
         // verify creator actually signed off on this nft
         if !creator.verified {
             continue;
