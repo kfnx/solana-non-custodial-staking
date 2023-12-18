@@ -576,12 +576,17 @@ describe("User Journey", () => {
         console.log("timeClaim1Txceil", timeClaim1Txceil);
         console.log("duration", duration, "seconds");
         const stakedNFTs = 2;
-        const minExpectedReward = (duration-1) * rewardPerSec * stakedNFTs;
-        const maxExpectedReward = (duration+1) * rewardPerSec * stakedNFTs;
+        const minExpectedReward = (duration - 1) * rewardPerSec * stakedNFTs;
+        const maxExpectedReward = (duration + 1) * rewardPerSec * stakedNFTs;
+        const expectedRange = `${minExpectedReward} - ${maxExpectedReward}`;
         console.log("stakedNFTs", stakedNFTs);
         console.log("rewardPerSec", rewardPerSec);
-        console.log(`expectedReward: ${minExpectedReward} - ${maxExpectedReward}`);
-        assert.isTrue(balance1 <= maxExpectedReward && balance1 >= minExpectedReward, "Balance should be increased after a valid claim");
+        console.log(`expectedReward: ${expectedRange}`);
+        const increment = balance1 - balance0;
+        assert.isTrue(
+          increment <= maxExpectedReward && increment >= minExpectedReward,
+          `Balance should be increased within expected amount of ${expectedRange} after a valid claim, but is actually ${increment}. This test can fail when time elapsed exceeds/is faster than the expected range.`
+        );
       }
 
       // claim #2 all should be 0 cos prev claim. reward_stored = 0, reward_now = 0
@@ -1176,7 +1181,7 @@ describe("User Journey", () => {
         .updateStakingConfig(
           slowConfig.option.rewardPerSec,
           slowConfig.option.rewardDenominator,
-          new anchor.BN(0), //allow immediate unlock
+          new anchor.BN(0) //allow immediate unlock
         )
         .accounts({
           admin: dev.keypair.publicKey,
@@ -1238,7 +1243,7 @@ describe("User Journey", () => {
         .updateStakingConfig(
           slowConfig.option.rewardPerSec,
           slowConfig.option.rewardDenominator,
-          slowConfig.option.stakingLockDurationInSec,
+          slowConfig.option.stakingLockDurationInSec
         )
         .accounts({
           admin: dev.keypair.publicKey,
@@ -1249,12 +1254,7 @@ describe("User Journey", () => {
     });
 
     it("justin will stake again", async () => {
-      await stake(
-        program,
-        justin,
-        configAddress,
-        nftToUse.mint.publicKey
-      );
+      await stake(program, justin, configAddress, nftToUse.mint.publicKey);
     });
 
     it("dev can modify reward rate", async () => {
@@ -1262,7 +1262,7 @@ describe("User Journey", () => {
         .updateStakingConfig(
           new anchor.BN(0),
           slowConfig.option.rewardDenominator,
-          new anchor.BN(0),
+          new anchor.BN(0)
         )
         .accounts({
           admin: dev.keypair.publicKey,
@@ -1279,18 +1279,17 @@ describe("User Journey", () => {
         await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
       console.log("originalBalance:", originalBalance);
-      await claim(
-        program,
-        justin,
-        configAddress,
-        rewardMint.publicKey
-      );
+      await claim(program, justin, configAddress, rewardMint.publicKey);
       const newBalance = await getTokenBalanceByATA(
         justin.provider.connection,
         await findUserATA(justin.wallet.publicKey, rewardMint.publicKey)
       );
       console.log("newBalance:", newBalance);
-      assert.equal(newBalance, originalBalance, "managed to get rewards even though rps is 0");
+      assert.equal(
+        newBalance,
+        originalBalance,
+        "managed to get rewards even though rps is 0"
+      );
     });
   });
 
