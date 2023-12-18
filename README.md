@@ -2,7 +2,7 @@ Non custodial staking program
 
 program id:
 - mainnet: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
-- devnet: `stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ`
+- devnet: `stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ` or `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 
 <br/>
 <p align="center">
@@ -74,3 +74,7 @@ spl-token transfer --fund-recipient --allow-unfunded-recipient BE9eZ6WSzKekD4pEg
 
 ### Solana CLI Version
 sh -c "$(curl -sSfL https://release.solana.com/v1.16.23/install)"
+
+### To run the "test" admin scripts (these are defined in Anchor.toml)
+anchor run admin-unstake
+anchor run update-staking-config

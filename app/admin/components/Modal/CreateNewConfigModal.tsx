@@ -50,7 +50,8 @@ const createNewConfig = async (
   );
   // anchor.setProvider(provider);
   const program = new anchor.Program<NcStaking>(IDL, programId, provider);
-
+  console.log("programId", programId.toBase58());
+  console.log("provider", provider);
   console.log("config", config.publicKey.toBase58());
   const [configAuth, configAuthBump] = await findConfigAuthorityPDA(
     config.publicKey,

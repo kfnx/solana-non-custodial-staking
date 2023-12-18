@@ -2,14 +2,8 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import * as anchor from "@project-serum/anchor";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
-import {
-  getSolanaBalance,
-  createUser,
-  findUserATA,
-  getTokenBalanceByATA,
-} from "./utils/user";
-import { adminUnstake, getStakingConfig, updateStakingConfig } from "./utils/transactions";
+import { getSolanaBalance, createUser } from "./utils/user";
+import { getStakingConfig, updateStakingConfig } from "./utils/transactions";
 import { IDL, NcStaking } from "../target/types/nc_staking";
 import { delay } from "./utils";
 
@@ -28,24 +22,31 @@ const MAINNET_CONFIGS = [
   "HGfsB83DVkcScAnNtoFTLEte42iFGZwNUbosevPYTKhf", //7days
   "Ceby7eP3WRfLVByz3Ujv13phgvQHWH6G63XNeUUJb6Xr", //flexible
 ];
+const CONFIG_TO_UPDATE = "5BMndnLrJWpyoJYZoM73qw9n2mjWkyaL4ChLxyeSh7gP";
 describe("Update Staking Config", () => {
   /**
    * Update constants below before running this script
    */
   // Mainnet TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5
   // Devnet 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
+  // dev-stakeum HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL
   const ADMIN_KEYPAIR = Keypair.fromSecretKey(
     Uint8Array.from(
       // THIS is dummy keypair, please update before running the script
-      []
+      [
+      ]
     )
   );
 
-  const CONFIG = new PublicKey(MAINNET_CONFIGS[0]);
+  const CONFIG = new PublicKey(CONFIG_TO_UPDATE);
 
+  // const CONNECTION = new Connection(
+  //   "https://bitter-twilight-night.solana-mainnet.discover.quiknode.pro/c0d5a9290c79e2a87e32cc3e6406d952c8ec2cd5"
+  // );
   const CONNECTION = new Connection(
-    "https://bitter-twilight-night.solana-mainnet.discover.quiknode.pro/c0d5a9290c79e2a87e32cc3e6406d952c8ec2cd5"
+    "https://morning-divine-needle.solana-devnet.quiknode.pro/db4bd156028b7c76e02b032d3ef844e7fe0c3cbf/"
   );
+
   const PROGRAM_ID = new PublicKey(
     "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
   );
@@ -71,8 +72,8 @@ describe("Update Staking Config", () => {
     console.log("configStateBefore", configStateBefore);
     const tx = await updateStakingConfig(program, admin, CONFIG, {
       rewardPerSec: new anchor.BN(0),
-      rewardDenominator: new anchor.BN(0),
-      stakingLockDurationInSec: new anchor.BN(0),
+      rewardDenominator: new anchor.BN(1),
+      stakingLockDurationInSec: new anchor.BN(100),
     });
     console.log("updateStakingConfig tx", tx);
     console.log(
