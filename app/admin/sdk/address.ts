@@ -40,7 +40,7 @@ export const MAINNET_INFO = {
   NFT_CREATOR_ID: new PublicKey("BWWE1mrYNCZ2rapGiWhrURgqq9P2RHVCHnAeVHRoFsZv"),
 };
 export const DEVNET_INFO = {
-  PROGRAM_ID: new PublicKey("stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ"),
+  PROGRAM_ID: new PublicKey("stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"),
   STAKING_REWARD_ID: new PublicKey(
     "rw1s6APBqeaLyTtTVSfh3CVvZ1XiusuEpLsr1y8Dgeq"
   ),

@@ -1,0 +1,6 @@
+json_rpc_url: "https://morning-divine-needle.solana-devnet.quiknode.pro/db4bd156028b7c76e02b032d3ef844e7fe0c3cbf/"
+websocket_url: ""
+keypair_path: /home/benson/UETQgtvJWRcMsqEqHtEBGyHHzDtebar3eWE79g4y2H6.json
+address_labels:
+  "11111111111111111111111111111111": System Program
+commitment: confirmed
