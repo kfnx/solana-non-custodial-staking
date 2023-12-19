@@ -5,12 +5,11 @@ import Image from "next/image";
 import NetworkSelector from "../components/NetworkSelector";
 import Tabs from "../components/Tabs";
 import useGlobalStore from "../hooks/useGlobalStore";
-import address from "../sdk/address";
+import { DEVNET_INFO, MAINNET_INFO } from "../sdk/address";
 
 const Home: NextPage = () => {
   const network = useGlobalStore((state) => state.network);
-  const networkName = network.name === "Mainnet-beta" ? "mainnet" : "devnet"
-  const { NFT_CREATOR_ID, STAKING_REWARD_ID, PROGRAM_ID } = address[networkName];
+  const { NFT_CREATOR_ID, STAKING_REWARD_ID, PROGRAM_ID } = network.name === "Mainnet-beta" ? MAINNET_INFO : DEVNET_INFO;
 
   return (
     <div>

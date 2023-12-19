@@ -24,10 +24,9 @@ import {
   findUserStatePDA,
   findUserStateV2PDA,
 } from "../sdk/pda";
-import address, { TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
+import { DEVNET_INFO, MAINNET_INFO, TOKEN_METADATA_PROGRAM_ID } from "../sdk/address";
 import { IDL, NcStaking } from "../sdk/nc_staking";
 import { findUserATA, getTokenBalanceByATA } from "../sdk/user";
-import { PROGRAM_ID } from "../sdk";
 
 export const networks: Network[] = [
   { name: "Localhost", endpoint: "http://localhost:8899" },
@@ -35,12 +34,11 @@ export const networks: Network[] = [
   {
     name: "Devnet",
     endpoint:
-      "https://solana-devnet.g.alchemy.com/v2/UhHycdI5YouCZZQkTizOC8pBAF2SX6Ly",
+      "https://api.devnet.solana.com/",
   },
   {
     name: "Mainnet-beta",
-    endpoint:
-      "https://solana-mainnet.g.alchemy.com/v2/j-aMW77Scbfn1L-eABXP07dx6wIn6mzT",
+    endpoint: "https://rpc.hellomoon.io/90b3c748-0578-4b9f-88d5-0c03f8d362bc",
   },
 ];
 
@@ -56,7 +54,7 @@ async function checkUserStatePDA(
   };
 
   try {
-    const [pda] = await findUserStatePDA(user, config);
+    const [pda] = await findUserStatePDA(user, config, program.programId);
     const available = await program.account.user.fetch(pda);
     result.v1Initiated = true;
     console.log(
@@ -70,7 +68,7 @@ async function checkUserStatePDA(
     console.log("v1 null", error);
   }
   try {
-    const [pda] = await findUserStateV2PDA(user, config);
+    const [pda] = await findUserStateV2PDA(user, config, program.programId);
     const available = await program.account.userV2.fetch(pda);
     result.v2Initiated = true;
 
@@ -115,6 +113,8 @@ interface GlobalState {
   setProvider: (provider: AnchorProvider) => void;
   network: Network;
   setNetwork: (network: Network) => void;
+  getProgramID: () => PublicKey;
+  getStakingRewardID: () => PublicKey;
   myNFT: INFT[];
   fetchMyNFT: () => void;
   config: number;
@@ -152,9 +152,6 @@ interface GlobalState {
 }
 
 const initialNetwork = networks[2];
-const { STAKING_REWARD_ID } = address.devnet;
-// const initialNetwork = networks[3];
-// const { STAKING_REWARD_ID } = address.mainnet;
 
 const useGlobalStore = create<GlobalState>((set, get) => ({
   connection: new Connection(initialNetwork.endpoint, {
@@ -186,6 +183,16 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       AnchorProvider.defaultOptions()
     );
     set({ network, provider, connection });
+  },
+  getProgramID: () => {
+    const networkName = get().network?.name;
+    if (networkName === "Mainnet-beta") return MAINNET_INFO.PROGRAM_ID;
+    return DEVNET_INFO.PROGRAM_ID;
+  },
+  getStakingRewardID: () => {
+    const networkName = get().network?.name;
+    if (networkName === "Mainnet-beta") return MAINNET_INFO.STAKING_REWARD_ID;
+    return DEVNET_INFO.STAKING_REWARD_ID;
   },
   myNFT: [],
   fetchMyNFT: async () => {
@@ -219,7 +226,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const program = new Program<NcStaking>(IDL, get().getProgramID(), provider);
 
     const { configs, config } = get();
     if (!configs[config]) {
@@ -248,10 +255,11 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
 
-    const [oldUserState] = await findUserStatePDA(userToUpgrade, config);
-    const [newUserState] = await findUserStateV2PDA(userToUpgrade, config);
+    const [oldUserState] = await findUserStatePDA(userToUpgrade, config, program.programId);
+    const [newUserState] = await findUserStateV2PDA(userToUpgrade, config, program.programId);
     console.log("upgrade configId", config.toString());
     console.log("upgrade oldUserState", oldUserState.toString());
     console.log("upgrade newUserState", newUserState.toString());
@@ -322,7 +330,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
     const users = await program.account.userV2.all();
     const oldUsers = await program.account.user.all();
 
@@ -357,8 +366,11 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
+    console.log(get().network);
+
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
+    console.log("programID", programID.toBase58());
     try {
       const configs = await program.account.stakingConfig.all();
       set({
@@ -400,8 +412,10 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
-    console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
+    
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
+    console.log("programID", programID.toBase58());
     try {
       const stakeInfo = await program.account.stakeInfo.all();
       console.log("🚀 fetchStakeInfo: ~ stakeInfo", stakeInfo);
@@ -428,7 +442,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
 
-    const userATA = await findUserATA(wallet.publicKey, STAKING_REWARD_ID);
+    const stakingRewardID = get().getStakingRewardID();
+    const userATA = await findUserATA(wallet.publicKey, stakingRewardID);
     const connection = get().connection;
     const userTokenBalance = await getTokenBalanceByATA(connection, userATA);
 
@@ -454,7 +469,9 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
 
     if (!configs[config]) {
       toast.error("Select a staking config");
@@ -464,7 +481,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       return;
     }
     const configId = configs[config].publicKey;
-    const [userState] = await findUserStateV2PDA(wallet.publicKey, configId);
+    const [userState] = await findUserStateV2PDA(wallet.publicKey, configId, program.programId);
 
     const accounts = {
       userState,
@@ -549,7 +566,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     );
     console.log("provider", provider.wallet.publicKey.toBase58());
     console.log("provider", provider.connection.rpcEndpoint);
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
     console.log("program", program.programId.toBase58());
 
     if (!configs[config]) {
@@ -573,15 +591,15 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
 
     const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
     console.log("user ATA", tokenAccount.toBase58());
-    const [delegate] = await findDelegateAuthPDA(tokenAccount);
+    const [delegate] = await findDelegateAuthPDA(tokenAccount, program.programId);
     console.log("user delegate", delegate.toBase58());
     const [edition] = await findEditionPDA(selectedNFT);
     console.log("edition", edition.toBase58());
-    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [userState] = await findUserStatePDA(wallet.publicKey, configId, program.programId);
     console.log("user state", userState.toBase58());
-    const [userStateV2] = await findUserStateV2PDA(wallet.publicKey, configId);
+    const [userStateV2] = await findUserStateV2PDA(wallet.publicKey, configId, program.programId);
     console.log("user state v2", userStateV2.toBase58());
-    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT);
+    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT, program.programId);
     const metadata = await findMetadataPDA(selectedNFT);
 
     const stakeNFTtx = program.methods
@@ -667,7 +685,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
 
     if (!configs[config]) {
       toast.error("Select a staking config");
@@ -680,13 +699,13 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
 
     const tokenAccount = await findUserATA(wallet.publicKey, selectedNFT);
     // console.log("user ATA", tokenAccount.toBase58());
-    const [delegate] = await findDelegateAuthPDA(tokenAccount);
+    const [delegate] = await findDelegateAuthPDA(tokenAccount, program.programId);
     // console.log("user delegate", delegate.toBase58());
     const [edition] = await findEditionPDA(selectedNFT);
     // console.log("edition", edition.toBase58());
-    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [userState] = await findUserStatePDA(wallet.publicKey, configId, program.programId);
     // console.log("user state", userState.toBase58());
-    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT);
+    const [stakeInfo] = await findStakeInfoPDA(wallet.publicKey, selectedNFT, program.programId);
 
     const stakeNFTtx = program.methods
       .unstake()
@@ -755,7 +774,8 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
       wallet,
       AnchorProvider.defaultOptions()
     );
-    const program = new Program<NcStaking>(IDL, PROGRAM_ID, provider);
+    const programID = get().getProgramID();
+    const program = new Program<NcStaking>(IDL, programID, provider);
 
     if (!configs[config]) {
       toast.error("Select a staking config");
@@ -767,12 +787,12 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     const configId = new PublicKey(configs[config].publicKey);
     const rewardMint = configs[config].account.rewardMint;
 
-    const [configAuth, configAuthBump] = await findConfigAuthorityPDA(configId);
+    const [configAuth, configAuthBump] = await findConfigAuthorityPDA(configId, program.programId);
     // console.log("configAuth", configAuth.toBase58());
 
     const [rewardPot, rewardPotBump] = await findRewardPotPDA(
       configId,
-      rewardMint
+      rewardMint, program.programId
     );
     // console.log("reward pot", rewardPot.toBase58());
 
@@ -789,7 +809,7 @@ const useGlobalStore = create<GlobalState>((set, get) => ({
     // );
     console.log("userATA", userATA.toBase58());
 
-    const [userState] = await findUserStatePDA(wallet.publicKey, configId);
+    const [userState] = await findUserStatePDA(wallet.publicKey, configId, program.programId);
 
     const claimTx = program.methods
       .claim(configAuthBump, rewardPotBump)

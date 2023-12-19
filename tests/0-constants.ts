@@ -205,26 +205,16 @@ export const store = {
         ])
       ),
     },
-    /* commented because more configs means more time to test. uncomment if you need more configs to test
     {
-      // 1 / Day
+      // 1 / s pubkey: FhW16wj3SHaYj3rWcpvEf2UbT3Xe8Zyx4ckvc585ASuC
       option: {
-        // baseRate: 0.001157407407,
-        rewardPerSec: new anchor.BN(1157407),
-        rewardDenominator: denominator,
-        stakingLockDurationInSec: new anchor.BN(0),
+        rewardPerSec: new anchor.BN(1),
+        rewardDenominator: new anchor.BN(1),
+        stakingLockDurationInSec: new anchor.BN(1000),
       },
-      keypair: Keypair.fromSecretKey(
-        // sc1B2RFctpCyFchTv3tmNAcCNuhNwojQFtx7NgSSUXN;
-        Uint8Array.from([
-          116, 42, 138, 155, 37, 2, 231, 209, 37, 141, 171, 188, 72, 140, 226,
-          149, 115, 91, 70, 57, 96, 108, 120, 129, 44, 125, 93, 155, 205, 213,
-          105, 189, 12, 246, 158, 82, 177, 229, 211, 177, 175, 171, 92, 148,
-          133, 118, 185, 5, 8, 14, 80, 202, 8, 69, 106, 70, 206, 58, 36, 249,
-          34, 216, 224, 197,
-        ])
-      ),
+      keypair: Keypair.fromSecretKey(Uint8Array.from([211,117,22,54,151,202,52,38,96,72,124,65,132,124,33,25,229,74,113,20,81,225,241,200,190,130,129,85,87,253,176,36,218,99,164,72,177,96,51,49,160,191,107,106,69,4,115,99,121,50,37,203,6,242,229,118,242,158,183,76,27,67,218,223])),
     },
+    /* commented because more configs means more time to test. uncomment if you need more configs to test
     {
       // 1.25 / Day
       option: {
@@ -354,7 +344,6 @@ export const store = {
         creators: [],
       },
     },
-    /* commented because more nft means more time to test. uncomment if you need more nft to test
     {
       mint: Keypair.generate(),
       metadata: {
@@ -365,6 +354,7 @@ export const store = {
         creators: [],
       },
     },
+    /* commented because more nft means more time to test. uncomment if you need more nft to test
     {
       mint: Keypair.generate(),
       metadata: {

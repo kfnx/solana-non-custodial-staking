@@ -1,40 +1,39 @@
 import { PublicKey } from "@solana/web3.js";
 import { programs } from "@metaplex/js";
 import { TOKEN_METADATA_PROGRAM_ID } from "./address";
-import { PROGRAM_ID } from ".";
 
-export const findUserStatePDA = async (user: PublicKey, config: PublicKey) => {
+export const findUserStatePDA = async (user: PublicKey, config: PublicKey, programId: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state"), config.toBytes(), user.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };
 
-export const findUserStateV2PDA = async (user: PublicKey, config: PublicKey) => {
+export const findUserStateV2PDA = async (user: PublicKey, config: PublicKey, programId: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("user_state_v2"), config.toBytes(), user.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };
 
-export const findDelegateAuthPDA = async (tokenAccount: PublicKey) => {
+export const findDelegateAuthPDA = async (tokenAccount: PublicKey, programId: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [Buffer.from("delegate"), tokenAccount.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };
 
-export const findConfigAuthorityPDA = async (config: PublicKey) => {
+export const findConfigAuthorityPDA = async (config: PublicKey, programId: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("config"), config.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };
 
-export const findRewardPotPDA = (config: PublicKey, rewardMint: PublicKey) => {
+export const findRewardPotPDA = (config: PublicKey, rewardMint: PublicKey, programId: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("reward_pot"), config.toBytes(), rewardMint.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };
 
@@ -54,9 +53,9 @@ export const findMetadataPDA = async (mint: PublicKey) => {
   return await programs.metadata.Metadata.getPDA(mint);
 };
 
-export const findStakeInfoPDA = async (user: PublicKey, mint: PublicKey) => {
+export const findStakeInfoPDA = async (user: PublicKey, mint: PublicKey, programId: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from("stake_info"), user.toBytes(), mint.toBytes()],
-    PROGRAM_ID
+    programId
   );
 };

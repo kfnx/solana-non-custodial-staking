@@ -129,7 +129,7 @@ const createNFT = async (
 
 describe("Generate Meekolony NFTs", () => {
   const { justin, NFTcreator, nfts } = store;
-  const userId = justin.keypair.publicKey;
+  const justinPubKey = justin.keypair.publicKey;
   it("Create mint and metadata", async () => {
     console.log(
       "Creator address",
@@ -137,13 +137,13 @@ describe("Generate Meekolony NFTs", () => {
       "balance",
       await getSolanaBalance(NFTcreator.wallet.publicKey)
     );
-    await airdropUser(userId);
+    await airdropUser(justinPubKey);
     await airdropUser(NFTcreator.wallet.publicKey);
     console.log(
       "NFT holder address",
-      userId.toBase58(),
+      justinPubKey.toBase58(),
       "balance",
-      await getSolanaBalance(userId)
+      await getSolanaBalance(justinPubKey)
     );
 
     await allSynchronously(
@@ -161,10 +161,10 @@ describe("Generate Meekolony NFTs", () => {
         );
         assert.equal(createdATAbalance, 1, "token amount 1");
 
-        await transferToken(NFTcreator.keypair, userId, mint.publicKey);
+        await transferToken(NFTcreator.keypair, justinPubKey, mint.publicKey);
 
         // verify
-        const userATA = await findUserATA(userId, mint.publicKey);
+        const userATA = await findUserATA(justinPubKey, mint.publicKey);
         const userATAbalance = await getTokenBalanceByATA(
           NFTcreator.provider.connection,
           userATA

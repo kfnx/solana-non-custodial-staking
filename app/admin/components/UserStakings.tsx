@@ -1,7 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { useEffect } from "react";
 import useGlobalStore, { UserStateWrapper } from "../hooks/useGlobalStore";
-import { findUserStatePDA, findUserStateV2PDA } from "../sdk/pda";
 import { convertSecondsToReadableTime } from "../utils/convertSecToReadableTime";
 import { unixTimeConverter } from "../utils/unixTimeConverter";
 

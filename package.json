@@ -18,6 +18,7 @@
     "homepage": "https://github.com/tatsuworks/nc-staking#readme",
     "scripts": {
         "setup:programid": "./scripts/update_program_id.sh",
+        "deploy": "./scripts/deploy_program.sh",
         "format": "prettier */*.js \"*/**/*{.js,.ts}\" -w && cargo fmt",
         "lint": "cargo clippy --fix --allow-dirty",
         "test": "anchor test --provider.wallet $(solana config get | grep \"Keypair Path: \" | sed \"s/Keypair Path: //g\")"

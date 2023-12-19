@@ -59,7 +59,7 @@ pub struct AdminUnstake<'info> {
     system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<AdminUnstake>) -> Result<()> {
+pub fn handle_admin_unstake(ctx: Context<AdminUnstake>) -> Result<()> {
     // check minimum time to unstake
     let config = &ctx.accounts.config;
     let user_state = &mut ctx.accounts.user_state;
