@@ -9,11 +9,8 @@ import { delay } from "./utils";
 
 chai.use(chaiAsPromised);
 
-console.log(
-  "anchor env",
-  anchor.AnchorProvider.env().connection.rpcEndpoint,
-  anchor.AnchorProvider.env().wallet.publicKey.toBase58()
-);
+console.log("anchor env: update the Anchor.toml if this is incorrect");
+console.log("rpc:", anchor.AnchorProvider.env().connection.rpcEndpoint);
 // ADMIN TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5
 const MAINNET_CONFIGS = [
   "62nhMVwrQQHp8cBm4G9H5xFW8dU2k7NukoUuGxxKVumq", //90days
@@ -22,14 +19,15 @@ const MAINNET_CONFIGS = [
   "HGfsB83DVkcScAnNtoFTLEte42iFGZwNUbosevPYTKhf", //7days
   "Ceby7eP3WRfLVByz3Ujv13phgvQHWH6G63XNeUUJb6Xr", //flexible
 ];
-const CONFIG_TO_UPDATE = "5BMndnLrJWpyoJYZoM73qw9n2mjWkyaL4ChLxyeSh7gP";
+const CONFIG_TO_UPDATE = "Ceby7eP3WRfLVByz3Ujv13phgvQHWH6G63XNeUUJb6Xr";
+const REWARD_PER_SEC = new anchor.BN(1157407);
+const REWARD_DENOMINATOR = new anchor.BN(100000000000);
+const STAKING_LOCK_DURATION_IN_SEC = new anchor.BN(60);
 describe("Update Staking Config", () => {
   /**
    * Update constants below before running this script
    */
   // Mainnet TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5
-  // Devnet 6s5EfTaCCNQ855n8nTqDHue6XJ3hDaxB2ynj727AmgPt
-  // dev-stakeum HwToSSqew673tpmGc2VqH4Q6kZJnxHmNZauTud5WoumL
   const ADMIN_KEYPAIR = Keypair.fromSecretKey(
     Uint8Array.from(
       // THIS is dummy keypair, please update before running the script
@@ -39,31 +37,25 @@ describe("Update Staking Config", () => {
   );
 
   const CONFIG = new PublicKey(CONFIG_TO_UPDATE);
-
-  // const CONNECTION = new Connection(
-  //   "https://bitter-twilight-night.solana-mainnet.discover.quiknode.pro/c0d5a9290c79e2a87e32cc3e6406d952c8ec2cd5"
-  // );
-  const CONNECTION = new Connection(
-    "https://morning-divine-needle.solana-devnet.quiknode.pro/db4bd156028b7c76e02b032d3ef844e7fe0c3cbf/"
-  );
-
   const PROGRAM_ID = new PublicKey(
     "stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E"
   );
-
+  const CONNECTION = anchor.AnchorProvider.env().connection;
   console.log("RUNNING CONFIG UPDATE");
   console.log("CONNECTION", CONNECTION.rpcEndpoint);
   console.log("PROGRAM_ID", PROGRAM_ID.toBase58());
   console.log("ADMIN_KEYPAIR", ADMIN_KEYPAIR.publicKey.toBase58());
   console.log("CONFIG_OF_THE_NFT", CONFIG.toBase58());
 
+  console.log("REWARD_PER_SEC", REWARD_PER_SEC);
+  console.log("REWARD_DENOMINATOR", REWARD_DENOMINATOR);
+  console.log("STAKING_LOCK_DURATION_IN_SEC", STAKING_LOCK_DURATION_IN_SEC);
   it("starts", async () => {
     const admin = createUser(ADMIN_KEYPAIR, CONNECTION);
-
     const program = new anchor.Program<NcStaking>(
       IDL,
       PROGRAM_ID,
-      admin.provider
+      anchor.AnchorProvider.env()
     );
 
     // check before unstake
@@ -71,9 +63,9 @@ describe("Update Staking Config", () => {
     const configStateBefore = await getStakingConfig(program, CONFIG);
     console.log("configStateBefore", configStateBefore);
     const tx = await updateStakingConfig(program, admin, CONFIG, {
-      rewardPerSec: new anchor.BN(0),
-      rewardDenominator: new anchor.BN(1),
-      stakingLockDurationInSec: new anchor.BN(100),
+      rewardPerSec: REWARD_PER_SEC,
+      rewardDenominator: REWARD_DENOMINATOR,
+      stakingLockDurationInSec: STAKING_LOCK_DURATION_IN_SEC,
     });
     console.log("updateStakingConfig tx", tx);
     console.log(
