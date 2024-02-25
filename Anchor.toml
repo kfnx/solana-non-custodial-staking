@@ -19,6 +19,7 @@ wallet = "/home/benson/TWMtQV3hzKLRpDy67QPcEqkFc6r8vAwxx5UvQ3fkjh5.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
 admin-unstake = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/admin-unstake.ts"
 update-staking-config = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/update-staking-config.ts"
+check-user-state = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/check-user-state.ts"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
