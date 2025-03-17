@@ -52,10 +52,7 @@ To deploy with original program id, you need the original keypair. If you dont h
 
 ## Frontend App
 
-Currently we have two web app that interact with this contract:
-
-- [Admin](app/admin/README.md): For Admin or Stake manager to create staking configuration, monitor stakers and other statistics.
-- [Tatsumeeko Staking Page](https://github.com/tatsuworks/tm-web/blob/dev/pages/meekolony/stake/index.tsx): Tatsumeeko customer facing staking app
+Admin web app can help to create staking configuration and monitor stakers with some statistics.
 
 ## Typescript SDK
 

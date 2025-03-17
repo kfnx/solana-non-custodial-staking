@@ -1,21 +1,21 @@
 {
-    "name": "nc-staking",
+    "name": "solana-non-custodial-staking",
     "description": "Non custodial staking program",
     "version": "1.0.0",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/tatsuworks/nc-staking.git"
+        "url": "git+https://github.com/kfnx/solana-non-custodial-staking.git"
     },
     "keywords": [
         "solana",
         "staking"
     ],
-    "author": "tatsuworks",
+    "author": "kfnx",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/tatsuworks/nc-staking/issues"
+        "url": "https://github.com/kfnx/solana-non-custodial-staking/issues"
     },
-    "homepage": "https://github.com/tatsuworks/nc-staking#readme",
+    "homepage": "https://github.com/kfnx/solana-non-custodial-staking#readme",
     "scripts": {
         "setup:programid": "./scripts/update_program_id.sh",
         "deploy": "./scripts/deploy_program.sh",
