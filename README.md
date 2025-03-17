@@ -1,5 +1,7 @@
 Non custodial staking program
 
+inspired by https://github.com/gemworks/gem-farm
+
 program id:
 - mainnet: `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
 - devnet: `stk4YMX6gbb5EL9T2d2UN4AWrGu2p8PzZCF4JQumAfJ` or `stakEUMMv9bRHYX4CyVY48i19ViBdNSzn8Rt1a1Fi6E`
@@ -7,14 +9,14 @@ program id:
 <br/>
 <p align="center">
   <img 
-    src="https://cdn.discordapp.com/attachments/897388963671736340/984288487551422554/Screenshot_2022-06-09_at_09.50.45.png"
+    src="program.png"
   />
   Program Instructions
 </p>
 <br/>
 <p align="center">
   <img 
-    src="https://cdn.discordapp.com/attachments/897388963671736340/989452987724357682/Screenshot_2022-06-23_at_15.51.41.png"
+    src="staking-visualization.png"
   />
   Staking reward calculation
 </p>
